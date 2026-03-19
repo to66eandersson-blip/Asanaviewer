@@ -13,9 +13,10 @@
   --bg: #0d0e10;
   --surface: #15171b;
   --surface2: #1c1f25;
+  --surface3: #22262e;
   --border: rgba(255,255,255,0.06);
   --border2: rgba(255,255,255,0.11);
-  --border3: rgba(255,255,255,0.18);
+  --border3: rgba(255,255,255,0.2);
   --text: #e6e3dc;
   --text2: #888580;
   --text3: #4a4845;
@@ -30,17 +31,17 @@
 }
 
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; overflow: hidden; }
-
 .screen { display: none; }
 .screen.active { display: flex; }
 
 /* ── SETUP ── */
 #screen-setup {
-  min-height: 100vh; align-items: center; justify-content: center;
-  padding: 2rem; flex-direction: column; overflow-y: auto;
+  min-height: 100vh; align-items: flex-start; justify-content: center;
+  padding: 3rem 1.5rem; flex-direction: column; overflow-y: auto;
+  align-items: center;
 }
+.setup-wrap { width: 100%; max-width: 680px; display: flex; flex-direction: column; gap: 1.5rem; }
 .setup-card {
-  width: 100%; max-width: 460px;
   background: var(--surface); border: 0.5px solid var(--border2);
   border-radius: var(--r-xl); padding: 2.5rem;
 }
@@ -48,14 +49,13 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .logo-gem { width: 13px; height: 13px; background: var(--accent); border-radius: 2px; transform: rotate(45deg); flex-shrink: 0; }
 .logo-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--accent); text-transform: uppercase; }
 .setup-card h1 { font-size: 22px; font-weight: 300; letter-spacing: -0.025em; margin-bottom: 0.4rem; }
-.setup-card p { font-size: 13px; color: var(--text2); margin-bottom: 1.75rem; line-height: 1.65; }
+.setup-card > p { font-size: 13px; color: var(--text2); margin-bottom: 1.75rem; line-height: 1.65; }
 .note-box {
   background: var(--accent-dim); border: 0.5px solid var(--accent-border);
   border-radius: var(--r); padding: 0.75rem 1rem;
   font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 1.5rem;
 }
 .note-box strong { color: var(--accent); font-weight: 400; }
-.note-box a { color: var(--text2); }
 .field { margin-bottom: 1.1rem; }
 .field label { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; margin-bottom: 0.45rem; }
 .field input {
@@ -67,7 +67,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .field input:focus { border-color: var(--accent); }
 .field input::placeholder { color: var(--text3); }
 .field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
-.field-hint a { color: var(--text2); }
+.field-hint a { color: var(--text2); text-decoration: none; border-bottom: 0.5px solid var(--border3); }
+.field-hint a:hover { color: var(--text); }
 .btn-main {
   width: 100%; background: var(--accent); color: #0d0e10; border: none;
   border-radius: var(--r); padding: 0.75rem; font-family: var(--mono);
@@ -76,6 +77,40 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 .btn-main:hover { opacity: 0.87; }
 #setup-error { font-family: var(--mono); font-size: 11px; color: var(--danger); margin-top: 0.75rem; display: none; line-height: 1.5; }
+
+/* PAT instructions card */
+.instructions-card {
+  background: var(--surface); border: 0.5px solid var(--border2);
+  border-radius: var(--r-xl); padding: 2rem 2.5rem;
+}
+.instructions-card h2 { font-size: 14px; font-weight: 400; color: var(--text2); margin-bottom: 1.25rem; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step { display: flex; gap: 1rem; padding: 0.85rem 0; border-bottom: 0.5px solid var(--border); }
+.step:last-child { border-bottom: none; }
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface3); border: 0.5px solid var(--border2);
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.step-body { flex: 1; }
+.step-body strong { font-size: 13px; font-weight: 400; color: var(--text); display: block; margin-bottom: 2px; }
+.step-body span { font-size: 12px; color: var(--text2); line-height: 1.55; }
+.step-body a { color: var(--accent); text-decoration: none; }
+.step-body a:hover { text-decoration: underline; }
+.step-body code {
+  font-family: var(--mono); font-size: 11px; color: var(--text);
+  background: var(--surface3); border: 0.5px solid var(--border2);
+  padding: 1px 6px; border-radius: 3px;
+}
+.pat-warning {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: rgba(240,80,80,0.07); border: 0.5px solid rgba(240,80,80,0.18);
+  border-radius: var(--r); padding: 0.75rem 1rem; margin-top: 1.25rem;
+  font-size: 12px; color: var(--text2); line-height: 1.6;
+}
+.pat-warning-icon { color: var(--danger); font-size: 13px; flex-shrink: 0; margin-top: 1px; }
 
 /* ── APP ── */
 #screen-app { flex-direction: column; height: 100vh; overflow: hidden; }
@@ -94,7 +129,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .url-bar input {
   background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--r);
   color: var(--text); font-family: var(--mono); font-size: 10px; padding: 5px 8px;
-  width: 230px; outline: none; transition: border-color 0.15s;
+  width: 220px; outline: none; transition: border-color 0.15s;
 }
 .url-bar input:focus { border-color: var(--accent); }
 .url-bar input::placeholder { color: var(--text3); }
@@ -114,12 +149,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .z-btn:hover { background: var(--surface2); color: var(--text); }
 .z-val { font-family: var(--mono); font-size: 9px; color: var(--text3); min-width: 24px; text-align: center; }
 
+/* Filter bars */
+.filterbars { border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
 .filterbar {
-  display: flex; align-items: center; gap: 5px; padding: 7px 1.25rem;
-  border-bottom: 0.5px solid var(--border); flex-shrink: 0; overflow-x: auto; scrollbar-width: none;
+  display: flex; align-items: center; gap: 5px; padding: 6px 1.25rem;
+  overflow-x: auto; scrollbar-width: none;
 }
+.filterbar + .filterbar { border-top: 0.5px solid var(--border); }
 .filterbar::-webkit-scrollbar { display: none; }
-.f-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--text3); text-transform: uppercase; white-space: nowrap; margin-right: 4px; }
+.f-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--text3); text-transform: uppercase; white-space: nowrap; margin-right: 4px; min-width: 54px; }
 .chip {
   display: flex; align-items: center; gap: 5px; background: transparent;
   border: 0.5px solid var(--border2); border-radius: 20px; padding: 3px 10px;
@@ -128,7 +166,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .chip:hover { background: var(--surface2); color: var(--text); }
 .chip.on { background: var(--surface2); color: var(--text); border-color: var(--border3); }
 .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.chip-diamond { width: 6px; height: 6px; border-radius: 1px; transform: rotate(45deg); flex-shrink: 0; }
 
+/* Timeline */
 .tl-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 .tl-scroll { flex: 1; overflow: auto; position: relative; }
 
@@ -150,8 +190,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .m-lbl.now { color: var(--accent); }
 
 .sec-head {
-  display: flex; align-items: stretch;
-  position: sticky; top: 33px; z-index: 10;
+  display: flex; align-items: stretch; position: sticky; top: 33px; z-index: 10;
   background: var(--surface); border-bottom: 0.5px solid var(--border);
 }
 .sec-name {
@@ -176,42 +215,128 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .t-track { flex: 1; height: 30px; position: relative; }
 
 .g-line { position: absolute; top: 0; bottom: 0; width: 0.5px; background: var(--border); pointer-events: none; }
-.today-ln { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--today-color); opacity: 0.65; z-index: 5; pointer-events: none; }
+.today-ln { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--today-color); opacity: 0.6; z-index: 5; pointer-events: none; }
 
-.ev { position: absolute; top: 50%; transform: translate(-50%,-50%); cursor: pointer; z-index: 6; transition: transform 0.1s; }
-.ev:hover { transform: translate(-50%,-50%) scale(1.5); }
-.ev-ms { width: 9px; height: 9px; border-radius: 1.5px; transform: rotate(45deg); }
-.ev-task { width: 7px; height: 7px; border-radius: 50%; }
-.ev.faded .ev-ms, .ev.faded .ev-task { opacity: 0.3; }
+/* Event markers */
+.ev { position: absolute; top: 50%; transform: translate(-50%,-50%); cursor: pointer; z-index: 6; transition: transform 0.12s; }
+.ev:hover { transform: translate(-50%,-50%) scale(1.45); }
 
+/* Milestone = diamond wrapper, task = circle wrapper */
+.ev-shape {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.ev-ms-outer {
+  width: 12px; height: 12px; border-radius: 2px;
+  transform: rotate(45deg); position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.ev-ms-inner {
+  width: 7px; height: 7px; border-radius: 1px;
+  transform: none; position: absolute;
+}
+.ev-task-outer {
+  width: 11px; height: 11px; border-radius: 50%;
+  position: relative; display: flex; align-items: center; justify-content: center;
+}
+.ev-task-inner {
+  width: 6px; height: 6px; border-radius: 50%; position: absolute;
+}
+.ev.faded .ev-ms-outer, .ev.faded .ev-task-outer { opacity: 0.3; }
+
+/* RAG ring colors */
+.rag-green { background: rgba(80, 220, 120, 0.25); box-shadow: 0 0 0 2px rgba(80,220,120,0.5); }
+.rag-amber { background: rgba(240, 160, 60, 0.25); box-shadow: 0 0 0 2px rgba(240,160,60,0.5); }
+.rag-red   { background: rgba(240, 80,  80, 0.25); box-shadow: 0 0 0 2px rgba(240,80,80,0.5); }
+.rag-none  { background: transparent; }
+
+/* ── TOOLTIP ── */
 #tt {
-  position: fixed; background: var(--surface2); border: 0.5px solid var(--border2);
-  border-radius: var(--r); padding: 10px 14px; font-size: 12px; max-width: 260px;
-  z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.1s;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+  position: fixed; background: var(--surface2);
+  border: 0.5px solid var(--border2); border-radius: var(--r-lg);
+  padding: 0; font-size: 12px; width: 280px;
+  z-index: 1000; pointer-events: none; opacity: 0;
+  transition: opacity 0.12s; box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+  overflow: hidden;
 }
 #tt.show { opacity: 1; }
-.tt-name { font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
-.tt-sec { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
-.tt-date { font-family: var(--mono); font-size: 11px; color: var(--text2); }
-.tt-kind { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 3px; }
 
-.legend {
-  display: flex; align-items: center; gap: 16px;
-  padding: 6px 1.25rem; border-top: 0.5px solid var(--border); flex-shrink: 0;
+.tt-header {
+  padding: 12px 14px 10px;
+  border-bottom: 0.5px solid var(--border);
 }
-.leg-i { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.06em; }
-.leg-ms { width: 8px; height: 8px; border-radius: 1px; transform: rotate(45deg); background: var(--text2); }
-.leg-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text2); }
+.tt-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.35; margin-bottom: 6px; }
+.tt-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 0; }
+.tt-badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
+  padding: 2px 7px; border-radius: 20px; text-transform: uppercase;
+  border: 0.5px solid transparent;
+}
+/* Domain badge colors */
+.badge-commercial  { background: rgba(80,200,80,0.12);   border-color: rgba(80,200,80,0.3);   color: #6dd97a; }
+.badge-health      { background: rgba(80,200,200,0.12);  border-color: rgba(80,200,200,0.3);  color: #60cece; }
+.badge-player      { background: rgba(220,80,180,0.12);  border-color: rgba(220,80,180,0.3);  color: #dd70c0; }
+.badge-quality     { background: rgba(240,160,60,0.12);  border-color: rgba(240,160,60,0.3);  color: #e89f50; }
+/* Type badge */
+.badge-milestone   { background: rgba(184,240,80,0.08);  border-color: rgba(184,240,80,0.2);  color: var(--accent); }
+.badge-task        { background: rgba(136,133,128,0.12); border-color: rgba(136,133,128,0.25); color: var(--text2); }
+/* RAG badges */
+.badge-rag-green   { background: rgba(80,220,120,0.1);   border-color: rgba(80,220,120,0.3);  color: #60dc80; }
+.badge-rag-amber   { background: rgba(240,160,60,0.1);   border-color: rgba(240,160,60,0.3);  color: #e89f50; }
+.badge-rag-red     { background: rgba(240,80,80,0.1);    border-color: rgba(240,80,80,0.3);   color: #f06060; }
+
+.tt-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.tt-row { display: flex; align-items: baseline; gap: 6px; }
+.tt-row-icon { font-size: 11px; width: 14px; flex-shrink: 0; text-align: center; }
+.tt-row-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: var(--text3); text-transform: uppercase; min-width: 52px; flex-shrink: 0; }
+.tt-row-val { font-size: 11px; color: var(--text2); line-height: 1.4; }
+.tt-row-val.accent { color: var(--text); }
+
+.tt-notes { padding: 0 14px 10px; }
+.tt-notes-text {
+  font-size: 11px; color: var(--text2); line-height: 1.55;
+  background: var(--surface3); border-radius: var(--r);
+  padding: 8px 10px; border: 0.5px solid var(--border);
+  font-style: italic;
+}
+
+.tt-footer {
+  padding: 8px 14px; border-top: 0.5px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tt-followers { display: flex; align-items: center; gap: 4px; }
+.tt-avatar {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--surface3); border: 0.5px solid var(--border2);
+  font-family: var(--mono); font-size: 8px; color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.tt-open-link {
+  font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.06em;
+  text-decoration: none; text-transform: uppercase;
+  border: 0.5px solid var(--border2); border-radius: var(--r);
+  padding: 3px 8px; transition: all 0.12s; pointer-events: all; cursor: pointer;
+}
+.tt-open-link:hover { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
+.tt-no-followers { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+
+/* Legend */
+.legend {
+  display: flex; align-items: center; gap: 14px;
+  padding: 6px 1.25rem; border-top: 0.5px solid var(--border); flex-shrink: 0; flex-wrap: wrap;
+}
+.leg-i { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.04em; }
+.leg-ms { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); background: var(--text2); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text2); }
+.leg-ring { width: 9px; height: 9px; border-radius: 50%; background: rgba(80,220,120,0.15); box-shadow: 0 0 0 2px rgba(80,220,120,0.5); }
 .leg-line { width: 14px; height: 1px; background: var(--today-color); opacity: 0.7; }
 .leg-note { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--text3); }
 
 .no-data { padding: 3rem 1.25rem; font-size: 12px; color: var(--text3); font-family: var(--mono); }
 
-#loading {
-  display: none; position: fixed; inset: 0; background: rgba(13,14,16,0.82);
-  z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
-}
+/* Loading */
+#loading { display: none; position: fixed; inset: 0; background: rgba(13,14,16,0.82); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
 #loading.show { display: flex; }
 .spinner { width: 22px; height: 22px; border: 1.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -220,38 +345,85 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 </head>
 <body>
 
-<!-- SETUP SCREEN -->
+<!-- ── SETUP SCREEN ── -->
 <div id="screen-setup" class="screen active">
-  <div class="setup-card">
-    <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board Timeline</span></div>
-    <h1>Connect your board</h1>
-    <p>Enter a Personal Access Token from your Asana account, then paste any Product Board URL to generate a unified timeline.</p>
+  <div class="setup-wrap">
 
-    <div class="note-box">
-      <strong>Your token never leaves your browser.</strong> It is used only to make direct calls to Asana's API, and is cleared when you close the tab. This tool is read-only — it will not modify any Asana data.
+    <div class="setup-card">
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board Timeline</span></div>
+      <h1>Connect your board</h1>
+      <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
+
+      <div class="note-box">
+        <strong>Read-only &amp; private.</strong> Your token is used only to make direct calls to Asana's API from your browser. It is never stored or transmitted anywhere else, and is cleared when you close the tab. This tool cannot modify any Asana data.
+      </div>
+
+      <div class="field">
+        <label>Personal Access Token</label>
+        <input type="password" id="inp-pat" placeholder="1/XXXXXXXXX:XXXXXXXX…" autocomplete="off" />
+        <div class="field-hint">See the instructions below for how to generate this.</div>
+      </div>
+
+      <div class="field">
+        <label>Asana Board URL</label>
+        <input type="text" id="inp-url" placeholder="https://app.asana.com/1/…/project/PROJECT_ID/…" />
+        <div class="field-hint">Paste any view URL from your Product Board — the project ID is extracted automatically.</div>
+      </div>
+
+      <button class="btn-main" onclick="connect()">Load Timeline →</button>
+      <div id="setup-error"></div>
     </div>
 
-    <div class="field">
-      <label>Personal Access Token</label>
-      <input type="password" id="inp-pat" placeholder="1/XXXXXXXXX:XXXXXXXX…" autocomplete="off" />
-      <div class="field-hint">
-        Generate one at <a href="https://app.asana.com/0/my-apps" target="_blank">app.asana.com/0/my-apps</a>
-        → Personal access tokens → Create new token
+    <!-- PAT Instructions -->
+    <div class="instructions-card">
+      <h2>How to get your Personal Access Token</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Open Asana's developer settings</strong>
+            <span>Go to <a href="https://app.asana.com/0/my-apps" target="_blank">app.asana.com/0/my-apps</a> — you must be logged in to Asana first.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Create a new token</strong>
+            <span>Scroll to the <code>Personal access tokens</code> section and click <code>Create new token</code>.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Name it and confirm</strong>
+            <span>Give it any name (e.g. <code>Timeline viewer</code>), accept the terms, and click <code>Create token</code>.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Copy the token immediately</strong>
+            <span>Asana will only show the token once. Copy it and paste it into the field above. It looks like <code>1/123456789:abcdef1234567890…</code></span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <strong>Get the board URL</strong>
+            <span>Open the Asana Product Board you want to view, copy the URL from your browser's address bar, and paste it into the Board URL field above.</span>
+          </div>
+        </div>
+      </div>
+      <div class="pat-warning">
+        <span class="pat-warning-icon">⚠</span>
+        <span>Treat your token like a password. Anyone with it can read your Asana data. If you ever share a device or suspect the token is compromised, you can revoke it at any time from the same <a href="https://app.asana.com/0/my-apps" target="_blank" style="color:var(--text2)">My Apps</a> page.</span>
       </div>
     </div>
 
-    <div class="field">
-      <label>Asana Board URL</label>
-      <input type="text" id="inp-url" placeholder="https://app.asana.com/1/…/project/PROJECT_ID/…" />
-      <div class="field-hint">Paste any view URL from your Product Board. The project ID will be extracted automatically.</div>
-    </div>
-
-    <button class="btn-main" onclick="connect()">Load Timeline →</button>
-    <div id="setup-error"></div>
   </div>
 </div>
 
-<!-- APP SCREEN -->
+<!-- ── APP SCREEN ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
     <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Timeline</span></div>
@@ -270,7 +442,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <button class="tb-btn" onclick="goSetup()">⏎ Switch account</button>
   </div>
 
-  <div class="filterbar" id="filterbar"><span class="f-label">Filter</span></div>
+  <div class="filterbars">
+    <div class="filterbar" id="filterbar-section"><span class="f-label">Section</span></div>
+    <div class="filterbar" id="filterbar-domain"><span class="f-label">Domain</span></div>
+  </div>
 
   <div class="tl-area">
     <div class="tl-scroll">
@@ -282,41 +457,73 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     </div>
     <div class="legend">
       <div class="leg-i"><div class="leg-ms"></div>Milestone</div>
-      <div class="leg-i"><div class="leg-dot"></div>Task / event</div>
+      <div class="leg-i"><div class="leg-dot"></div>Task</div>
+      <div class="leg-i"><div class="leg-ring"></div>RAG status ring</div>
       <div class="leg-i"><div class="leg-line"></div>Today</div>
       <span class="leg-note">Hover events for details &nbsp;·&nbsp; + / − to zoom &nbsp;·&nbsp; items without due dates are not shown</span>
     </div>
   </div>
 </div>
 
-<!-- TOOLTIP -->
+<!-- ── TOOLTIP ── -->
 <div id="tt">
-  <div class="tt-name" id="tt-name"></div>
-  <div class="tt-sec" id="tt-sec"></div>
-  <div class="tt-date" id="tt-date"></div>
-  <div class="tt-kind" id="tt-kind"></div>
+  <div class="tt-header">
+    <div class="tt-name" id="tt-name"></div>
+    <div class="tt-badges" id="tt-badges"></div>
+  </div>
+  <div class="tt-body" id="tt-body"></div>
+  <div class="tt-notes" id="tt-notes" style="display:none">
+    <div class="tt-notes-text" id="tt-notes-text"></div>
+  </div>
+  <div class="tt-footer">
+    <div class="tt-followers" id="tt-followers"></div>
+    <a class="tt-open-link" id="tt-open-link" target="_blank">Open in Asana ↗</a>
+  </div>
 </div>
 
-<!-- LOADING -->
+<!-- ── LOADING ── -->
 <div id="loading"><div class="spinner"></div><div class="load-txt" id="load-txt">Loading…</div></div>
 
 <script>
 /* ─── Config ─── */
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-const ZOOMS  = [700, 1000, 1400, 2000, 2800];
-const ZLBLS  = ['0.5×', '0.75×', '1×', '1.5×', '2×'];
-const COLORS = ['#b8f050','#50c8f0','#f09650','#c850f0','#50f0a0',
-                '#f05080','#a0c850','#f0d050','#5080f0','#f07050'];
+const ZOOMS = [700, 1000, 1400, 2000, 2800];
+const ZLBLS = ['0.5×','0.75×','1×','1.5×','2×'];
+const SEC_COLORS = ['#b8f050','#50c8f0','#f09650','#c850f0','#50f0a0',
+                    '#f05080','#a0c850','#f0d050','#5080f0','#f07050'];
+
+/* ─── Known custom field GIDs ─── */
+const CF = {
+  RAG:    '1211609680601811',
+  DOMAIN: '1211610750042338',
+};
+
+/* ─── Domain → badge class mapping ─── */
+const DOMAIN_CLASS = {
+  'Commercial Viability': 'badge-commercial',
+  'Project Health':       'badge-health',
+  'Player Experience':    'badge-player',
+  'Product Quality':      'badge-quality',
+};
+
+/* ─── RAG value GID → label/class ─── */
+const RAG_MAP = {
+  '1211609680601814': { label: '🟢 On track',  cls: 'badge-rag-green', ring: 'rag-green' },
+  '1211609680601815': { label: '🟡 At risk',   cls: 'badge-rag-amber', ring: 'rag-amber' },
+  '1211609680601816': { label: '🔴 Off track', cls: 'badge-rag-red',   ring: 'rag-red'   },
+};
 
 /* ─── State ─── */
 let PAT = '', allEvents = [], sections = [];
 let hideDone = false, zoomIdx = 2;
-let activeFilters = new Set(['ALL']);
+let activeSections = new Set(['ALL']);
+let activeDomains  = new Set(['ALL']);
+let allDomains = [];
 
 /* ─── Helpers ─── */
-function $(id) { return document.getElementById(id); }
+const $ = id => document.getElementById(id);
 function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -330,31 +537,45 @@ function setLoad(msg) {
 function showErr(msg) {
   const el = $('setup-error'); el.textContent = msg; el.style.display = 'block';
 }
-
-/* ─── URL / ID parsing ─── */
 function extractPid(url) {
-  // Try /project/ID, then any long numeric segment
-  const m = url.match(/\/project\/(\d+)/) ||
-            url.match(/[?&]project[=\/](\d+)/) ||
-            url.match(/\/(\d{10,})/);
+  const m = url.match(/\/project\/(\d+)/) || url.match(/[?&]project[=\/](\d+)/) || url.match(/\/(\d{10,})/);
   return m ? m[1] : null;
 }
+function initials(name) {
+  return (name||'?').split(' ').filter(Boolean).slice(0,2).map(p=>p[0].toUpperCase()).join('');
+}
+function daysFromToday(dateStr) {
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const diff = Math.round((d - TODAY) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff === -1) return 'Yesterday';
+  if (diff > 0) return `in ${diff} days`;
+  return `${Math.abs(diff)} days overdue`;
+}
+function isOverdue(dateStr) {
+  return new Date(dateStr) < TODAY;
+}
 
-/* ─── Asana API ─── */
+/* ─── API ─── */
 async function api(path) {
   const r = await fetch('https://app.asana.com/api/1.0' + path, {
     headers: { 'Authorization': 'Bearer ' + PAT, 'Accept': 'application/json' }
   });
   if (!r.ok) {
     const body = await r.json().catch(() => ({}));
-    const msg = body.errors?.[0]?.message || `HTTP ${r.status} ${r.statusText}`;
-    throw new Error(msg);
+    throw new Error(body.errors?.[0]?.message || `HTTP ${r.status}`);
   }
   return r.json();
 }
 
 async function fetchAllTasks(pid) {
-  const fields = 'name,due_on,start_on,completed,resource_subtype,memberships.section.name';
+  const fields = [
+    'name','due_on','start_on','completed','resource_subtype',
+    'memberships.section.name','memberships.project.name',
+    'followers','followers.name',
+    'custom_fields','notes','permalink_url','num_subtasks'
+  ].join(',');
   let tasks = [], offset = null;
   do {
     const qs = new URLSearchParams({ opt_fields: fields, limit: '100' });
@@ -366,17 +587,29 @@ async function fetchAllTasks(pid) {
   return tasks;
 }
 
+/* ─── Custom field extraction ─── */
+function getCF(task, gid) {
+  return (task.custom_fields || []).find(f => f.gid === gid) || null;
+}
+function getRag(task) {
+  const f = getCF(task, CF.RAG);
+  if (!f || !f.enum_value) return null;
+  return RAG_MAP[f.enum_value.gid] || null;
+}
+function getDomain(task) {
+  const f = getCF(task, CF.DOMAIN);
+  return f?.enum_value?.name || null;
+}
+
 /* ─── Connect ─── */
 async function connect() {
   const pat = $('inp-pat').value.trim();
   const url = $('inp-url').value.trim();
   $('setup-error').style.display = 'none';
-
   if (!pat) { showErr('Please enter your Personal Access Token.'); return; }
   if (!url) { showErr('Please enter an Asana board URL.'); return; }
   const pid = extractPid(url);
-  if (!pid) { showErr('Could not find a project ID in that URL — please paste the full Asana board URL.'); return; }
-
+  if (!pid) { showErr('Could not find a project ID in that URL — paste the full Asana board URL.'); return; }
   PAT = pat;
   try {
     setLoad('Connecting to Asana…');
@@ -387,11 +620,9 @@ async function connect() {
     show('screen-app');
   } catch(e) {
     PAT = '';
-    const hint = e.message.includes('401') || e.message.toLowerCase().includes('unauthorized')
-      ? ' Make sure you copied the full token correctly.'
-      : e.message.includes('403') || e.message.toLowerCase().includes('forbidden')
-      ? ' You may not have access to this project.'
-      : '';
+    const hint = e.message.includes('401') ? ' — check that your token is correct and hasn\'t been revoked.'
+                : e.message.includes('403') ? ' — you may not have access to this project.'
+                : '';
     showErr('Connection failed: ' + e.message + hint);
   } finally { setLoad(null); }
 }
@@ -412,73 +643,102 @@ async function switchBoard() {
   finally { setLoad(null); }
 }
 
-function goSetup() {
-  PAT = '';
-  $('inp-pat').value = '';
-  $('inp-url').value = '';
-  show('screen-setup');
-}
+function goSetup() { PAT = ''; $('inp-pat').value=''; $('inp-url').value=''; show('screen-setup'); }
 
 /* ─── Build app ─── */
 function buildApp(proj, tasks) {
   $('proj-title').innerHTML = `<strong>${esc(proj.name)}</strong>`;
 
   const dated = tasks.filter(t => t.due_on).map(t => {
-    // Pick the first section name that isn't "Untitled section"
-    const sec = (t.memberships || [])
-      .map(m => m.section?.name)
-      .find(n => n && n !== 'Untitled section') || 'Other';
+    const sec = (t.memberships||[]).map(m=>m.section?.name).find(n=>n&&n!=='Untitled section') || 'Other';
+    const rag = getRag(t);
+    const domain = getDomain(t);
     return {
+      gid: t.gid,
       name: t.name || '(unnamed)',
       date: t.due_on,
       section: sec,
       type: t.resource_subtype === 'milestone' ? 'milestone' : 'task',
       done: !!t.completed,
+      rag, domain,
+      notes: t.notes || '',
+      followers: (t.followers||[]).map(f=>f.name),
+      permalink: t.permalink_url || '',
     };
   });
 
   allEvents = dated;
 
-  // Build sections, preserving order of first appearance
-  const order = [], map = {};
+  // Sections
+  const secOrder=[], secMap={};
   dated.forEach(e => {
-    if (!map[e.section]) { order.push(e.section); map[e.section] = []; }
-    map[e.section].push(e);
+    if (!secMap[e.section]) { secOrder.push(e.section); secMap[e.section]=[]; }
+    secMap[e.section].push(e);
   });
-  sections = order.map((name, i) => ({ name, events: map[name], color: COLORS[i % COLORS.length] }));
+  sections = secOrder.map((name,i) => ({ name, events: secMap[name], color: SEC_COLORS[i%SEC_COLORS.length] }));
 
-  activeFilters = new Set(['ALL']);
+  // Domains
+  const domainSet = new Set(dated.map(e=>e.domain).filter(Boolean));
+  allDomains = [...domainSet].sort();
+
+  activeSections = new Set(['ALL']);
+  activeDomains  = new Set(['ALL']);
   buildFilters();
   render();
 }
 
 /* ─── Filters ─── */
 function buildFilters() {
-  const bar = $('filterbar');
-  bar.innerHTML = '<span class="f-label">Filter</span>';
-  bar.appendChild(makeChip('All', '#888580', 'ALL', true));
-  sections.forEach(s => bar.appendChild(makeChip(s.name, s.color, s.name, false)));
+  // Section filter
+  const sb = $('filterbar-section');
+  sb.innerHTML = '<span class="f-label">Section</span>';
+  sb.appendChild(makeChip('All', '#888580', 'ALL', true, 'section'));
+  sections.forEach(s => {
+    const c = makeChip(s.name, s.color, s.name, false, 'section');
+    sb.appendChild(c);
+  });
+
+  // Domain filter
+  const db = $('filterbar-domain');
+  db.innerHTML = '<span class="f-label">Domain</span>';
+  db.appendChild(makeChip('All', '#888580', 'ALL', true, 'domain'));
+  const DOMAIN_COLORS = {
+    'Commercial Viability': '#6dd97a',
+    'Project Health':       '#60cece',
+    'Player Experience':    '#dd70c0',
+    'Product Quality':      '#e89f50',
+  };
+  allDomains.forEach(d => {
+    const color = DOMAIN_COLORS[d] || '#888580';
+    db.appendChild(makeChip(d, color, d, false, 'domain'));
+  });
 }
 
-function makeChip(label, color, key, active) {
+function makeChip(label, color, key, active, group) {
   const c = document.createElement('button');
-  c.className = 'chip' + (active ? ' on' : '');
+  c.className = 'chip' + (active?' on':'');
   c.dataset.key = key;
-  c.innerHTML = `<span class="chip-dot" style="background:${color}"></span>${esc(label)}`;
-  c.onclick = () => toggleFilter(key);
+  c.dataset.group = group;
+  const dot = document.createElement('span');
+  dot.className = 'chip-dot';
+  dot.style.background = color;
+  c.appendChild(dot);
+  c.appendChild(document.createTextNode(label));
+  c.onclick = () => toggleFilter(key, group);
   return c;
 }
 
-function toggleFilter(key) {
+function toggleFilter(key, group) {
+  const store = group === 'section' ? activeSections : activeDomains;
   if (key === 'ALL') {
-    activeFilters = new Set(['ALL']);
+    store.clear(); store.add('ALL');
   } else {
-    activeFilters.delete('ALL');
-    activeFilters.has(key) ? activeFilters.delete(key) : activeFilters.add(key);
-    if (!activeFilters.size) activeFilters.add('ALL');
+    store.delete('ALL');
+    store.has(key) ? store.delete(key) : store.add(key);
+    if (!store.size) store.add('ALL');
   }
-  document.querySelectorAll('.chip').forEach(c =>
-    c.classList.toggle('on', activeFilters.has(c.dataset.key))
+  document.querySelectorAll(`.chip[data-group="${group}"]`).forEach(c =>
+    c.classList.toggle('on', store.has(c.dataset.key))
   );
   render();
 }
@@ -495,19 +755,14 @@ function dateRange() {
   const ds = allEvents.map(e => new Date(e.date));
   if (!ds.length) return { start: TODAY, end: TODAY };
   let mn = new Date(Math.min(...ds)), mx = new Date(Math.max(...ds));
-  // Pad by one month on each side
-  mn = new Date(mn.getFullYear(), mn.getMonth() - 1, 1);
-  mx = new Date(mx.getFullYear(), mx.getMonth() + 2, 1);
+  mn = new Date(mn.getFullYear(), mn.getMonth()-1, 1);
+  mx = new Date(mx.getFullYear(), mx.getMonth()+2, 1);
   return { start: mn, end: mx };
 }
-
-function pct(d, start, end) {
-  return ((new Date(d) - start) / (end - start)) * 100;
-}
-
+function pct(d, start, end) { return ((new Date(d)-start)/(end-start))*100; }
 function getMonths(start, end) {
-  const ms = []; let d = new Date(start);
-  while (d < end) { ms.push(new Date(d)); d = new Date(d.getFullYear(), d.getMonth()+1, 1); }
+  const ms=[]; let d=new Date(start);
+  while(d<end){ ms.push(new Date(d)); d=new Date(d.getFullYear(),d.getMonth()+1,1); }
   return ms;
 }
 
@@ -521,12 +776,12 @@ function render() {
   // Month header
   const mhdr = $('tl-months');
   mhdr.innerHTML = '';
-  mhdr.style.minWidth = W + 'px';
+  mhdr.style.minWidth = W+'px';
   mths.forEach(m => {
     const el = document.createElement('div');
-    const isNow = m.getMonth()===TODAY.getMonth() && m.getFullYear()===TODAY.getFullYear();
-    el.className = 'm-lbl' + (isNow ? ' now' : '');
-    el.textContent = m.toLocaleDateString('en-US', { month:'short', year:'2-digit' });
+    const isNow = m.getMonth()===TODAY.getMonth()&&m.getFullYear()===TODAY.getFullYear();
+    el.className = 'm-lbl'+(isNow?' now':'');
+    el.textContent = m.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
     el.style.flex = '1';
     mhdr.appendChild(el);
   });
@@ -536,14 +791,17 @@ function render() {
   let anyVisible = false;
 
   sections.forEach(sec => {
-    if (!activeFilters.has('ALL') && !activeFilters.has(sec.name)) return;
+    if (!activeSections.has('ALL') && !activeSections.has(sec.name)) return;
+
     const evts = sec.events
       .filter(e => !(hideDone && e.done))
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .filter(e => activeDomains.has('ALL') || activeDomains.has(e.domain))
+      .sort((a,b) => a.date.localeCompare(b.date));
+
     if (!evts.length) return;
     anyVisible = true;
 
-    // Section sticky header
+    // Section header
     const sh = document.createElement('div');
     sh.className = 'sec-head';
     sh.innerHTML = `
@@ -553,47 +811,62 @@ function render() {
       <div class="sec-track" style="min-width:${W}px"></div>`;
     body.appendChild(sh);
 
-    // One row per event
     evts.forEach(evt => {
       const row = document.createElement('div');
       row.className = 't-row';
 
       const lbl = document.createElement('div');
-      lbl.className = 't-lbl' + (evt.type==='milestone'?' ms':'') + (evt.done?' done':'');
+      lbl.className = 't-lbl'+(evt.type==='milestone'?' ms':'')+(evt.done?' done':'');
       lbl.textContent = evt.name;
       lbl.title = evt.name;
 
       const trk = document.createElement('div');
       trk.className = 't-track';
-      trk.style.minWidth = W + 'px';
+      trk.style.minWidth = W+'px';
 
-      // Month grid lines
+      // Grid lines
       mths.forEach(m => {
         const gl = document.createElement('div');
         gl.className = 'g-line';
-        gl.style.left = pct(m, start, end) + '%';
+        gl.style.left = pct(m,start,end)+'%';
         trk.appendChild(gl);
       });
 
-      // Today marker
+      // Today line
       const tl = document.createElement('div');
       tl.className = 'today-ln';
-      tl.style.left = todayP + '%';
+      tl.style.left = todayP+'%';
       trk.appendChild(tl);
 
-      // Event dot
+      // Event marker
       const ev = document.createElement('div');
-      ev.className = 'ev' + (evt.done ? ' faded' : '');
-      ev.style.left = pct(evt.date, start, end) + '%';
+      ev.className = 'ev'+(evt.done?' faded':'');
+      ev.style.left = pct(evt.date,start,end)+'%';
 
-      const dot = document.createElement('div');
-      dot.className = evt.type === 'milestone' ? 'ev-ms' : 'ev-task';
-      dot.style.background = evt.done ? '#4a4845' : sec.color;
-      if (evt.type === 'milestone' && !evt.done) {
-        dot.style.boxShadow = `0 0 0 2.5px ${sec.color}2e`;
+      const shape = document.createElement('div');
+      shape.className = 'ev-shape';
+
+      const ragCls = evt.rag?.ring || 'rag-none';
+
+      if (evt.type === 'milestone') {
+        const outer = document.createElement('div');
+        outer.className = `ev-ms-outer ${ragCls}`;
+        const inner = document.createElement('div');
+        inner.className = 'ev-ms-inner';
+        inner.style.background = evt.done ? '#4a4845' : sec.color;
+        outer.appendChild(inner);
+        shape.appendChild(outer);
+      } else {
+        const outer = document.createElement('div');
+        outer.className = `ev-task-outer ${ragCls}`;
+        const inner = document.createElement('div');
+        inner.className = 'ev-task-inner';
+        inner.style.background = evt.done ? '#4a4845' : sec.color;
+        outer.appendChild(inner);
+        shape.appendChild(outer);
       }
-      ev.appendChild(dot);
 
+      ev.appendChild(shape);
       ev.addEventListener('mouseenter', e => showTT(e, evt, sec));
       ev.addEventListener('mousemove', moveTT);
       ev.addEventListener('mouseleave', hideTT);
@@ -606,7 +879,7 @@ function render() {
   });
 
   if (!anyVisible) {
-    body.innerHTML = '<div class="no-data">No dated tasks match the current filter.</div>';
+    body.innerHTML = '<div class="no-data">No dated tasks match the current filters.</div>';
   }
 
   $('z-val').textContent = ZLBLS[zoomIdx];
@@ -614,38 +887,141 @@ function render() {
 
 /* ─── Tooltip ─── */
 function showTT(e, evt, sec) {
+  // Name
   $('tt-name').textContent = evt.name;
-  const ts = $('tt-sec'); ts.textContent = sec.name; ts.style.color = sec.color;
-  $('tt-date').textContent = new Date(evt.date).toLocaleDateString('en-US', {
-    weekday:'short', month:'long', day:'numeric', year:'numeric'
-  });
-  $('tt-kind').textContent =
-    (evt.type==='milestone' ? '◆ Milestone' : '● Task') + (evt.done ? ' · Completed' : '');
+
+  // Badges row
+  const badges = $('tt-badges');
+  badges.innerHTML = '';
+
+  // Type badge
+  const typeBadge = document.createElement('span');
+  typeBadge.className = `tt-badge ${evt.type==='milestone'?'badge-milestone':'badge-task'}`;
+  typeBadge.textContent = evt.type === 'milestone' ? '◆ Milestone' : '● Task';
+  badges.appendChild(typeBadge);
+
+  // Domain badge
+  if (evt.domain) {
+    const db = document.createElement('span');
+    db.className = `tt-badge ${DOMAIN_CLASS[evt.domain]||'badge-task'}`;
+    db.textContent = evt.domain;
+    badges.appendChild(db);
+  }
+
+  // RAG badge
+  if (evt.rag) {
+    const rb = document.createElement('span');
+    rb.className = `tt-badge ${evt.rag.cls}`;
+    rb.textContent = evt.rag.label;
+    badges.appendChild(rb);
+  }
+
+  // Body rows
+  const body = $('tt-body');
+  body.innerHTML = '';
+
+  // Section
+  addTTRow(body, '§', 'Section', sec.name, sec.color, false);
+
+  // Date
+  const dateStr = new Date(evt.date).toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'});
+  const overdue = !evt.done && isOverdue(evt.date);
+  addTTRow(body, '📅', 'Due', dateStr, overdue ? 'var(--danger)' : null, false);
+
+  // Countdown
+  const countdown = daysFromToday(evt.date);
+  const countdownColor = overdue ? 'var(--danger)' : countdown==='Today'||countdown==='Tomorrow' ? 'var(--accent)' : null;
+  addTTRow(body, '', '', countdown, countdownColor, true);
+
+  // Notes
+  const notesEl = $('tt-notes');
+  if (evt.notes && evt.notes.trim()) {
+    $('tt-notes-text').textContent = evt.notes.trim();
+    notesEl.style.display = 'block';
+  } else {
+    notesEl.style.display = 'none';
+  }
+
+  // Followers
+  const follEl = $('tt-followers');
+  follEl.innerHTML = '';
+  if (evt.followers.length) {
+    evt.followers.forEach(name => {
+      const av = document.createElement('div');
+      av.className = 'tt-avatar';
+      av.title = name;
+      av.textContent = initials(name);
+      follEl.appendChild(av);
+    });
+    const label = document.createElement('span');
+    label.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:4px;';
+    label.textContent = evt.followers.length === 1 ? '1 follower' : `${evt.followers.length} followers`;
+    follEl.appendChild(label);
+  } else {
+    follEl.innerHTML = '<span class="tt-no-followers">No followers</span>';
+  }
+
+  // Open link
+  const link = $('tt-open-link');
+  if (evt.permalink) {
+    link.href = evt.permalink;
+    link.style.display = '';
+  } else {
+    link.style.display = 'none';
+  }
+
   $('tt').classList.add('show');
   moveTT(e);
 }
+
+function addTTRow(parent, icon, label, value, color, compact) {
+  const row = document.createElement('div');
+  row.className = 'tt-row';
+  if (compact) { row.style.marginTop = '-4px'; }
+  if (icon) {
+    const ic = document.createElement('span');
+    ic.className = 'tt-row-icon';
+    ic.textContent = icon;
+    row.appendChild(ic);
+  } else {
+    const spacer = document.createElement('span');
+    spacer.style.width = '14px';
+    spacer.style.flexShrink = '0';
+    row.appendChild(spacer);
+  }
+  if (label) {
+    const lb = document.createElement('span');
+    lb.className = 'tt-row-label';
+    lb.textContent = label;
+    row.appendChild(lb);
+  }
+  const vl = document.createElement('span');
+  vl.className = 'tt-row-val' + (color ? ' accent' : '');
+  if (color) vl.style.color = color;
+  vl.textContent = value;
+  row.appendChild(vl);
+  parent.appendChild(row);
+}
+
 function moveTT(e) {
   const tt = $('tt');
-  const flip = e.clientX + 280 > window.innerWidth;
-  tt.style.left = (flip ? e.clientX - 275 : e.clientX + 14) + 'px';
-  tt.style.top = Math.max(8, e.clientY - 10) + 'px';
+  const flip = e.clientX + 300 > window.innerWidth;
+  tt.style.left = (flip ? e.clientX - 295 : e.clientX + 14) + 'px';
+  tt.style.top = Math.max(8, Math.min(window.innerHeight - tt.offsetHeight - 8, e.clientY - 10)) + 'px';
 }
 function hideTT() { $('tt').classList.remove('show'); }
 
 /* ─── Zoom ─── */
-function zoom(d) {
-  zoomIdx = Math.max(0, Math.min(ZOOMS.length-1, zoomIdx+d));
-  render();
-}
+function zoom(d) { zoomIdx = Math.max(0,Math.min(ZOOMS.length-1,zoomIdx+d)); render(); }
 
-/* ─── Keyboard shortcuts ─── */
+/* ─── Keyboard ─── */
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
-  if (e.key==='+' || e.key==='=') zoom(1);
+  if (e.target.tagName==='INPUT') return;
+  if (e.key==='+'||e.key==='=') zoom(1);
   if (e.key==='-') zoom(-1);
 });
-$('inp-url').addEventListener('keydown', e => { if (e.key==='Enter') connect(); });
-$('inp-pat').addEventListener('keydown', e => { if (e.key==='Enter') $('inp-url').focus(); });
+$('inp-url').addEventListener('keydown', e => { if(e.key==='Enter') connect(); });
+$('inp-pat').addEventListener('keydown', e => { if(e.key==='Enter') $('inp-url').focus(); });
 </script>
 </body>
 </html>
