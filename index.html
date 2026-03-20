@@ -107,6 +107,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* Timeline */
 .tl-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+#budget-bar { border-bottom: 0.5px solid var(--border); flex-shrink: 0; background: var(--surface); }
+.bbar-inner { display: flex; align-items: center; gap: 0; padding: 0; overflow-x: auto; scrollbar-width: none; }
+.bbar-inner::-webkit-scrollbar { display: none; }
+.bbar-card { display: flex; align-items: center; gap: 14px; padding: 10px 20px; border-right: 0.5px solid var(--border); flex: 1; min-width: 180px; }
+.bbar-card:last-child { border-right: none; }
+.bbar-donut { flex-shrink: 0; }
+.bbar-info { display: flex; flex-direction: column; gap: 1px; }
+.bbar-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+.bbar-spent { font-size: 13px; font-weight: 400; color: var(--text); letter-spacing: -0.01em; }
+.bbar-budget { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.bbar-pct { font-family: var(--mono); font-size: 9px; }
 #tl-inner { display: flex; flex-direction: column; } /* width set by JS */
 .tl-scroll { flex: 1; overflow: auto; position: relative; }
 .tl-head { display: flex; position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 0.5px solid var(--border2); }
@@ -325,6 +336,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="filterbar" id="filterbar-section"><span class="f-label">Section</span></div>
     <div class="filterbar" id="filterbar-domain"><span class="f-label">Domain</span></div>
   </div>
+
+  <!-- Budget strip -->
+  <div id="budget-bar" style="display:none"><div class="bbar-inner" id="bbar-inner"></div></div>
 
   <div class="tl-area">
     <div class="tl-scroll">
@@ -570,6 +584,98 @@ async function switchBoard(){
 }
 function goSetup(){PAT='';currentPid='';$('inp-pat').value='';$('inp-url').value='';show('screen-setup');}
 
+/* ─── Budget bar ─── */
+const CF_BUDGET_TYPE   = '1211766305628326';
+const CF_BUDGET_TOTAL  = '1211766344234259';
+const CF_BUDGET_SPEND  = '1211766348602670';
+
+const BUDGET_TYPE_GID = {
+  '1211766305628329': 'Development',
+  '1211766305628330': 'Service',
+  '1211766305628331': 'Marketing',
+};
+
+function extractBudgets(tasks){
+  /* Find tasks that have a budget type set — these are the Budget Tracker rows */
+  const rows = tasks.filter(t=>{
+    const f=getCF(t,CF_BUDGET_TYPE);
+    return f&&f.enum_value;
+  });
+
+  const map={Development:{budget:0,spend:0},Service:{budget:0,spend:0},Marketing:{budget:0,spend:0}};
+  rows.forEach(t=>{
+    const typeField=getCF(t,CF_BUDGET_TYPE);
+    const type=BUDGET_TYPE_GID[typeField.enum_value.gid];
+    if(!type)return;
+    const b=getCF(t,CF_BUDGET_TOTAL)?.number_value||0;
+    const s=getCF(t,CF_BUDGET_SPEND)?.number_value||0;
+    map[type].budget+=b;
+    map[type].spend+=s;
+  });
+
+  const total={
+    budget:map.Development.budget+map.Service.budget+map.Marketing.budget,
+    spend:map.Development.spend+map.Service.spend+map.Marketing.spend,
+  };
+  return{total,dev:map.Development,svc:map.Service,mkt:map.Marketing};
+}
+
+function fmtK(n){
+  if(n>=1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'')+'M';
+  if(n>=1000)    return (n/1000).toFixed(0)+'k';
+  return n.toString();
+}
+
+function donutSvg(pct, color, size=52, stroke=6){
+  const r=size/2-stroke/2;
+  const circ=2*Math.PI*r;
+  const used=Math.min(pct/100,1)*circ;
+  const c=size/2;
+  const over=pct>100;
+  const fillColor=over?'var(--rag-r)':color;
+  const trackColor='rgba(255,255,255,0.06)';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="bbar-donut">
+    <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${trackColor}" stroke-width="${stroke}"/>
+    <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${fillColor}" stroke-width="${stroke}"
+      stroke-dasharray="${used} ${circ}" stroke-dashoffset="${circ/4}"
+      stroke-linecap="round" transform="rotate(0 ${c} ${c})"/>
+    <text x="${c}" y="${c}" text-anchor="middle" dominant-baseline="central"
+      fill="${over?'var(--rag-r)':pct>=80?'var(--rag-a)':fillColor}"
+      font-family="var(--mono)" font-size="${pct>=100?9:10}" font-weight="500">
+      ${pct>=100?pct+'%':Math.round(pct)+'%'}
+    </text>
+  </svg>`;
+}
+
+function buildBudgetBar(tasks){
+  const bar=$('budget-bar');
+  const inner=$('bbar-inner');
+  const bdata=extractBudgets(tasks);
+
+  if(!bdata.total.budget){bar.style.display='none';return;}
+  bar.style.display='block';
+
+  const cards=[
+    {label:'Total',      color:'var(--accent)',  data:bdata.total},
+    {label:'Development',color:'#50c8f0',        data:bdata.dev},
+    {label:'Marketing',  color:'#c850f0',        data:bdata.mkt},
+    {label:'Service',    color:'#f09650',        data:bdata.svc},
+  ];
+
+  inner.innerHTML=cards.map(c=>{
+    const pct=c.data.budget>0?Math.round(c.data.spend/c.data.budget*100):0;
+    const pctColor=pct>100?'var(--rag-r)':pct>=80?'var(--rag-a)':'var(--text2)';
+    return `<div class="bbar-card">
+      ${donutSvg(pct,c.color)}
+      <div class="bbar-info">
+        <span class="bbar-label">${c.label}</span>
+        <span class="bbar-spent">${fmtK(c.data.spend)}</span>
+        <span class="bbar-budget">of ${fmtK(c.data.budget)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 /* ─── Build app ─── */
 function buildApp(proj,tasks){
   $('proj-title').innerHTML=`<strong>${esc(proj.name)}</strong>`;
@@ -605,7 +711,7 @@ function buildApp(proj,tasks){
   sections=ordered;
   allDomains=[...new Set(parsed.map(e=>e.domain).filter(Boolean))].sort();
   activeSections=new Set(['ALL']);activeDomains=new Set(['ALL']);
-  buildFilters();render();
+  buildBudgetBar(tasks);buildFilters();render();
 }
 
 /* ─── Filters ─── */
