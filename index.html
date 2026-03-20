@@ -224,15 +224,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   max-height: 220px; overflow-y: auto;
 }
 /* Styles for rendered Asana html_notes content */
-.tt-notes-content p  { margin-bottom: 6px; }
+.tt-notes-content p { margin: 0 0 10px; line-height: 1.6; }
 .tt-notes-content p:last-child { margin-bottom: 0; }
-.tt-notes-content ul { padding-left: 16px; margin: 4px 0 6px; list-style: disc; }
-.tt-notes-content ul ul { margin: 2px 0; list-style: circle; }
-.tt-notes-content li { margin-bottom: 2px; }
+/* <strong> or <b> as the first child of a <p> acts as a section label */
+.tt-notes-content p > strong:first-child,
+.tt-notes-content p > b:first-child { display: block; color: var(--text); font-weight: 500; margin-bottom: 2px; }
 .tt-notes-content b, .tt-notes-content strong { color: var(--text); font-weight: 500; }
 .tt-notes-content em, .tt-notes-content i { font-style: italic; }
-.tt-notes-content br { display: block; content: ''; margin-top: 4px; }
-/* Asana wraps content in <body> — we strip that in JS but keep inner whitespace */
+.tt-notes-content ul { padding-left: 16px; margin: 4px 0 8px; list-style: disc; }
+.tt-notes-content ul ul { margin: 2px 0; list-style: circle; }
+.tt-notes-content li { margin-bottom: 3px; line-height: 1.55; }
+.tt-notes-content br { display: block; content: ''; margin-top: 2px; }
 
 .tt-footer { padding: 8px 14px; border-top: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .tt-followers { display: flex; align-items: center; gap: 4px; }
@@ -431,29 +433,53 @@ function truncLabel(name,n=20){return name.length>n?name.slice(0,n-1)+'…':name
    Converts Asana's <body>...</body> wrapper to just its inner content.           */
 function sanitiseHtmlNotes(raw){
   if(!raw||!raw.trim())return'';
-  // Strip the outer <body> wrapper Asana adds
+
+  /* Step 1 — strip outer <body> wrapper Asana always adds */
   let html=raw.replace(/^<body>/i,'').replace(/<\/body>$/i,'').trim();
-  // Allowed tags — everything else is stripped but text content is kept
-  const allowed=['p','br','ul','ol','li','b','strong','em','i','s','del','u','h1','h2','h3','h4','span'];
-  // Parse into a DocumentFragment in a sandboxed div
-  const wrap=document.createElement('div');
-  wrap.innerHTML=html;
-  // Walk and remove disallowed elements (keeping their text)
+
+  /* Step 2 — Asana uses raw \n characters rather than block tags to
+     separate paragraphs. We need to convert them BEFORE parsing so
+     the browser doesn't collapse them as whitespace.
+
+     Strategy:
+       \n\n  (blank line between paragraphs) → paragraph break marker
+       \n    (single newline within a paragraph) → <br>
+     Then we wrap each paragraph-break-separated chunk in <p>…</p>.
+
+     We do this on the raw string so we can see the newlines before
+     the HTML parser swallows them.                                      */
+
+  /* Protect existing block-level tags: don't inject <p> inside <ul>/<ol> */
+  /* Split on double-newline to get paragraph chunks */
+  const chunks = html.split(/\n{2,}/);
+
+  const processed = chunks.map(chunk => {
+    /* Within each chunk convert single \n → <br> */
+    const inner = chunk.replace(/\n/g, '<br>').trim();
+    if(!inner) return '';
+    /* If the chunk is already a block element (ul, ol, h1-h4) don't wrap in <p> */
+    if(/^<(ul|ol|h[1-6]|li)/i.test(inner)) return inner;
+    return `<p>${inner}</p>`;
+  }).filter(Boolean);
+
+  html = processed.join('');
+
+  /* Step 3 — parse and sanitise tags */
+  const allowed = new Set(['p','br','ul','ol','li','b','strong','em','i','s','del','u','h1','h2','h3','h4','span']);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+
   function clean(node){
-    const children=[...node.childNodes];
-    children.forEach(child=>{
+    [...node.childNodes].forEach(child=>{
       if(child.nodeType===Node.ELEMENT_NODE){
         const tag=child.tagName.toLowerCase();
-        if(!allowed.includes(tag)){
-          // Replace with text content
+        if(!allowed.has(tag)){
           const frag=document.createDocumentFragment();
           [...child.childNodes].forEach(n=>frag.appendChild(n.cloneNode(true)));
           child.replaceWith(frag);
         }else{
-          // Remove all attributes except safe ones
-          [...child.attributes].forEach(a=>{
-            if(!['href'].includes(a.name))child.removeAttribute(a.name);
-          });
+          /* Strip all attributes */
+          [...child.attributes].forEach(a=>child.removeAttribute(a.name));
           clean(child);
         }
       }
