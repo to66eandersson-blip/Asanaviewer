@@ -25,13 +25,13 @@
   --accent-border: rgba(184,240,80,0.22);
   --danger: #f05050;
   --today-color: #f05050;
-  /* Vivid RAG colours */
   --rag-g: #22dd6e;
   --rag-a: #ffaa00;
   --rag-r: #ff3d3d;
   --mono: 'DM Mono', monospace;
   --sans: 'DM Sans', sans-serif;
   --r: 6px; --r-lg: 10px; --r-xl: 14px;
+  --row-h: 28px; /* track height — labels use this to centre */
 }
 
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; overflow: hidden; }
@@ -56,7 +56,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .field input::placeholder { color: var(--text3); }
 .field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
 .field-hint a { color: var(--text2); text-decoration: none; border-bottom: 0.5px solid var(--border3); }
-.field-hint a:hover { color: var(--text); }
 .btn-main { width: 100%; background: var(--accent); color: #0d0e10; border: none; border-radius: var(--r); padding: 0.75rem; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 0.25rem; transition: opacity 0.15s; }
 .btn-main:hover { opacity: 0.87; }
 #setup-error { font-family: var(--mono); font-size: 11px; color: var(--danger); margin-top: 0.75rem; display: none; line-height: 1.5; }
@@ -122,8 +121,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 .t-row { display: flex; align-items: center; border-bottom: 0.5px solid var(--border); transition: background 0.1s; }
 .t-row:hover { background: var(--surface); }
-.t-row.dated { min-height: 34px; } /* taller to accommodate inline labels */
-.t-row.undated { min-height: 26px; }
+.t-row.dated { height: var(--row-h); }
+.t-row.undated { height: 24px; }
 
 .t-lbl { width: 210px; flex-shrink: 0; padding: 0 1rem; font-size: 11px; color: var(--text2); border-right: 0.5px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
 .t-lbl.ms { color: var(--text); }
@@ -132,18 +131,18 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .t-lbl.monthly.ms { color: var(--text2); }
 .t-lbl.product-goal { padding-left: 1.75rem; color: var(--text2); font-size: 10.5px; font-style: italic; }
 
-/* Undated placeholder track */
-.t-track-undated { flex: 1; height: 26px; display: flex; align-items: center; padding-left: 12px; }
+.t-track-undated { flex: 1; height: 24px; display: flex; align-items: center; padding-left: 12px; }
 .undated-pill { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.06em; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 20px; padding: 2px 8px; }
 
-.t-track { flex: 1; height: 34px; position: relative; }
+/* Track — overflow visible so labels can extend right of viewport */
+.t-track { flex: 1; height: var(--row-h); position: relative; overflow: visible; }
 .g-line { position: absolute; top: 0; bottom: 0; width: 0.5px; background: var(--border); pointer-events: none; }
 .today-ln { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--today-color); opacity: 0.6; z-index: 5; pointer-events: none; }
 
-/* Event markers */
-.ev { position: absolute; top: 50%; transform: translate(-50%,-50%); cursor: pointer; z-index: 6; }
+/* Event wrapper — overflow visible */
+.ev { position: absolute; top: 50%; transform: translateY(-50%); cursor: pointer; z-index: 6; display: flex; align-items: center; }
 .ev:hover .ev-shape { transform: scale(1.35); }
-.ev-shape { transition: transform 0.12s; }
+.ev-shape { transition: transform 0.12s; flex-shrink: 0; }
 .ev-ms-outer { width: 12px; height: 12px; border-radius: 2px; transform: rotate(45deg); position: relative; display: flex; align-items: center; justify-content: center; }
 .ev-ms-inner { width: 7px; height: 7px; border-radius: 1px; position: absolute; }
 .ev-task-outer { width: 11px; height: 11px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; }
@@ -151,44 +150,40 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .ev.faded .ev-ms-outer, .ev.faded .ev-task-outer { opacity: 0.28; }
 .ev.pinned .ev-ms-outer, .ev.pinned .ev-task-outer { outline: 2px solid white; outline-offset: 2px; }
 
-/* RAG rings — vivid */
+/* RAG rings */
 .rag-green { background: rgba(34,221,110,0.18); box-shadow: 0 0 0 2.5px var(--rag-g), 0 0 8px rgba(34,221,110,0.35); }
 .rag-amber { background: rgba(255,170,0,0.18);  box-shadow: 0 0 0 2.5px var(--rag-a), 0 0 8px rgba(255,170,0,0.35); }
 .rag-red   { background: rgba(255,61,61,0.18);  box-shadow: 0 0 0 2.5px var(--rag-r), 0 0 8px rgba(255,61,61,0.35); }
 .rag-none  { background: transparent; }
-
-/* Monthly: outer always grey; RAG overrides */
 .monthly-outer { background: rgba(90,87,84,0.15) !important; box-shadow: none !important; }
 .monthly-outer.rag-green { background: rgba(34,221,110,0.15) !important; box-shadow: 0 0 0 2.5px var(--rag-g), 0 0 8px rgba(34,221,110,0.3) !important; }
 .monthly-outer.rag-amber { background: rgba(255,170,0,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-a), 0 0 8px rgba(255,170,0,0.3)  !important; }
 .monthly-outer.rag-red   { background: rgba(255,61,61,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-r), 0 0 8px rgba(255,61,61,0.3)  !important; }
 
-/* ── INLINE LABELS ── */
+/* ── INLINE LABEL — right of dot ── */
 .ev-label {
-  position: absolute;
-  white-space: nowrap;
+  /* sits immediately to the right of the dot shape */
+  margin-left: 6px;
   font-family: var(--mono);
   font-size: 8.5px;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
   pointer-events: none;
-  z-index: 7;
-  max-width: 120px;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* vertically center on the track, then offset above or below */
-  transform: translateX(-50%);
+  line-height: 1;
   opacity: 0;
   transition: opacity 0.15s;
+  /* vertically centred by the flex row on .ev */
 }
-.ev-label.above { bottom: calc(50% + 9px); text-align: center; }
-.ev-label.below { top:    calc(50% + 9px); text-align: center; }
 .show-labels .ev-label { opacity: 1; }
 
 /* ── TOOLTIP ── */
 #tt {
   position: fixed; background: var(--surface2);
   border: 0.5px solid var(--border2); border-radius: var(--r-lg);
-  padding: 0; font-size: 12px; width: 290px;
+  padding: 0; font-size: 12px; width: 300px;
   z-index: 1000; pointer-events: none; opacity: 0;
   transition: opacity 0.12s; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
   overflow: hidden;
@@ -200,7 +195,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tt-pin-close { position: absolute; top: 10px; right: 10px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface3); border: 0.5px solid var(--border2); color: var(--text3); font-size: 10px; display: none; align-items: center; justify-content: center; cursor: pointer; line-height: 1; }
 #tt.pinned .tt-pin-close { display: flex; }
 .tt-pin-close:hover { color: var(--text); background: var(--surface); }
-
 .tt-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.35; margin-bottom: 6px; padding-right: 22px; }
 .tt-badges { display: flex; flex-wrap: wrap; gap: 4px; }
 .tt-badge { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; border: 0.5px solid transparent; }
@@ -220,8 +214,26 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tt-row-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: var(--text3); text-transform: uppercase; min-width: 52px; flex-shrink: 0; }
 .tt-row-val { font-size: 11px; color: var(--text2); line-height: 1.4; }
 .tt-row-val.hi { color: var(--text); }
+
+/* ── Notes / html_notes rendering ── */
 .tt-notes { padding: 0 14px 10px; }
-.tt-notes-text { font-size: 11px; color: var(--text2); line-height: 1.55; background: var(--surface3); border-radius: var(--r); padding: 8px 10px; border: 0.5px solid var(--border); font-style: italic; }
+.tt-notes-content {
+  font-size: 11px; color: var(--text2); line-height: 1.6;
+  background: var(--surface3); border-radius: var(--r);
+  padding: 10px 12px; border: 0.5px solid var(--border);
+  max-height: 220px; overflow-y: auto;
+}
+/* Styles for rendered Asana html_notes content */
+.tt-notes-content p  { margin-bottom: 6px; }
+.tt-notes-content p:last-child { margin-bottom: 0; }
+.tt-notes-content ul { padding-left: 16px; margin: 4px 0 6px; list-style: disc; }
+.tt-notes-content ul ul { margin: 2px 0; list-style: circle; }
+.tt-notes-content li { margin-bottom: 2px; }
+.tt-notes-content b, .tt-notes-content strong { color: var(--text); font-weight: 500; }
+.tt-notes-content em, .tt-notes-content i { font-style: italic; }
+.tt-notes-content br { display: block; content: ''; margin-top: 4px; }
+/* Asana wraps content in <body> — we strip that in JS but keep inner whitespace */
+
 .tt-footer { padding: 8px 14px; border-top: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .tt-followers { display: flex; align-items: center; gap: 4px; }
 .tt-avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--surface3); border: 0.5px solid var(--border2); font-family: var(--mono); font-size: 8px; color: var(--text2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -242,8 +254,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .leg-note { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--text3); }
 
 .no-data { padding: 3rem 1.25rem; font-size: 12px; color: var(--text3); font-family: var(--mono); }
-
-/* Loading */
 #loading { display: none; position: fixed; inset: 0; background: rgba(13,14,16,0.82); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
 #loading.show { display: flex; }
 .spinner { width: 22px; height: 22px; border: 1.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
@@ -314,7 +324,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   </div>
 
   <div class="tl-area">
-    <div class="tl-scroll" id="tl-scroll">
+    <div class="tl-scroll">
       <div class="tl-head">
         <div class="tl-col-head">Task / Milestone</div>
         <div class="tl-months" id="tl-months"></div>
@@ -342,7 +352,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="tt-pin-close" onclick="unpinTT()" title="Close">✕</div>
   </div>
   <div class="tt-body" id="tt-body"></div>
-  <div class="tt-notes" id="tt-notes" style="display:none"><div class="tt-notes-text" id="tt-notes-text"></div></div>
+  <div class="tt-notes" id="tt-notes" style="display:none">
+    <div class="tt-notes-content" id="tt-notes-content"></div>
+  </div>
   <div class="tt-footer">
     <div class="tt-followers" id="tt-followers"></div>
     <a class="tt-open-link" id="tt-open-link" target="_blank">Open in Asana ↗</a>
@@ -367,8 +379,6 @@ const SECTION_ORDER = [
   { match: '1st party',      label: '1st Party',      color: '#50f0a0' },
 ];
 const SKIP_SECTIONS = new Set(['budget tracker','goal excersize results','untitled section','other']);
-
-const MONTHLY_GREY = '#6b6966';
 const MONTHLY_GREY_INNER = '#4a4845';
 
 const CF_RAG       = '1211609680601811';
@@ -413,6 +423,45 @@ function initials(name){return(name||'?').split(' ').filter(Boolean).slice(0,2).
 function daysFromToday(ds){const d=new Date(ds);d.setHours(0,0,0,0);const diff=Math.round((d-TODAY)/86400000);if(diff===0)return'Today';if(diff===1)return'Tomorrow';if(diff===-1)return'Yesterday';return diff>0?`in ${diff} days`:`${Math.abs(diff)} days overdue`;}
 function isOverdue(ds){return new Date(ds)<TODAY;}
 function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`${r},${g},${b}`;}
+function ragInnerColor(ring){return ring==='rag-green'?'#16a850':ring==='rag-amber'?'#cc8800':ring==='rag-red'?'#cc2020':MONTHLY_GREY_INNER;}
+function truncLabel(name,n=20){return name.length>n?name.slice(0,n-1)+'…':name;}
+
+/* ─── html_notes sanitiser ───
+   Allows only a safe subset of tags. Strips <script>, <style>, <body>, <html>, etc.
+   Converts Asana's <body>...</body> wrapper to just its inner content.           */
+function sanitiseHtmlNotes(raw){
+  if(!raw||!raw.trim())return'';
+  // Strip the outer <body> wrapper Asana adds
+  let html=raw.replace(/^<body>/i,'').replace(/<\/body>$/i,'').trim();
+  // Allowed tags — everything else is stripped but text content is kept
+  const allowed=['p','br','ul','ol','li','b','strong','em','i','s','del','u','h1','h2','h3','h4','span'];
+  // Parse into a DocumentFragment in a sandboxed div
+  const wrap=document.createElement('div');
+  wrap.innerHTML=html;
+  // Walk and remove disallowed elements (keeping their text)
+  function clean(node){
+    const children=[...node.childNodes];
+    children.forEach(child=>{
+      if(child.nodeType===Node.ELEMENT_NODE){
+        const tag=child.tagName.toLowerCase();
+        if(!allowed.includes(tag)){
+          // Replace with text content
+          const frag=document.createDocumentFragment();
+          [...child.childNodes].forEach(n=>frag.appendChild(n.cloneNode(true)));
+          child.replaceWith(frag);
+        }else{
+          // Remove all attributes except safe ones
+          [...child.attributes].forEach(a=>{
+            if(!['href'].includes(a.name))child.removeAttribute(a.name);
+          });
+          clean(child);
+        }
+      }
+    });
+  }
+  clean(wrap);
+  return wrap.innerHTML;
+}
 
 /* ─── Custom fields ─── */
 function getCF(task,gid){return(task.custom_fields||[]).find(f=>f.gid===gid)||null;}
@@ -423,11 +472,11 @@ function getGoalType(task){const f=getCF(task,CF_GOAL_TYPE);return f?.enum_value
 /* ─── Section resolution ─── */
 function resolveSection(task){
   const gt=getGoalType(task);
-  if(gt==='Monthly Goal') return 'Monthly goals';
-  if(gt==='Product Goal') return 'PRODUCT GOAL (Launch+12M)';
+  if(gt==='Monthly Goal')return'Monthly goals';
+  if(gt==='Product Goal')return'PRODUCT GOAL (Launch+12M)';
   const mems=task.memberships||[];
   const own=mems.find(m=>m.project?.gid===currentPid);
-  if(own?.section?.name&&own.section.name!=='Untitled section') return own.section.name;
+  if(own?.section?.name&&own.section.name!=='Untitled section')return own.section.name;
   const fb=mems.map(m=>m.section?.name).find(n=>n&&n!=='Untitled section');
   return fb||'Other';
 }
@@ -439,7 +488,13 @@ async function api(path){
   return r.json();
 }
 async function fetchAllTasks(pid){
-  const fields=['name','due_on','start_on','completed','resource_subtype','memberships.section.name','memberships.project.gid','followers','followers.name','custom_fields','notes','permalink_url'].join(',');
+  /* Request html_notes in addition to all other fields */
+  const fields=[
+    'name','due_on','start_on','completed','resource_subtype',
+    'memberships.section.name','memberships.project.gid',
+    'followers','followers.name',
+    'custom_fields','notes','html_notes','permalink_url'
+  ].join(',');
   let tasks=[],offset=null;
   do{
     const qs=new URLSearchParams({opt_fields:fields,limit:'100'});
@@ -489,72 +544,54 @@ function goSetup(){PAT='';currentPid='';$('inp-pat').value='';$('inp-url').value
 /* ─── Build app ─── */
 function buildApp(proj,tasks){
   $('proj-title').innerHTML=`<strong>${esc(proj.name)}</strong>`;
-
-  /* Include ALL tasks (including undated) */
   const parsed=tasks.filter(t=>t.name).map(t=>{
-    const secName=resolveSection(t);
     const gt=getGoalType(t);
     return{
-      gid:t.gid, name:t.name||'(unnamed)', date:t.due_on||null,
-      sectionName:secName,
+      gid:t.gid,name:t.name||'(unnamed)',date:t.due_on||null,
+      sectionName:resolveSection(t),
       type:t.resource_subtype==='milestone'?'milestone':'task',
       done:!!t.completed,
-      rag:getRag(t), domain:getDomain(t), goalType:gt,
+      rag:getRag(t),domain:getDomain(t),goalType:gt,
       isMonthly:gt==='Monthly Goal',
       isProductGoal:gt==='Product Goal',
+      htmlNotes:t.html_notes||'',
       notes:t.notes||'',
       followers:(t.followers||[]).map(f=>f.name),
       permalink:t.permalink_url||'',
     };
   });
-
   allEvents=parsed;
 
   const secMap={};
-  parsed.forEach(e=>{
-    if(!secMap[e.sectionName])secMap[e.sectionName]=[];
-    secMap[e.sectionName].push(e);
-  });
-
+  parsed.forEach(e=>{if(!secMap[e.sectionName])secMap[e.sectionName]=[];secMap[e.sectionName].push(e);});
   const ordered=[];
   SECTION_ORDER.forEach(def=>{
     const key=Object.keys(secMap).find(k=>k.toLowerCase().startsWith(def.match)||k.toLowerCase()===def.match);
-    if(key&&secMap[key].length){
-      ordered.push({name:key,label:def.label,color:def.color,isMonthly:!!def.isMonthly,events:secMap[key]});
-      delete secMap[key];
-    }
+    if(key&&secMap[key].length){ordered.push({name:key,label:def.label,color:def.color,isMonthly:!!def.isMonthly,events:secMap[key]});delete secMap[key];}
   });
   Object.keys(secMap).forEach(name=>{
-    if(!SKIP_SECTIONS.has(name.toLowerCase())&&secMap[name].length)
-      ordered.push({name,label:name,color:'#888580',isMonthly:false,events:secMap[name]});
+    if(!SKIP_SECTIONS.has(name.toLowerCase())&&secMap[name].length)ordered.push({name,label:name,color:'#888580',isMonthly:false,events:secMap[name]});
   });
 
   sections=ordered;
   allDomains=[...new Set(parsed.map(e=>e.domain).filter(Boolean))].sort();
-  activeSections=new Set(['ALL']);
-  activeDomains=new Set(['ALL']);
-  buildFilters();
-  render();
+  activeSections=new Set(['ALL']);activeDomains=new Set(['ALL']);
+  buildFilters();render();
 }
 
 /* ─── Filters ─── */
 function buildFilters(){
-  const sb=$('filterbar-section');
-  sb.innerHTML='<span class="f-label">Section</span>';
+  const sb=$('filterbar-section');sb.innerHTML='<span class="f-label">Section</span>';
   sb.appendChild(makeChip('All','#888580','ALL',true,'section'));
   sections.forEach(s=>sb.appendChild(makeChip(s.label,s.color,s.name,false,'section')));
-  const db=$('filterbar-domain');
-  db.innerHTML='<span class="f-label">Domain</span>';
+  const db=$('filterbar-domain');db.innerHTML='<span class="f-label">Domain</span>';
   db.appendChild(makeChip('All','#888580','ALL',true,'domain'));
   allDomains.forEach(d=>db.appendChild(makeChip(d,DOMAIN_COLORS[d]||'#888580',d,false,'domain')));
 }
 function makeChip(label,color,key,active,group){
-  const c=document.createElement('button');
-  c.className='chip'+(active?' on':'');
-  c.dataset.key=key;c.dataset.group=group;
+  const c=document.createElement('button');c.className='chip'+(active?' on':'');c.dataset.key=key;c.dataset.group=group;
   const dot=document.createElement('span');dot.className='chip-dot';dot.style.background=color;
-  c.appendChild(dot);c.appendChild(document.createTextNode(label));
-  c.onclick=()=>toggleFilter(key,group);return c;
+  c.appendChild(dot);c.appendChild(document.createTextNode(label));c.onclick=()=>toggleFilter(key,group);return c;
 }
 function toggleFilter(key,group){
   const store=group==='section'?activeSections:activeDomains;
@@ -569,8 +606,7 @@ function toggleLabels(){
   $('labels-btn').classList.toggle('on',!showLabels);
   $('labels-btn').textContent=showLabels?'Labels off':'Labels on';
   const body=$('tl-body');
-  if(showLabels)body.classList.add('show-labels');
-  else body.classList.remove('show-labels');
+  showLabels?body.classList.add('show-labels'):body.classList.remove('show-labels');
 }
 
 /* ─── Date helpers ─── */
@@ -578,8 +614,7 @@ function dateRange(){
   const ds=allEvents.filter(e=>e.date).map(e=>new Date(e.date));
   if(!ds.length)return{start:TODAY,end:TODAY};
   let mn=new Date(Math.min(...ds)),mx=new Date(Math.max(...ds));
-  mn=new Date(mn.getFullYear(),mn.getMonth()-1,1);
-  mx=new Date(mx.getFullYear(),mx.getMonth()+2,1);
+  mn=new Date(mn.getFullYear(),mn.getMonth()-1,1);mx=new Date(mx.getFullYear(),mx.getMonth()+2,1);
   return{start:mn,end:mx};
 }
 function pct(d,start,end){return((new Date(d)-start)/(end-start))*100;}
@@ -593,8 +628,7 @@ function render(){
   const todayP=pct(TODAY,start,end);
   const mths=getMonths(start,end);
 
-  const mhdr=$('tl-months');
-  mhdr.innerHTML='';mhdr.style.minWidth=W+'px';
+  const mhdr=$('tl-months');mhdr.innerHTML='';mhdr.style.minWidth=W+'px';
   mths.forEach(m=>{
     const el=document.createElement('div');
     const isNow=m.getMonth()===TODAY.getMonth()&&m.getFullYear()===TODAY.getFullYear();
@@ -603,82 +637,60 @@ function render(){
     el.style.flex='1';mhdr.appendChild(el);
   });
 
-  const body=$('tl-body');
-  body.innerHTML='';
+  const body=$('tl-body');body.innerHTML='';
   if(showLabels)body.classList.add('show-labels');
-
   let anyVisible=false;
 
   sections.forEach(sec=>{
     if(!activeSections.has('ALL')&&!activeSections.has(sec.name))return;
-
     const evts=sec.events
       .filter(e=>!(hideDone&&e.done))
       .filter(e=>activeDomains.has('ALL')||activeDomains.has(e.domain));
-
     if(!evts.length)return;
     anyVisible=true;
 
-    /* Sort: undated first within section (so Product Goals float to top), then by date */
     const undated=evts.filter(e=>!e.date);
     const dated=evts.filter(e=>e.date).sort((a,b)=>a.date.localeCompare(b.date));
 
-    /* Section header */
-    const sh=document.createElement('div');
-    sh.className='sec-head';
+    // Section header
+    const sh=document.createElement('div');sh.className='sec-head';
     sh.innerHTML=`<div class="sec-name" style="color:${sec.color}">${esc(sec.label)}<span class="sec-count">${evts.length}</span></div><div class="sec-track" style="min-width:${W}px"></div>`;
     body.appendChild(sh);
 
-    /* Undated rows first */
+    // Undated rows
     undated.forEach(evt=>{
-      const row=document.createElement('div');
-      row.className='t-row undated';
+      const row=document.createElement('div');row.className='t-row undated';
       const lbl=document.createElement('div');
-      const cls=['t-lbl'];
-      if(evt.type==='milestone')cls.push('ms');
-      if(evt.done)cls.push('done');
-      if(evt.isMonthly)cls.push('monthly');
-      if(evt.isProductGoal)cls.push('product-goal');
-      lbl.className=cls.join(' ');
+      lbl.className=['t-lbl',evt.type==='milestone'?'ms':'',evt.done?'done':'',evt.isMonthly?'monthly':'',evt.isProductGoal?'product-goal':''].filter(Boolean).join(' ');
       lbl.textContent=evt.name;lbl.title=evt.name;
-      const trk=document.createElement('div');
-      trk.className='t-track-undated';
-      trk.style.minWidth=W+'px';
-      const pill=document.createElement('span');
-      pill.className='undated-pill';
-      pill.textContent='no date set';
-      trk.appendChild(pill);
-      row.appendChild(lbl);row.appendChild(trk);
-      body.appendChild(row);
+      const trk=document.createElement('div');trk.className='t-track-undated';trk.style.minWidth=W+'px';
+      const pill=document.createElement('span');pill.className='undated-pill';pill.textContent='no date set';
+      trk.appendChild(pill);row.appendChild(lbl);row.appendChild(trk);body.appendChild(row);
     });
 
-    /* Dated rows */
-    dated.forEach((evt,idx)=>{
-      const row=document.createElement('div');
-      row.className='t-row dated';
+    // Dated rows
+    dated.forEach(evt=>{
+      const row=document.createElement('div');row.className='t-row dated';
       const lbl=document.createElement('div');
-      const cls=['t-lbl'];
-      if(evt.type==='milestone')cls.push('ms');
-      if(evt.done)cls.push('done');
-      if(evt.isMonthly)cls.push('monthly');
-      lbl.className=cls.join(' ');
+      lbl.className=['t-lbl',evt.type==='milestone'?'ms':'',evt.done?'done':'',evt.isMonthly?'monthly':''].filter(Boolean).join(' ');
       lbl.textContent=evt.name;lbl.title=evt.name;
 
-      const trk=document.createElement('div');
-      trk.className='t-track';trk.style.minWidth=W+'px';
-
+      const trk=document.createElement('div');trk.className='t-track';trk.style.minWidth=W+'px';
       mths.forEach(m=>{const gl=document.createElement('div');gl.className='g-line';gl.style.left=pct(m,start,end)+'%';trk.appendChild(gl);});
       const tl=document.createElement('div');tl.className='today-ln';tl.style.left=todayP+'%';trk.appendChild(tl);
 
-      /* Event marker */
+      // Event element — flex row: [shape][label]
       const evEl=document.createElement('div');
       evEl.className='ev'+(evt.done?' faded':'');
-      evEl.style.left=pct(evt.date,start,end)+'%';
+      // Position the left edge of the flex row so the shape centre = the date position
+      // shape is 12px wide, so offset left by 6px
+      const leftPct=pct(evt.date,start,end);
+      evEl.style.left=`calc(${leftPct}% - 6px)`;
+      evEl.style.transform='translateY(-50%)';
       evEl.dataset.gid=evt.gid;
 
-      const shape=document.createElement('div');
-      shape.className='ev-shape';
-
+      // Shape
+      const shape=document.createElement('div');shape.className='ev-shape';
       const ragCls=evt.rag?.ring||'rag-none';
       const isMonthly=evt.isMonthly;
 
@@ -687,45 +699,39 @@ function render(){
         outer.className=`ev-ms-outer ${ragCls}${isMonthly?' monthly-outer':''}`;
         if(!isMonthly)outer.style.background=`rgba(${hexToRgb(sec.color)},0.18)`;
         if(!isMonthly&&!evt.rag&&!evt.done)outer.style.boxShadow=`0 0 0 2px ${sec.color}40`;
-        const inner=document.createElement('div');
-        inner.className='ev-ms-inner';
+        const inner=document.createElement('div');inner.className='ev-ms-inner';
         inner.style.background=evt.done?'#4a4845':(isMonthly?(evt.rag?ragInnerColor(evt.rag.ring):MONTHLY_GREY_INNER):sec.color);
         outer.appendChild(inner);shape.appendChild(outer);
       }else{
         const outer=document.createElement('div');
         outer.className=`ev-task-outer ${ragCls}${isMonthly?' monthly-outer':''}`;
         if(!isMonthly)outer.style.background=`rgba(${hexToRgb(sec.color)},0.18)`;
-        const inner=document.createElement('div');
-        inner.className='ev-task-inner';
+        const inner=document.createElement('div');inner.className='ev-task-inner';
         inner.style.background=evt.done?'#4a4845':(isMonthly?(evt.rag?ragInnerColor(evt.rag.ring):MONTHLY_GREY_INNER):sec.color);
         outer.appendChild(inner);shape.appendChild(outer);
       }
       evEl.appendChild(shape);
 
-      /* Inline label — alternates above/below */
+      // Inline label — immediately right of shape
       const labelEl=document.createElement('div');
-      const above=idx%2===0;
-      labelEl.className=`ev-label ${above?'above':'below'}`;
-      labelEl.style.left=pct(evt.date,start,end)+'%';
-      labelEl.style.color=isMonthly?MONTHLY_GREY:sec.color;
+      labelEl.className='ev-label';
+      labelEl.style.color=isMonthly?'#6b6966':sec.color;
       labelEl.textContent=truncLabel(evt.name);
       labelEl.title=evt.name;
+      evEl.appendChild(labelEl);
 
+      // Events
       evEl.addEventListener('mouseenter',e=>{if(!pinnedEvt)populateTT(evt,sec);});
       evEl.addEventListener('mousemove',e=>{if(!pinnedEvt)moveTT(e);});
       evEl.addEventListener('mouseleave',()=>{if(!pinnedEvt)hideTT();});
       evEl.addEventListener('click',e=>{
         e.stopPropagation();
         if(pinnedEvt&&pinnedEvt.gid===evt.gid){unpinTT();return;}
-        populateTT(evt,sec);
-        moveTT(e);
-        pinTT(evt,evEl);
+        populateTT(evt,sec);moveTT(e);pinTT(evt,evEl);
       });
 
-      trk.appendChild(labelEl);
       trk.appendChild(evEl);
-      row.appendChild(lbl);row.appendChild(trk);
-      body.appendChild(row);
+      row.appendChild(lbl);row.appendChild(trk);body.appendChild(row);
     });
   });
 
@@ -733,22 +739,15 @@ function render(){
   $('z-val').textContent=ZLBLS[zoomIdx];
 }
 
-function ragInnerColor(ring){
-  if(ring==='rag-green')return'#16a850';
-  if(ring==='rag-amber')return'#cc8800';
-  if(ring==='rag-red')return'#cc2020';
-  return MONTHLY_GREY_INNER;
-}
-function truncLabel(name,maxChars=22){return name.length>maxChars?name.slice(0,maxChars-1)+'…':name;}
-
 /* ─── Tooltip ─── */
 function populateTT(evt,sec){
   $('tt-name').textContent=evt.name;
   const badges=$('tt-badges');badges.innerHTML='';
-  const tb=document.createElement('span');tb.className=`tt-badge ${evt.type==='milestone'?'badge-milestone':'badge-task'}`;tb.textContent=evt.type==='milestone'?'◆ Milestone':'● Task';badges.appendChild(tb);
-  if(evt.goalType){const gb=document.createElement('span');gb.className='tt-badge badge-task';gb.textContent=evt.goalType;badges.appendChild(gb);}
-  if(evt.domain){const db=document.createElement('span');db.className=`tt-badge ${DOMAIN_CLASS[evt.domain]||'badge-task'}`;db.textContent=evt.domain;badges.appendChild(db);}
-  if(evt.rag){const rb=document.createElement('span');rb.className=`tt-badge ${evt.rag.cls}`;rb.textContent=evt.rag.label;badges.appendChild(rb);}
+  const mkBadge=(cls,text)=>{const b=document.createElement('span');b.className=`tt-badge ${cls}`;b.textContent=text;badges.appendChild(b);};
+  mkBadge(evt.type==='milestone'?'badge-milestone':'badge-task',evt.type==='milestone'?'◆ Milestone':'● Task');
+  if(evt.goalType)mkBadge('badge-task',evt.goalType);
+  if(evt.domain)mkBadge(DOMAIN_CLASS[evt.domain]||'badge-task',evt.domain);
+  if(evt.rag)mkBadge(evt.rag.cls,evt.rag.label);
 
   const body=$('tt-body');body.innerHTML='';
   addRow(body,'§','Section',sec.label,sec.color,false);
@@ -757,56 +756,63 @@ function populateTT(evt,sec){
     const ov=!evt.done&&isOverdue(evt.date);
     addRow(body,'📅','Due',dateStr,ov?'var(--danger)':null,false);
     const cd=daysFromToday(evt.date);
-    const cdc=ov?'var(--danger)':cd==='Today'||cd==='Tomorrow'?'var(--accent)':null;
-    addRow(body,'','',cd,cdc,true);
+    addRow(body,'','',cd,ov?'var(--danger)':cd==='Today'||cd==='Tomorrow'?'var(--accent)':null,true);
   }else{
     addRow(body,'📅','Due','No date set','var(--text3)',false);
   }
 
+  // Notes — prefer html_notes, fall back to plain notes with \n→<br>
   const notesEl=$('tt-notes');
-  if(evt.notes&&evt.notes.trim()){$('tt-notes-text').textContent=evt.notes.trim();notesEl.style.display='block';}
-  else notesEl.style.display='none';
+  const contentEl=$('tt-notes-content');
+  const rawHtml=evt.htmlNotes;
+  const hasHtmlContent=rawHtml&&rawHtml.replace(/<body>|<\/body>/gi,'').trim().length>0;
+  const hasPlainContent=evt.notes&&evt.notes.trim().length>0;
+
+  if(hasHtmlContent){
+    contentEl.innerHTML=sanitiseHtmlNotes(rawHtml);
+    notesEl.style.display='block';
+  }else if(hasPlainContent){
+    // Plain text fallback: convert newlines to <br> and wrap in <p> blocks
+    const escaped=evt.notes.trim()
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
+    contentEl.innerHTML=`<p>${escaped}</p>`;
+    notesEl.style.display='block';
+  }else{
+    notesEl.style.display='none';
+  }
 
   const follEl=$('tt-followers');follEl.innerHTML='';
   if(evt.followers.length){
     evt.followers.forEach(name=>{const av=document.createElement('div');av.className='tt-avatar';av.title=name;av.textContent=initials(name);follEl.appendChild(av);});
-    const lbl=document.createElement('span');lbl.style.cssText='font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:4px;';lbl.textContent=evt.followers.length===1?'1 follower':`${evt.followers.length} followers`;follEl.appendChild(lbl);
+    const lbl=document.createElement('span');lbl.style.cssText='font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:4px;';
+    lbl.textContent=evt.followers.length===1?'1 follower':`${evt.followers.length} followers`;follEl.appendChild(lbl);
   }else follEl.innerHTML='<span class="tt-no-followers">No followers</span>';
 
   const link=$('tt-open-link');
   if(evt.permalink){link.href=evt.permalink;link.style.display='';}else link.style.display='none';
-
   $('tt').classList.add('show');
 }
 
 function moveTT(e){
   const tt=$('tt');
-  const flip=e.clientX+300>window.innerWidth;
-  tt.style.left=(flip?e.clientX-295:e.clientX+14)+'px';
+  const flip=e.clientX+310>window.innerWidth;
+  tt.style.left=(flip?e.clientX-305:e.clientX+14)+'px';
   tt.style.top=Math.max(8,Math.min(window.innerHeight-tt.offsetHeight-8,e.clientY-10))+'px';
 }
-
 function pinTT(evt,evEl){
-  pinnedEvt=evt;
-  const tt=$('tt');
-  tt.classList.add('pinned');
-  /* mark the dot */
+  pinnedEvt=evt;$('tt').classList.add('pinned');
   document.querySelectorAll('.ev.pinned').forEach(e=>e.classList.remove('pinned'));
   evEl.classList.add('pinned');
 }
-
 function unpinTT(){
-  pinnedEvt=null;
-  const tt=$('tt');
-  tt.classList.remove('pinned','show');
+  pinnedEvt=null;$('tt').classList.remove('pinned','show');
   document.querySelectorAll('.ev.pinned').forEach(e=>e.classList.remove('pinned'));
 }
-
 function hideTT(){$('tt').classList.remove('show');}
 
 function addRow(parent,icon,label,value,color,compact){
-  const row=document.createElement('div');row.className='tt-row';
-  if(compact)row.style.marginTop='-4px';
+  const row=document.createElement('div');row.className='tt-row';if(compact)row.style.marginTop='-4px';
   if(icon){const ic=document.createElement('span');ic.className='tt-row-icon';ic.textContent=icon;row.appendChild(ic);}
   else{const sp=document.createElement('span');sp.style.cssText='width:14px;flex-shrink:0;';row.appendChild(sp);}
   if(label){const lb=document.createElement('span');lb.className='tt-row-label';lb.textContent=label;row.appendChild(lb);}
@@ -817,12 +823,8 @@ function addRow(parent,icon,label,value,color,compact){
 /* ─── Zoom ─── */
 function zoom(d){zoomIdx=Math.max(0,Math.min(ZOOMS.length-1,zoomIdx+d));render();}
 
-/* ─── Global click to unpin ─── */
-document.addEventListener('click',e=>{
-  if(pinnedEvt&&!e.target.closest('.ev')&&!e.target.closest('#tt'))unpinTT();
-});
-
-/* ─── Keyboard ─── */
+/* ─── Global dismiss ─── */
+document.addEventListener('click',e=>{if(pinnedEvt&&!e.target.closest('.ev')&&!e.target.closest('#tt'))unpinTT();});
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT')return;
   if(e.key==='+'||e.key==='=')zoom(1);
