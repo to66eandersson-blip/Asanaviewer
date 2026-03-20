@@ -107,6 +107,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* Timeline */
 .tl-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+#tl-inner { display: flex; flex-direction: column; } /* width set by JS */
 .tl-scroll { flex: 1; overflow: auto; position: relative; }
 .tl-head { display: flex; position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 0.5px solid var(--border2); }
 .tl-col-head { width: 210px; flex-shrink: 0; padding: 8px 1rem; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--text3); text-transform: uppercase; border-right: 0.5px solid var(--border); }
@@ -169,7 +170,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   letter-spacing: 0.02em;
   white-space: nowrap;
   pointer-events: none;
-  max-width: 260px;
+  max-width: 520px;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1;
@@ -327,11 +328,13 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
   <div class="tl-area">
     <div class="tl-scroll">
+      <div id="tl-inner">
       <div class="tl-head">
         <div class="tl-col-head">Task / Milestone</div>
         <div class="tl-months" id="tl-months"></div>
       </div>
       <div id="tl-body"></div>
+      </div>
     </div>
     <div class="legend">
       <div class="leg-i"><div class="leg-ms"></div>Milestone</div>
@@ -426,7 +429,7 @@ function daysFromToday(ds){const d=new Date(ds);d.setHours(0,0,0,0);const diff=M
 function isOverdue(ds){return new Date(ds)<TODAY;}
 function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`${r},${g},${b}`;}
 function ragInnerColor(ring){return ring==='rag-green'?'#16a850':ring==='rag-amber'?'#cc8800':ring==='rag-red'?'#cc2020':MONTHLY_GREY_INNER;}
-function truncLabel(name,n=40){return name.length>n?name.slice(0,n-1)+'…':name;}
+function truncLabel(name,n=80){return name.length>n?name.slice(0,n-1)+'…':name;}
 
 /* ─── html_notes sanitiser ───
    Allows only a safe subset of tags. Strips <script>, <style>, <body>, <html>, etc.
@@ -654,7 +657,9 @@ function render(){
   const todayP=pct(TODAY,start,end);
   const mths=getMonths(start,end);
 
-  const mhdr=$('tl-months');mhdr.innerHTML='';mhdr.style.minWidth=W+'px';
+  const LABEL_W=210;
+  $('tl-inner').style.width=(LABEL_W+W)+'px';
+  const mhdr=$('tl-months');mhdr.innerHTML='';
   mths.forEach(m=>{
     const el=document.createElement('div');
     const isNow=m.getMonth()===TODAY.getMonth()&&m.getFullYear()===TODAY.getFullYear();
@@ -680,7 +685,7 @@ function render(){
 
     // Section header
     const sh=document.createElement('div');sh.className='sec-head';
-    sh.innerHTML=`<div class="sec-name" style="color:${sec.color}">${esc(sec.label)}<span class="sec-count">${evts.length}</span></div><div class="sec-track" style="min-width:${W}px"></div>`;
+    sh.innerHTML=`<div class="sec-name" style="color:${sec.color}">${esc(sec.label)}<span class="sec-count">${evts.length}</span></div><div class="sec-track" style="flex:1"></div>`;
     body.appendChild(sh);
 
     // Undated rows
@@ -689,7 +694,7 @@ function render(){
       const lbl=document.createElement('div');
       lbl.className=['t-lbl',evt.type==='milestone'?'ms':'',evt.done?'done':'',evt.isMonthly?'monthly':'',evt.isProductGoal?'product-goal':''].filter(Boolean).join(' ');
       lbl.textContent=evt.name;lbl.title=evt.name;
-      const trk=document.createElement('div');trk.className='t-track-undated';trk.style.minWidth=W+'px';
+      const trk=document.createElement('div');trk.className='t-track-undated';
       const pill=document.createElement('span');pill.className='undated-pill';pill.textContent='no date set';
       trk.appendChild(pill);row.appendChild(lbl);row.appendChild(trk);body.appendChild(row);
     });
@@ -701,7 +706,7 @@ function render(){
       lbl.className=['t-lbl',evt.type==='milestone'?'ms':'',evt.done?'done':'',evt.isMonthly?'monthly':''].filter(Boolean).join(' ');
       lbl.textContent=evt.name;lbl.title=evt.name;
 
-      const trk=document.createElement('div');trk.className='t-track';trk.style.minWidth=W+'px';
+      const trk=document.createElement('div');trk.className='t-track';
       mths.forEach(m=>{const gl=document.createElement('div');gl.className='g-line';gl.style.left=pct(m,start,end)+'%';trk.appendChild(gl);});
       const tl=document.createElement('div');tl.className='today-ln';tl.style.left=todayP+'%';trk.appendChild(tl);
 
