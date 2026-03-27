@@ -273,6 +273,161 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .spinner { width: 22px; height: 22px; border: 1.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .load-txt { font-family: var(--mono); font-size: 11px; color: var(--text2); letter-spacing: 0.1em; }
+
+/* ── TAB NAV ── */
+.tab-nav { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
+.tab-btn {
+  background: transparent; border: 0.5px solid transparent;
+  border-radius: var(--r); color: var(--text3);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.07em;
+  text-transform: uppercase; padding: 4px 10px; cursor: pointer;
+  transition: all 0.12s; white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text2); background: var(--surface2); }
+.tab-btn.active { color: var(--accent); background: var(--accent-dim); border-color: var(--accent-border); }
+
+/* ── TAB PANELS ── */
+.tab-panel { display: none; flex-direction: column; flex: 1; min-height: 0; }
+.tab-panel.active { display: flex; }
+
+/* ── GOALS BOARD (Tab 2) ── */
+#goals-board { flex: 1; overflow: auto; position: relative; }
+
+.gb-outer { display: inline-flex; flex-direction: column; min-width: 100%; }
+
+/* Sticky column-header row */
+.gb-col-headers {
+  display: flex; position: sticky; top: 0; z-index: 20;
+  background: var(--bg); border-bottom: 0.5px solid var(--border2);
+}
+.gb-row-spacer {
+  width: 200px; flex-shrink: 0;
+  border-right: 0.5px solid var(--border);
+}
+.gb-month-hdr {
+  width: 160px; flex-shrink: 0;
+  padding: 7px 12px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text3);
+  border-right: 0.5px solid var(--border);
+  text-align: center;
+}
+.gb-month-hdr.now { color: var(--accent); }
+.gb-pg-hdr {
+  width: 180px; flex-shrink: 0;
+  padding: 7px 12px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text3);
+  border-left: 1px solid var(--border2);
+  text-align: center;
+}
+
+/* Domain rows */
+.gb-domain-row { display: flex; border-bottom: 0.5px solid var(--border); }
+
+/* Row label */
+.gb-row-label {
+  width: 200px; flex-shrink: 0;
+  padding: 14px 14px 14px 18px;
+  border-right: 0.5px solid var(--border);
+  position: sticky; left: 0;
+  background: var(--bg); z-index: 10;
+  display: flex; flex-direction: column; gap: 3px;
+  position: relative;
+}
+.gb-row-accent {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2.5px; border-radius: 0 2px 2px 0;
+}
+.gb-row-name {
+  font-family: var(--mono); font-size: 9.5px;
+  font-weight: 500; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gb-row-owner { font-family: var(--mono); font-size: 8.5px; color: var(--text3); letter-spacing: 0.06em; margin-top: 1px; }
+.gb-row-q { font-size: 10.5px; color: var(--text3); font-style: italic; margin-top: 6px; line-height: 1.45; font-family: var(--sans); }
+
+/* Month cells */
+.gb-cell {
+  width: 160px; flex-shrink: 0;
+  padding: 10px 10px;
+  border-right: 0.5px solid var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+  min-height: 80px;
+}
+.gb-cell.now { background: rgba(184,240,80,0.018); }
+.gb-cell.now { box-shadow: inset 0 2px 0 rgba(184,240,80,0.12); }
+
+/* Goal dot rows inside cells */
+.gb-goal-row {
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; padding: 2px 2px;
+  border-radius: 4px; transition: background 0.1s;
+}
+.gb-goal-row:hover { background: var(--surface2); }
+.gb-goal-row.pinned { background: var(--surface3); outline: 0.5px solid var(--border2); }
+
+.gb-dot-wrap { flex-shrink: 0; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; }
+
+/* Standard goal dot — matches Tab 1 monthly-goal style */
+.gb-dot-outer {
+  width: 11px; height: 11px; border-radius: 50%;
+  position: relative; display: flex; align-items: center; justify-content: center;
+}
+.gb-dot-inner {
+  width: 6px; height: 6px; border-radius: 50%;
+  position: absolute;
+}
+
+/* Product goal dot — slightly larger diamond shape */
+.gb-pg-outer {
+  width: 13px; height: 13px; border-radius: 2px;
+  transform: rotate(45deg);
+  position: relative; display: flex; align-items: center; justify-content: center;
+}
+.gb-pg-inner {
+  width: 7px; height: 7px; border-radius: 1px;
+  position: absolute;
+}
+
+.gb-goal-name {
+  font-size: 10.5px; color: var(--text2);
+  line-height: 1.35; overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+
+.gb-empty {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--text3); opacity: 0.4;
+  padding: 2px 2px; letter-spacing: 0.04em;
+}
+
+/* Product goal column */
+.gb-pg-cell {
+  width: 180px; flex-shrink: 0;
+  padding: 10px 10px;
+  border-left: 1px solid var(--border2);
+  display: flex; flex-direction: column; gap: 6px;
+  min-height: 80px;
+  background: rgba(255,255,255,0.008);
+}
+
+/* Goals board legend */
+.gb-legend {
+  display: flex; align-items: center; gap: 14px;
+  padding: 6px 1.25rem; border-top: 0.5px solid var(--border);
+  flex-shrink: 0; flex-wrap: wrap;
+  font-family: var(--mono);
+}
+.gb-leg-i { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--text3); letter-spacing: 0.04em; }
+.gb-leg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text2); }
+.gb-leg-pg { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); background: var(--text2); }
+.gb-leg-ring-g { width: 9px; height: 9px; border-radius: 50%; background: rgba(34,221,110,0.15); box-shadow: 0 0 0 2.5px var(--rag-g); }
+.gb-leg-ring-a { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,170,0,0.15);  box-shadow: 0 0 0 2.5px var(--rag-a); }
+.gb-leg-ring-r { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,61,61,0.15);  box-shadow: 0 0 0 2.5px var(--rag-r); }
+.gb-leg-pg-ring-g { width: 11px; height: 11px; border-radius: 2px; transform: rotate(45deg); background: rgba(34,221,110,0.15); box-shadow: 0 0 0 2.5px var(--rag-g); }
+.gb-leg-note { margin-left: auto; font-size: 9px; color: var(--text3); }
 </style>
 </head>
 <body>
@@ -315,7 +470,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Timeline</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span></div>
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
+      <button class="tab-btn" id="tab-btn-goals" onclick="switchTab('goals')">Goals Board</button>
+    </div>
     <div class="tb-sep"></div>
     <div class="tb-project" id="proj-title">—</div>
     <div class="url-bar">
@@ -336,6 +495,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="filterbar" id="filterbar-section"><span class="f-label">Section</span></div>
     <div class="filterbar" id="filterbar-domain"><span class="f-label">Domain</span></div>
   </div>
+
+  <!-- ── TAB 1: TIMELINE ── -->
+  <div class="tab-panel active" id="panel-timeline">
 
   <!-- Budget strip -->
   <div id="budget-bar" style="display:none"><div class="bbar-inner" id="bbar-inner"></div></div>
@@ -361,7 +523,25 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <span class="leg-note">Hover to preview · Click dot to pin · + / − to zoom</span>
     </div>
   </div>
-</div>
+
+  </div><!-- /panel-timeline -->
+
+  <!-- ── TAB 2: GOALS BOARD ── -->
+  <div class="tab-panel" id="panel-goals">
+    <div id="goals-board">
+      <div id="gb-content" style="padding:3rem 1.25rem; font-size:12px; color:var(--text3); font-family:var(--mono);">Load a board first to see the Goals Board.</div>
+    </div>
+    <div class="gb-legend">
+      <div class="gb-leg-i"><div class="gb-leg-dot" style="background:rgba(90,87,84,0.6);box-shadow:none"></div>Monthly goal (no RAG)</div>
+      <div class="gb-leg-i"><div class="gb-leg-ring-g"></div>On track</div>
+      <div class="gb-leg-i"><div class="gb-leg-ring-a"></div>At risk</div>
+      <div class="gb-leg-i"><div class="gb-leg-ring-r"></div>Off track</div>
+      <div class="gb-leg-i"><div class="gb-leg-pg" style="background:var(--text2)"></div>Product goal</div>
+      <span class="gb-leg-note">Hover to preview · Click dot to pin</span>
+    </div>
+  </div><!-- /panel-goals -->
+
+</div><!-- /screen-app -->
 
 <!-- ── TOOLTIP ── -->
 <div id="tt">
@@ -681,6 +861,7 @@ function buildApp(proj,tasks){
   $('proj-title').innerHTML=`<strong>${esc(proj.name)}</strong>`;
   const parsed=tasks.filter(t=>t.name).map(t=>{
     const gt=getGoalType(t);
+    const moParsed = parseGoalMonth(t);
     return{
       gid:t.gid,name:t.name||'(unnamed)',date:t.due_on||null,
       sectionName:resolveSection(t),
@@ -689,6 +870,7 @@ function buildApp(proj,tasks){
       rag:getRag(t),domain:getDomain(t),goalType:gt,
       isMonthly:gt==='Monthly Goal',
       isProductGoal:gt==='Product Goal',
+      monthKey: moParsed ? moParsed.key : null,
       htmlNotes:t.html_notes||'',
       notes:t.notes||'',
       followers:(t.followers||[]).map(f=>f.name),
@@ -712,6 +894,10 @@ function buildApp(proj,tasks){
   allDomains=[...new Set(parsed.map(e=>e.domain).filter(Boolean))].sort();
   activeSections=new Set(['ALL']);activeDomains=new Set(['ALL']);
   buildBudgetBar(tasks);buildFilters();render();
+  /* Refresh goals board if it's currently visible, else reset placeholder */
+  if (activeTab === 'goals') renderGoalsBoard();
+  else $('gb-content').innerHTML = '<div style="padding:3rem 1.25rem;font-size:12px;color:var(--text3);font-family:var(--mono);">Switch to this tab to see the Goals Board.</div>';
+  gbPinnedEvt = null; gbPinnedEl = null;
 }
 
 /* ─── Filters ─── */
@@ -970,6 +1156,215 @@ document.addEventListener('keydown',e=>{
 });
 $('inp-url').addEventListener('keydown',e=>{if(e.key==='Enter')connect();});
 $('inp-pat').addEventListener('keydown',e=>{if(e.key==='Enter')$('inp-url').focus();});
+
+/* ─── Tab switching ─── */
+let activeTab = 'timeline';
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'tab-btn-' + tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+  if (tab === 'goals' && allEvents.length) renderGoalsBoard();
+  unpinTT();
+}
+
+/* ─── Goals Board ─── */
+const GB_DOMAINS = [
+  { key: 'Product Quality',      owner: 'PM',       question: 'Are we connecting with the right players?' },
+  { key: 'Project Health',       owner: 'PP',       question: 'Are we on track and executing effectively?' },
+  { key: 'Player Experience',    owner: 'Dev + PP', question: 'Is the player experience living up to its promise?' },
+  { key: 'Commercial Viability', owner: 'BM + PM',  question: 'Are we on track for a successful launch?' },
+];
+
+/* Month field format: "(2025) Oct" → ISO "2025-10" */
+const CF_MONTH = '1211670301793184';
+const MONTH_ABBRS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+function parseGoalMonth(task) {
+  const f = (task.custom_fields || []).find(f => f.gid === CF_MONTH);
+  const raw = f?.enum_value?.name || f?.display_value || null;
+  if (!raw) return null;
+  const m = raw.match(/\((\d{4})\)\s*([A-Za-z]+)/);
+  if (!m) return null;
+  const yr = parseInt(m[1]);
+  const mo = MONTH_ABBRS.indexOf(m[2].toLowerCase().slice(0, 3));
+  if (mo < 0) return null;
+  return { yr, mo, key: `${yr}-${String(mo + 1).padStart(2, '0')}` };
+}
+
+/* Build month window: 3 back, 6 forward from today */
+function gbMonthWindow() {
+  const months = [];
+  for (let d = -3; d <= 6; d++) {
+    const dt = new Date(TODAY.getFullYear(), TODAY.getMonth() + d, 1);
+    months.push({
+      yr: dt.getFullYear(), mo: dt.getMonth(),
+      key: `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`,
+      label: dt.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+      isNow: dt.getFullYear() === TODAY.getFullYear() && dt.getMonth() === TODAY.getMonth(),
+    });
+  }
+  return months;
+}
+
+function gbRagStyles(rag) {
+  if (!rag) return { outer: 'background:rgba(90,87,84,0.15)', inner: `background:${MONTHLY_GREY_INNER}` };
+  const map = {
+    'rag-green': { outer: 'background:rgba(34,221,110,0.15);box-shadow:0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3)', inner: 'background:#16a850' },
+    'rag-amber': { outer: 'background:rgba(255,170,0,0.15);box-shadow:0 0 0 2.5px var(--rag-a),0 0 8px rgba(255,170,0,0.3)',   inner: 'background:#cc8800' },
+    'rag-red':   { outer: 'background:rgba(255,61,61,0.15);box-shadow:0 0 0 2.5px var(--rag-r),0 0 8px rgba(255,61,61,0.3)',   inner: 'background:#cc2020' },
+  };
+  return map[rag.ring] || { outer: 'background:rgba(90,87,84,0.15)', inner: `background:${MONTHLY_GREY_INNER}` };
+}
+
+let gbPinnedEvt = null;
+let gbPinnedEl  = null;
+
+function renderGoalsBoard() {
+  const months = gbMonthWindow();
+
+  /* Bucket events by domain + month key, and separate product goals */
+  const monthly = {}; // `${domain}__${monthKey}` → [evt, …]
+  const product = {}; // domain → [evt, …]
+
+  allEvents.forEach(evt => {
+    if (!evt.domain) return;
+
+    if (evt.isProductGoal) {
+      if (!product[evt.domain]) product[evt.domain] = [];
+      product[evt.domain].push(evt);
+      return;
+    }
+
+    if (!evt.isMonthly || !evt.monthKey) return;
+    const bucket = `${evt.domain}__${evt.monthKey}`;
+    if (!monthly[bucket]) monthly[bucket] = [];
+    monthly[bucket].push(evt);
+  });
+
+  const outer = document.createElement('div');
+  outer.className = 'gb-outer';
+
+  /* Column header row */
+  const colRow = document.createElement('div');
+  colRow.className = 'gb-col-headers';
+  const spacer = document.createElement('div'); spacer.className = 'gb-row-spacer'; colRow.appendChild(spacer);
+  months.forEach(m => {
+    const hdr = document.createElement('div');
+    hdr.className = 'gb-month-hdr' + (m.isNow ? ' now' : '');
+    hdr.textContent = m.label;
+    colRow.appendChild(hdr);
+  });
+  const pgHdr = document.createElement('div'); pgHdr.className = 'gb-pg-hdr'; pgHdr.textContent = '↗ Product Goals'; colRow.appendChild(pgHdr);
+  outer.appendChild(colRow);
+
+  /* Domain rows */
+  GB_DOMAINS.forEach(domain => {
+    const dc = DOMAIN_COLORS[domain.key] || '#888580';
+    const row = document.createElement('div'); row.className = 'gb-domain-row';
+
+    /* Row label */
+    const lbl = document.createElement('div'); lbl.className = 'gb-row-label';
+    const accent = document.createElement('div'); accent.className = 'gb-row-accent'; accent.style.background = dc; lbl.appendChild(accent);
+    const nm = document.createElement('div'); nm.className = 'gb-row-name'; nm.style.color = dc; nm.textContent = domain.key; lbl.appendChild(nm);
+    const ow = document.createElement('div'); ow.className = 'gb-row-owner'; ow.textContent = domain.owner; lbl.appendChild(ow);
+    const q  = document.createElement('div'); q.className  = 'gb-row-q';     q.textContent  = domain.question; lbl.appendChild(q);
+    row.appendChild(lbl);
+
+    /* Month cells */
+    months.forEach(m => {
+      const cell = document.createElement('div');
+      cell.className = 'gb-cell' + (m.isNow ? ' now' : '');
+      const goals = monthly[`${domain.key}__${m.key}`] || [];
+      if (!goals.length) {
+        const em = document.createElement('div'); em.className = 'gb-empty'; em.textContent = '–'; cell.appendChild(em);
+      } else {
+        goals.forEach(evt => cell.appendChild(gbMakeGoalRow(evt, false)));
+      }
+      row.appendChild(cell);
+    });
+
+    /* Product goal column */
+    const pgCell = document.createElement('div'); pgCell.className = 'gb-pg-cell';
+    const pgs = product[domain.key] || [];
+    if (!pgs.length) {
+      const em = document.createElement('div'); em.className = 'gb-empty'; em.textContent = 'No product goal set'; pgCell.appendChild(em);
+    } else {
+      pgs.forEach(evt => pgCell.appendChild(gbMakeGoalRow(evt, true)));
+    }
+    row.appendChild(pgCell);
+
+    outer.appendChild(row);
+  });
+
+  const content = $('gb-content');
+  content.innerHTML = '';
+  content.removeAttribute('style');
+  content.appendChild(outer);
+}
+
+function gbMakeGoalRow(evt, isProduct) {
+  const rag = evt.rag;
+  const styles = gbRagStyles(rag);
+
+  const row = document.createElement('div');
+  row.className = 'gb-goal-row';
+  row.dataset.gid = evt.gid;
+
+  /* Dot */
+  const wrap = document.createElement('div'); wrap.className = 'gb-dot-wrap';
+
+  if (isProduct) {
+    const outer = document.createElement('div');
+    outer.className = 'gb-pg-outer';
+    outer.style.cssText = styles.outer;
+    const inner = document.createElement('div');
+    inner.className = 'gb-pg-inner';
+    inner.style.cssText = styles.inner;
+    outer.appendChild(inner); wrap.appendChild(outer);
+  } else {
+    const outer = document.createElement('div');
+    outer.className = 'gb-dot-outer';
+    outer.style.cssText = styles.outer;
+    const inner = document.createElement('div');
+    inner.className = 'gb-dot-inner';
+    inner.style.cssText = styles.inner;
+    outer.appendChild(inner); wrap.appendChild(outer);
+  }
+  row.appendChild(wrap);
+
+  /* Name */
+  const name = document.createElement('div'); name.className = 'gb-goal-name'; name.textContent = evt.name; name.title = evt.name;
+  row.appendChild(name);
+
+  /* Tooltip section context (reuse existing populateTT) */
+  const sec = { label: isProduct ? 'Product Goal' : 'Monthly Goal', color: DOMAIN_COLORS[evt.domain] || '#888580' };
+
+  row.addEventListener('mouseenter', e => { if (!pinnedEvt && !gbPinnedEvt) populateTT(evt, sec); });
+  row.addEventListener('mousemove',  e => { if (!pinnedEvt && !gbPinnedEvt) moveTT(e); });
+  row.addEventListener('mouseleave', () => { if (!pinnedEvt && !gbPinnedEvt) hideTT(); });
+  row.addEventListener('click', e => {
+    e.stopPropagation();
+    if (gbPinnedEvt && gbPinnedEvt.gid === evt.gid) { gbUnpin(); return; }
+    gbUnpin();
+    gbPinnedEvt = evt; gbPinnedEl = row;
+    row.classList.add('pinned');
+    populateTT(evt, sec); moveTT(e);
+    $('tt').classList.add('pinned', 'show');
+  });
+
+  return row;
+}
+
+function gbUnpin() {
+  gbPinnedEvt = null;
+  if (gbPinnedEl) { gbPinnedEl.classList.remove('pinned'); gbPinnedEl = null; }
+  $('tt').classList.remove('pinned', 'show');
+}
+
+/* Dismiss GB pin on outside click */
+document.addEventListener('click', e => {
+  if (activeTab === 'goals' && gbPinnedEvt && !e.target.closest('.gb-goal-row') && !e.target.closest('#tt')) gbUnpin();
+});
 </script>
 </body>
 </html>
