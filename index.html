@@ -10,19 +10,19 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0d0e10;
-  --surface: #15171b;
-  --surface2: #1c1f25;
-  --surface3: #22262e;
-  --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.11);
-  --border3: rgba(255,255,255,0.20);
-  --text: #e6e3dc;
-  --text2: #888580;
-  --text3: #4a4845;
+  --bg: #1a1c20;
+  --surface: #21242a;
+  --surface2: #292d35;
+  --surface3: #313640;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --border3: rgba(255,255,255,0.26);
+  --text: #eceae2;
+  --text2: #9c9890;
+  --text3: #5e5c57;
   --accent: #b8f050;
-  --accent-dim: rgba(184,240,80,0.10);
-  --accent-border: rgba(184,240,80,0.22);
+  --accent-dim: rgba(184,240,80,0.12);
+  --accent-border: rgba(184,240,80,0.28);
   --danger: #f05050;
   --today-color: #f05050;
   --rag-g: #22dd6e;
@@ -31,7 +31,9 @@
   --mono: 'DM Mono', monospace;
   --sans: 'DM Sans', sans-serif;
   --r: 6px; --r-lg: 10px; --r-xl: 14px;
-  --row-h: 28px; /* track height — labels use this to centre */
+  --row-h: 28px;
+  --gb-row-even: rgba(255,255,255,0.025);
+  --gb-row-odd:  rgba(0,0,0,0.12);
 }
 
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; overflow: hidden; }
@@ -291,18 +293,34 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tab-panel.active { display: flex; }
 
 /* ── GOALS BOARD (Tab 2) ── */
-#goals-board { flex: 1; overflow: auto; position: relative; }
+/*  Layout: [label-col][scrollable months][fixed product-goals]
+    #goals-board is the outer flex row container.
+    #gb-scroll holds the label + month columns and scrolls horizontally.
+    #gb-pg-panel is the fixed right product-goals panel.            */
+#goals-board {
+  flex: 1; display: flex; overflow: hidden; position: relative;
+}
+#gb-scroll {
+  flex: 1; overflow: auto; position: relative;
+}
+#gb-pg-panel {
+  width: 200px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border-left: 1.5px solid var(--border3);
+  background: var(--surface);
+  overflow-y: auto; overflow-x: hidden;
+}
 
 .gb-outer { display: inline-flex; flex-direction: column; min-width: 100%; }
 
 /* Sticky column-header row */
 .gb-col-headers {
   display: flex; position: sticky; top: 0; z-index: 20;
-  background: var(--bg); border-bottom: 0.5px solid var(--border2);
+  background: var(--surface2); border-bottom: 1px solid var(--border2);
 }
 .gb-row-spacer {
   width: 200px; flex-shrink: 0;
-  border-right: 0.5px solid var(--border);
+  border-right: 1px solid var(--border2);
 }
 .gb-month-hdr {
   width: 160px; flex-shrink: 0;
@@ -312,32 +330,34 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   border-right: 0.5px solid var(--border);
   text-align: center;
 }
-.gb-month-hdr.now { color: var(--accent); }
-.gb-pg-hdr {
-  width: 180px; flex-shrink: 0;
-  padding: 7px 12px;
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--text3);
-  border-left: 1px solid var(--border2);
-  text-align: center;
+.gb-month-hdr.now {
+  color: var(--accent);
+  background: rgba(184,240,80,0.1);
+  border-right: 1px solid rgba(184,240,80,0.18);
+  border-left: 1px solid rgba(184,240,80,0.18);
+  font-weight: 500;
 }
+/* .gb-pg-hdr removed — header is now in the fixed panel */
 
-/* Domain rows */
-.gb-domain-row { display: flex; border-bottom: 0.5px solid var(--border); }
+/* Domain rows — alternating band */
+.gb-domain-row { display: flex; border-bottom: 1px solid var(--border2); }
+.gb-domain-row:nth-child(even) { background: var(--gb-row-even); }
+.gb-domain-row:nth-child(odd)  { background: var(--gb-row-odd); }
 
 /* Row label */
 .gb-row-label {
   width: 200px; flex-shrink: 0;
   padding: 14px 14px 14px 18px;
-  border-right: 0.5px solid var(--border);
+  border-right: 1px solid var(--border2);
   position: sticky; left: 0;
-  background: var(--bg); z-index: 10;
+  background: inherit;   /* inherit the row band colour */
+  z-index: 10;
   display: flex; flex-direction: column; gap: 3px;
   position: relative;
 }
 .gb-row-accent {
   position: absolute; left: 0; top: 0; bottom: 0;
-  width: 2.5px; border-radius: 0 2px 2px 0;
+  width: 3px; border-radius: 0 2px 2px 0;
 }
 .gb-row-name {
   font-family: var(--mono); font-size: 9.5px;
@@ -354,9 +374,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   border-right: 0.5px solid var(--border);
   display: flex; flex-direction: column; gap: 6px;
   min-height: 80px;
+  background: transparent; /* let the row band show through */
 }
-.gb-cell.now { background: rgba(184,240,80,0.018); }
-.gb-cell.now { box-shadow: inset 0 2px 0 rgba(184,240,80,0.12); }
+/* Current-month column: a clear accent band */
+.gb-cell.now {
+  background: rgba(184,240,80,0.07) !important;
+  border-right: 1px solid rgba(184,240,80,0.18);
+  border-left: 1px solid rgba(184,240,80,0.18);
+}
 
 /* Goal dot rows inside cells */
 .gb-goal-row {
@@ -403,15 +428,28 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   padding: 2px 2px; letter-spacing: 0.04em;
 }
 
-/* Product goal column */
+/* Product goal panel header */
+.gb-pg-panel-hdr {
+  padding: 7px 12px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text3);
+  border-bottom: 1px solid var(--border2);
+  background: var(--surface2);
+  position: sticky; top: 0; z-index: 20;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Product goal row — one per domain, matches domain row height */
 .gb-pg-cell {
-  width: 180px; flex-shrink: 0;
+  flex: 1;
   padding: 10px 10px;
-  border-left: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
   display: flex; flex-direction: column; gap: 6px;
   min-height: 80px;
-  background: rgba(255,255,255,0.008);
 }
+.gb-pg-cell:nth-child(even) { background: var(--gb-row-even); }
+.gb-pg-cell:nth-child(odd)  { background: var(--gb-row-odd); }
 
 /* Goals board legend */
 .gb-legend {
@@ -529,7 +567,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <!-- ── TAB 2: GOALS BOARD ── -->
   <div class="tab-panel" id="panel-goals">
     <div id="goals-board">
-      <div id="gb-content" style="padding:3rem 1.25rem; font-size:12px; color:var(--text3); font-family:var(--mono);">Load a board first to see the Goals Board.</div>
+      <!-- left+months scrollable area -->
+      <div id="gb-scroll">
+        <div id="gb-content" style="padding:3rem 1.25rem; font-size:12px; color:var(--text3); font-family:var(--mono);">Load a board first to see the Goals Board.</div>
+      </div>
+      <!-- fixed right product-goals panel -->
+      <div id="gb-pg-panel">
+        <div class="gb-pg-panel-hdr">↗ Product Goals</div>
+        <div id="gb-pg-cells"><!-- filled by renderGoalsBoard --></div>
+      </div>
     </div>
     <div class="gb-legend">
       <div class="gb-leg-i"><div class="gb-leg-dot" style="background:rgba(90,87,84,0.6);box-shadow:none"></div>Monthly goal (no RAG)</div>
@@ -1222,29 +1268,28 @@ let gbPinnedEl  = null;
 function renderGoalsBoard() {
   const months = gbMonthWindow();
 
-  /* Bucket events by domain + month key, and separate product goals */
-  const monthly = {}; // `${domain}__${monthKey}` → [evt, …]
-  const product = {}; // domain → [evt, …]
+  /* Bucket events */
+  const monthly = {};
+  const product = {};
 
   allEvents.forEach(evt => {
     if (!evt.domain) return;
-
     if (evt.isProductGoal) {
       if (!product[evt.domain]) product[evt.domain] = [];
       product[evt.domain].push(evt);
       return;
     }
-
     if (!evt.isMonthly || !evt.monthKey) return;
     const bucket = `${evt.domain}__${evt.monthKey}`;
     if (!monthly[bucket]) monthly[bucket] = [];
     monthly[bucket].push(evt);
   });
 
+  /* ── LEFT + MONTHS (scrollable) ── */
   const outer = document.createElement('div');
   outer.className = 'gb-outer';
 
-  /* Column header row */
+  /* Column header row — no product-goal header here */
   const colRow = document.createElement('div');
   colRow.className = 'gb-col-headers';
   const spacer = document.createElement('div'); spacer.className = 'gb-row-spacer'; colRow.appendChild(spacer);
@@ -1254,20 +1299,19 @@ function renderGoalsBoard() {
     hdr.textContent = m.label;
     colRow.appendChild(hdr);
   });
-  const pgHdr = document.createElement('div'); pgHdr.className = 'gb-pg-hdr'; pgHdr.textContent = '↗ Product Goals'; colRow.appendChild(pgHdr);
   outer.appendChild(colRow);
 
-  /* Domain rows */
+  /* Domain rows — no product goal cells here */
   GB_DOMAINS.forEach(domain => {
     const dc = DOMAIN_COLORS[domain.key] || '#888580';
     const row = document.createElement('div'); row.className = 'gb-domain-row';
 
-    /* Row label */
+    /* Row label (sticky left) */
     const lbl = document.createElement('div'); lbl.className = 'gb-row-label';
     const accent = document.createElement('div'); accent.className = 'gb-row-accent'; accent.style.background = dc; lbl.appendChild(accent);
     const nm = document.createElement('div'); nm.className = 'gb-row-name'; nm.style.color = dc; nm.textContent = domain.key; lbl.appendChild(nm);
     const ow = document.createElement('div'); ow.className = 'gb-row-owner'; ow.textContent = domain.owner; lbl.appendChild(ow);
-    const q  = document.createElement('div'); q.className  = 'gb-row-q';     q.textContent  = domain.question; lbl.appendChild(q);
+    const q  = document.createElement('div'); q.className  = 'gb-row-q';    q.textContent  = domain.question; lbl.appendChild(q);
     row.appendChild(lbl);
 
     /* Month cells */
@@ -1283,16 +1327,6 @@ function renderGoalsBoard() {
       row.appendChild(cell);
     });
 
-    /* Product goal column */
-    const pgCell = document.createElement('div'); pgCell.className = 'gb-pg-cell';
-    const pgs = product[domain.key] || [];
-    if (!pgs.length) {
-      const em = document.createElement('div'); em.className = 'gb-empty'; em.textContent = 'No product goal set'; pgCell.appendChild(em);
-    } else {
-      pgs.forEach(evt => pgCell.appendChild(gbMakeGoalRow(evt, true)));
-    }
-    row.appendChild(pgCell);
-
     outer.appendChild(row);
   });
 
@@ -1300,6 +1334,22 @@ function renderGoalsBoard() {
   content.innerHTML = '';
   content.removeAttribute('style');
   content.appendChild(outer);
+
+  /* ── RIGHT PANEL: PRODUCT GOALS (fixed) ── */
+  const pgCells = $('gb-pg-cells');
+  pgCells.innerHTML = '';
+
+  GB_DOMAINS.forEach(domain => {
+    const pgCell = document.createElement('div');
+    pgCell.className = 'gb-pg-cell';
+    const pgs = product[domain.key] || [];
+    if (!pgs.length) {
+      const em = document.createElement('div'); em.className = 'gb-empty'; em.textContent = 'No product goal set'; pgCell.appendChild(em);
+    } else {
+      pgs.forEach(evt => pgCell.appendChild(gbMakeGoalRow(evt, true)));
+    }
+    pgCells.appendChild(pgCell);
+  });
 }
 
 function gbMakeGoalRow(evt, isProduct) {
