@@ -891,7 +891,7 @@ const ALL_PHASES = [
 
 /* ─── Portfolio state ─── */
 let portfolioProducts = [];   // [{name, boardGid, phase}]
-let activePhaseFilter = new Set(ALL_PHASES); // show all by default
+let activePhaseFilter = new Set([...ALL_PHASES, 'Unknown', 'ALL']); // show all by default
 
 const MONTHLY_GREY_INNER = '#4a4845';
 
@@ -1186,7 +1186,13 @@ function buildApp(proj,tasks){
       tmp.textContent = proj.name;
       pickerSel.insertBefore(tmp, pickerSel.options[0]);
     } else {
-      pickerSel.value = currentPid;
+      // .value doesn't always work across optgroups — use explicit loop
+      for (let i = 0; i < pickerSel.options.length; i++) {
+        if (pickerSel.options[i].value === currentPid) {
+          pickerSel.selectedIndex = i;
+          break;
+        }
+      }
     }
   }
   const parsed=tasks.filter(t=>t.name).map(t=>{
@@ -1758,6 +1764,16 @@ async function loadPortfolio() {
 
     buildPhaseFilterBar();
     buildBoardDropdown();
+    // Restore selection to the currently-loaded board (currentPid may be set already)
+    if (currentPid) {
+      const selEl = document.getElementById('board-select');
+      for (let i = 0; i < selEl.options.length; i++) {
+        if (selEl.options[i].value === currentPid) {
+          selEl.selectedIndex = i;
+          break;
+        }
+      }
+    }
     status.textContent = `${portfolioProducts.length} boards`;
   } catch (e) {
     sel.innerHTML = '<option value="">— portfolio load failed —</option>';
@@ -1817,7 +1833,7 @@ function buildBoardDropdown() {
   sel.innerHTML = '<option value="">— select a game —</option>';
 
   const visible = portfolioProducts.filter(p =>
-    activePhaseFilter.has('ALL') || activePhaseFilter.has(p.phase)
+    activePhaseFilter.has('ALL') || activePhaseFilter.has(p.phase || 'Unknown')
   );
 
   // Group by phase
@@ -1859,6 +1875,7 @@ async function onBoardPickerChange(gid) {
   const product = portfolioProducts.find(p => p.boardGid === gid);
   try {
     setLoad('Connecting…');
+    currentPid = gid;  // set BEFORE buildApp so selection restore works
     const projResp = await api(`/projects/${gid}?opt_fields=name`);
     setLoad('Fetching tasks…');
     const tasks = await fetchAllTasks(gid);
@@ -1934,17 +1951,11 @@ function boardAcronym() {
   // Look up the product entry that matches the selected GID
   const product = portfolioProducts.find(p => p.boardGid === gid);
   if (product && product.code) return product.code.toUpperCase();
-  // Fallback: derive from the Asana board name stored on the option data attribute
+  // Fallback: use data-code stored on the option element during buildBoardDropdown
   const opt = sel.options[sel.selectedIndex];
-  const boardName = opt ? (opt.dataset.boardName || opt.textContent.trim()) : '';
-  // Board names are like "MC Product Board" — take the first token
-  return boardName
-    .replace(/product\s*board/i, '')
-    .replace(/\(FoF\)/i, '')
-    .replace(/[^A-Za-z0-9 ]/g, ' ')
-    .trim()
-    .toUpperCase()
-    .split(/\s+/)[0] || '';
+  if (opt && opt.dataset.code) return opt.dataset.code.toUpperCase();
+  // Last resort: return empty (will trigger manual picker)
+  return '';
 }
 
 /* Score how well a sheet name matches an acronym.
@@ -2001,96 +2012,90 @@ function fmtMoney(v) {
 function extractSheetData(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
   if (!ws) return null;
+
+  // Use sheet_to_json with header:1 to get raw 2D array
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
   if (!rows.length) return null;
 
-  // EP = col index 145 (A=0, Z=25, AA=26 ... EP = 4*26+15 = 119... let's calc)
-  // A=1, B=2, ... Z=26, AA=27 ...
-  // EP: E=5, P=16 → (5-1)*26 + 16 - 1 = 4*26+15 = 119 (0-based)
-  const IDX_EP = colLetterToIdx('EP'); // 119
-  const IDX_EQ = colLetterToIdx('EQ'); // 120
+  const IDX_EP = colLetterToIdx('EP');  // 119
+  const IDX_EQ = colLetterToIdx('EQ');  // 120
+  const IDX_EU = colLetterToIdx('EU');  // 124
+  const IDX_EV = colLetterToIdx('EV');  // 125
+  const IDX_EW = colLetterToIdx('EW');  // 126
+  const IDX_EX = colLetterToIdx('EX');  // 127
+  const IDX_EY = colLetterToIdx('EY');  // 128
 
-  // General section columns (from screenshot: EU=146, EV=147)
-  const IDX_EU = colLetterToIdx('EU');
-  const IDX_EV = colLetterToIdx('EV');
-  const IDX_EW = colLetterToIdx('EW');
-  const IDX_EX = colLetterToIdx('EX');
-  const IDX_EY = colLetterToIdx('EY');
-
-  // ── Scan all rows for the changelog (EP=Date, EQ=Description)
-  // Find the header row by looking for "Date" in EP column
+  // ── Changelog: collect all rows where EP or EQ has content ──────────────
+  // First try to find a header row with "Date" in EP or nearby cols
   let changelogHeaderRow = -1;
-  for (let i = 0; i < rows.length; i++) {
-    const cell = String(rows[i][IDX_EP] || '').trim().toLowerCase();
-    if (cell === 'date') { changelogHeaderRow = i; break; }
+  for (let i = 0; i < Math.min(30, rows.length); i++) {
+    // Check EP and a few columns around it
+    for (let c = Math.max(0, IDX_EP - 2); c <= IDX_EP + 2; c++) {
+      const cell = String(rows[i][c] || '').trim().toLowerCase();
+      if (cell === 'date' || cell === 'changelog') {
+        changelogHeaderRow = i;
+        break;
+      }
+    }
+    if (changelogHeaderRow >= 0) break;
   }
 
   const changelog = [];
-  if (changelogHeaderRow >= 0) {
-    for (let r = changelogHeaderRow + 1; r < rows.length; r++) {
-      const dateRaw = rows[r][IDX_EP];
-      const desc    = String(rows[r][IDX_EQ] || '').trim();
-      if (!dateRaw && !desc) continue;
-      const dateStr = fmtDate(dateRaw);
-      if (dateStr || desc) changelog.push({ date: dateStr, desc });
+  const startRow = changelogHeaderRow >= 0 ? changelogHeaderRow + 1 : 0;
+  for (let r = startRow; r < rows.length; r++) {
+    const epRaw = rows[r][IDX_EP];
+    const eqRaw = rows[r][IDX_EQ];
+    const dateStr = fmtDate(epRaw);
+    const desc    = String(eqRaw || '').trim();
+    // Include row if EP looks like a date OR EQ has content
+    if ((dateStr && dateStr !== String(epRaw).trim()) || desc) {
+      changelog.push({ date: dateStr || String(epRaw || '').trim() || null, desc });
     }
   }
 
-  // ── Scan for General section info
-  // Find row where EU column = "Title Name (Finance)"
-  let generalStartRow = -1;
-  for (let i = 0; i < rows.length; i++) {
-    const cell = String(rows[i][IDX_EU] || '').trim().toLowerCase();
-    if (cell.includes('title name')) { generalStartRow = i; break; }
-  }
-
+  // ── General info: search EU column for known labels ───────────────────
   const info = {};
-  if (generalStartRow >= 0) {
-    for (let r = generalStartRow; r < Math.min(generalStartRow + 40, rows.length); r++) {
-      const label = String(rows[r][IDX_EU] || '').trim();
-      const val   = String(rows[r][IDX_EV] || '').trim();
-      const val2  = String(rows[r][IDX_EW] || '').trim();
-      if (!label) continue;
+  for (let r = 0; r < rows.length; r++) {
+    const labelRaw = String(rows[r][IDX_EU] || '').trim();
+    if (!labelRaw) continue;
+    const lc = labelRaw.toLowerCase();
+    const val  = String(rows[r][IDX_EV] || '').trim();
+    const val2 = String(rows[r][IDX_EW] || '').trim();
+    const valBest = val || val2;
 
-      const lc = label.toLowerCase();
-      if (lc.includes('title name') && !info.title) info.title = val || val2;
-      else if (lc.includes('release date')) info.releaseDate = fmtDate(val || val2) || (val || val2);
-      else if (lc === 'product manager') info.pm = val;
-      else if (lc.includes('publishing producer')) info.pp = val;
-      else if (lc.includes('brand manager')) {
-        // brand manager is in EX/EY from screenshot
-        info.bm = String(rows[r][IDX_EX] || '').trim() || String(rows[r][IDX_EY] || '').trim();
-      }
-      else if (lc.includes('revenue model')) info.revenueModel = val;
-    }
+    if (lc.includes('title name') && !info.title)       info.title        = valBest;
+    else if (lc.includes('release date'))                info.releaseDate  = fmtDate(valBest) || valBest;
+    else if (lc === 'product manager')                   info.pm           = valBest;
+    else if (lc.includes('publishing producer'))         info.pp           = valBest;
+    else if (lc.includes('brand manager'))               info.bm           = String(rows[r][IDX_EX] || rows[r][IDX_EY] || '').trim() || valBest;
+    else if (lc === 'revenue model')                     info.revenueModel = valBest;
   }
 
-  // ── Budget: look for "Contracted Principal Spend" etc.
-  // From screenshot these are in EU column, values in EV/EW (Min/Max), EX (Spent), EY (Remaining)
-  const budgetRows = ['contracted principal spend', 'contracted service spend',
-                      'contracted marketing spend', 'total contracted budget'];
+  // ── Budget: look for known spend labels in EU column ──────────────────
   const budget = {};
+  const budgetLabelMap = {
+    'contracted principal spend': 'dev',
+    'contracted service spend':   'svc',
+    'contracted marketing spend': 'mkt',
+    'total contracted budget':    'total',
+  };
   for (let r = 0; r < rows.length; r++) {
     const label = String(rows[r][IDX_EU] || '').trim().toLowerCase();
-    for (const bk of budgetRows) {
-      if (label === bk) {
-        const key = bk.includes('principal') ? 'dev'
-                  : bk.includes('service')   ? 'svc'
-                  : bk.includes('marketing') ? 'mkt'
-                  : 'total';
-        // Use Max column as budget, Spent column as spend
-        budget[key] = {
-          budget: fmtMoney(rows[r][IDX_EW]) || fmtMoney(rows[r][IDX_EV]) || 0,
-          spend:  fmtMoney(rows[r][IDX_EX]) || 0,
-        };
-      }
+    const key   = budgetLabelMap[label];
+    if (!key) continue;
+    // Try EW as Max/budget, EX as Spent — fall back to EV
+    const budgetVal = fmtMoney(rows[r][IDX_EW]) || fmtMoney(rows[r][IDX_EV]) || 0;
+    const spendVal  = fmtMoney(rows[r][IDX_EX]) || 0;
+    if (budgetVal > 0 || spendVal > 0) {
+      budget[key] = { budget: budgetVal, spend: spendVal };
     }
   }
-  // Derive total if not found
+  // Derive total if missing
   if (!budget.total && (budget.dev || budget.svc || budget.mkt)) {
-    const b = (budget.dev?.budget||0) + (budget.svc?.budget||0) + (budget.mkt?.budget||0);
-    const s = (budget.dev?.spend||0)  + (budget.svc?.spend||0)  + (budget.mkt?.spend||0);
-    budget.total = { budget: b, spend: s };
+    budget.total = {
+      budget: (budget.dev?.budget||0) + (budget.svc?.budget||0) + (budget.mkt?.budget||0),
+      spend:  (budget.dev?.spend||0)  + (budget.svc?.spend||0)  + (budget.mkt?.spend||0),
+    };
   }
 
   return { game: sheetName, changelog, info, budget };
