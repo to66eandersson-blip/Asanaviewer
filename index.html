@@ -559,6 +559,21 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   color: var(--text3); font-family: var(--mono);
   display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
 }
+#sheet-picker-wrap {
+  display: none; align-items: center; gap: 8px;
+  padding: 8px 1.25rem 0;
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+}
+#sheet-picker-wrap.visible { display: flex; }
+#sheet-picker-sel {
+  background: var(--bg); border: 0.5px solid var(--border2);
+  border-radius: var(--r); color: var(--text);
+  font-family: var(--mono); font-size: 10px;
+  padding: 5px 8px; outline: none; cursor: pointer;
+  transition: border-color 0.15s; min-width: 160px;
+}
+#sheet-picker-sel:focus { border-color: var(--accent); }
+#sheet-picker-sel option { background: var(--surface2); }
 .excel-col-config {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
@@ -718,6 +733,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <input type="text" id="col-b-inp" value="EQ" />
       </div>
     </div>
+    <div id="sheet-picker-wrap">
+      <span>No auto-match — pick sheet:</span>
+      <select id="sheet-picker-sel" onchange="onManualSheetPick(this.value)">
+        <option value="">— select a sheet tab —</option>
+      </select>
+    </div>
     <div id="excel-scroll">
       <div class="excel-empty" id="excel-empty">
         <div>No forecast loaded.</div>
@@ -771,26 +792,28 @@ const SKIP_SECTIONS = new Set(['budget tracker','goal excersize results','untitl
 /* ─── Product Board Map ───
    Maps Portfolio-Overview product names → Product Board GIDs.
    Built from live Asana data. Used by the board picker dropdown.    */
+// Map: Portfolio product name → { gid, code }
+// 'code' is the acronym used in the Excel sheet tab names
 const PRODUCT_BOARD_MAP = {
-  'Appulse':                  '1213508049767992',   // APP Product Board
-  'Blake Manor':              '1211968270657884',   // SBM Product Board
-  'Blue Prince':              '1211875734575549',   // BP Product Board
-  'Cassette Beasts 2002':     '1211911867621234',   // CB2002 Product Board
-  'Deep Dish Dungeon':        '1211967053427418',   // DDD Product Board
-  'Dome Keeper':              '1212013201863467',   // DK Product Board
-  'Esoteric Ebb':             '1212013205439519',   // EE Product Board
-  'KTC':                      '1212081395447699',   // KTC Product Board
-  'Kingdom 3':                '1212151115389244',   // K3 Product Board
-  'KuloNiku: Bowl Up!':       '1211912056412903',   // KNBU Product Board
-  'Last Man Sitting':         '1211911723653147',   // LMS Product Board
-  'Llamalandia':              '1213537831150285',   // LL Product Board
-  'Monsters Are Coming':      '1211966243305065',   // (mapped to RIV - verify)
-  'My Cannibal Family':       '1211911867619071',   // MC Product Board
-  'ROUTINE':                  '1212148535011307',   // ROUTINE Product Board
-  'Regions of Ruin: Runegate':'1211899818368463',   // RR2 Product Board
-  'Rivage':                   '1211966243305065',   // RIV Product Board
-  'Star Trucker':             '1211962398846254',   // ST Product Board
-  'Sulfur Coast':             '1211990738288419',   // SC Product Board
+  'Appulse':                  { gid: '1213508049767992', code: 'APP'     },
+  'Blake Manor':              { gid: '1211968270657884', code: 'SBM'     },
+  'Blue Prince':              { gid: '1211875734575549', code: 'BP'      },
+  'Cassette Beasts 2002':     { gid: '1211911867621234', code: 'CB2'     },
+  'Deep Dish Dungeon':        { gid: '1211967053427418', code: 'DDD'     },
+  'Dome Keeper':              { gid: '1212013201863467', code: 'DK'      },
+  'Esoteric Ebb':             { gid: '1212013205439519', code: 'EE'      },
+  'KTC':                      { gid: '1212081395447699', code: 'KTC'     },
+  'Kingdom 3':                { gid: '1212151115389244', code: 'K3'      },
+  'KuloNiku: Bowl Up!':       { gid: '1211912056412903', code: 'KNBU'    },
+  'Last Man Sitting':         { gid: '1211911723653147', code: 'LMS'     },
+  'Llamalandia':              { gid: '1213537831150285', code: 'LLA'     },
+  'Monsters Are Coming':      { gid: '1211966243305065', code: 'MSI'     },
+  'My Cannibal Family':       { gid: '1211911867619071', code: 'MC'      },
+  'ROUTINE':                  { gid: '1212148535011307', code: 'ROU'     },
+  'Regions of Ruin: Runegate':{ gid: '1211899818368463', code: 'RR2'     },
+  'Rivage':                   { gid: '1211966243305065', code: 'RIV'     },
+  'Star Trucker':             { gid: '1211962398846254', code: 'ST'      },
+  'Sulfur Coast':             { gid: '1211990738288419', code: 'SC'      },
 };
 
 // Portfolio Overview project GID
@@ -1655,9 +1678,11 @@ async function loadPortfolio() {
         if (cf.gid === CF_PHASE_FIELD   && cf.enum_value) phase   = cf.enum_value.name;
       }
       if (product && !productMap[product]) {
+        const entry = PRODUCT_BOARD_MAP[product] || null;
         productMap[product] = {
           name: product,
-          boardGid: PRODUCT_BOARD_MAP[product] || null,
+          boardGid: entry ? entry.gid : null,
+          code: entry ? entry.code : null,
           phase: phase || 'Unknown',
         };
       } else if (product && phase && productMap[product].phase === 'Unknown') {
@@ -1748,14 +1773,21 @@ function buildBoardDropdown() {
       const opt = document.createElement('option');
       opt.value = p.boardGid;
       opt.textContent = p.name;
+      // Store the board code so boardAcronym() can find it without a DOM search
+      if (p.code) opt.dataset.code = p.code;
       grp.appendChild(opt);
     });
     sel.appendChild(grp);
   });
 
-  // Restore previous selection if still visible
-  if (currentVal && [...sel.options].find(o => o.value === currentVal)) {
-    sel.value = currentVal;
+  // Restore previous selection — must use explicit loop, sel.value may not work across optgroups
+  if (currentVal) {
+    for (let i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === currentVal) {
+        sel.selectedIndex = i;
+        break;
+      }
+    }
   }
 }
 
@@ -1835,10 +1867,16 @@ function parseExcelBuffer(ab) {
    "K3 Product Board"      → "K3"                                    */
 function boardAcronym() {
   const sel = document.getElementById('board-select');
-  const opt = sel ? sel.options[sel.selectedIndex] : null;
-  let name = (opt && opt.value) ? opt.textContent.trim() : '';
-  // Strip "Product Board", "(FoF)", whitespace; uppercase; take first token
-  return name
+  const gid = sel ? sel.value : '';
+  if (!gid) return '';
+  // Look up the product entry that matches the selected GID
+  const product = portfolioProducts.find(p => p.boardGid === gid);
+  if (product && product.code) return product.code.toUpperCase();
+  // Fallback: derive from the Asana board name stored on the option data attribute
+  const opt = sel.options[sel.selectedIndex];
+  const boardName = opt ? (opt.dataset.boardName || opt.textContent.trim()) : '';
+  // Board names are like "MC Product Board" — take the first token
+  return boardName
     .replace(/product\s*board/i, '')
     .replace(/\(FoF\)/i, '')
     .replace(/[^A-Za-z0-9 ]/g, ' ')
@@ -1914,14 +1952,34 @@ function renderForecastForCurrentBoard() {
     .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score);
 
+  const pickerWrap = document.getElementById('sheet-picker-wrap');
+  const pickerSel  = document.getElementById('sheet-picker-sel');
+
   if (!scored.length) {
+    // No match — show manual picker populated with all sheet names
+    pickerWrap.classList.add('visible');
+    pickerSel.innerHTML = '<option value="">— select a sheet tab —</option>';
+    wb.SheetNames.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      pickerSel.appendChild(opt);
+    });
     renderForecast(null, 'EP', 'EQ', acronym, wb.SheetNames);
     return;
   }
 
+  // Good match found — hide manual picker
+  pickerWrap.classList.remove('visible');
+
   const data = extractSheetData(wb, scored[0].name);
   if (data) renderForecast(data, data.labelA, data.labelB, acronym, null);
   else renderForecast(null, 'EP', 'EQ', acronym, wb.SheetNames);
+}
+
+function onManualSheetPick(sheetName) {
+  if (!sheetName || !_cachedWorkbook) return;
+  const data = extractSheetData(_cachedWorkbook, sheetName);
+  if (data) renderForecast(data, data.labelA, data.labelB, boardAcronym(), null);
 }
 
 function renderForecast(data, labelA, labelB, acronym, allSheets) {
