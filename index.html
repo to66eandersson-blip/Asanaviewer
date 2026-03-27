@@ -466,7 +466,112 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .gb-leg-ring-r { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,61,61,0.15);  box-shadow: 0 0 0 2.5px var(--rag-r); }
 .gb-leg-pg-ring-g { width: 11px; height: 11px; border-radius: 2px; transform: rotate(45deg); background: rgba(34,221,110,0.15); box-shadow: 0 0 0 2.5px var(--rag-g); }
 .gb-leg-note { margin-left: auto; font-size: 9px; color: var(--text3); }
+
+/* ── BOARD PICKER ── */
+.board-picker-wrap {
+  display: flex; align-items: center; gap: 8px; flex: 1;
+  min-width: 0;
+}
+#board-select {
+  background: var(--bg); border: 0.5px solid var(--border2);
+  border-radius: var(--r); color: var(--text);
+  font-family: var(--mono); font-size: 10px;
+  padding: 5px 8px; outline: none; cursor: pointer;
+  transition: border-color 0.15s; max-width: 230px;
+  flex: 1; min-width: 0;
+}
+#board-select:focus { border-color: var(--accent); }
+#board-select option { background: var(--surface2); }
+.picker-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  color: var(--text3); text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+}
+#picker-status {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+  white-space: nowrap; flex-shrink: 0;
+}
+
+/* Phase filter bar (inside filterbars, shown only when Goals Board active) */
+#filterbar-phase { display: none; }
+#filterbar-phase.visible { display: flex; }
+
+/* ── EXCEL TAB ── */
+#panel-excel {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+}
+.excel-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 1.25rem; border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0; background: var(--surface); flex-wrap: wrap;
+}
+.excel-toolbar .picker-label { color: var(--text3); }
+/* excel-url-inp removed */
+#excel-file-inp { display: none; }
+.excel-local-note {
+  font-family: var(--mono); font-size: 9.5px; color: var(--text3);
+  letter-spacing: 0.04em; padding: 4px 8px;
+  background: rgba(184,240,80,0.06); border: 0.5px solid var(--accent-border);
+  border-radius: var(--r);
+}
+.excel-btn {
+  background: transparent; border: 0.5px solid var(--border2);
+  border-radius: var(--r); color: var(--text2);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.07em;
+  text-transform: uppercase; padding: 5px 9px; cursor: pointer;
+  white-space: nowrap; transition: all 0.12s;
+}
+.excel-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border3); }
+.excel-btn.accent { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+
+#excel-scroll { flex: 1; overflow: auto; padding: 1.25rem; }
+
+/* Forecast grid */
+.fc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.fc-card {
+  background: var(--surface); border: 0.5px solid var(--border2);
+  border-radius: var(--r-lg); overflow: hidden;
+}
+.fc-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 0.5px solid var(--border);
+}
+.fc-game-name {
+  font-size: 12px; font-weight: 400; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fc-card-body { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+.fc-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.fc-col-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
+  color: var(--text3); text-transform: uppercase; flex-shrink: 0;
+}
+.fc-col-value { font-size: 13px; color: var(--text); text-align: right; }
+.fc-col-value.accent { color: var(--accent); }
+
+.excel-empty {
+  padding: 3rem 1.25rem; font-size: 12px;
+  color: var(--text3); font-family: var(--mono);
+  display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
+}
+.excel-col-config {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+#col-a-inp, #col-b-inp {
+  background: var(--bg); border: 0.5px solid var(--border2);
+  border-radius: var(--r); color: var(--text);
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 7px; width: 160px; outline: none;
+  transition: border-color 0.15s;
+}
+#col-a-inp:focus, #col-b-inp:focus { border-color: var(--accent); }
+#col-a-inp::placeholder, #col-b-inp::placeholder { color: var(--text3); }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -512,11 +617,19 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
       <button class="tab-btn" id="tab-btn-goals" onclick="switchTab('goals')">Goals Board</button>
+      <button class="tab-btn" id="tab-btn-excel" onclick="switchTab('excel')">Forecast</button>
     </div>
     <div class="tb-sep"></div>
-    <div class="tb-project" id="proj-title">—</div>
+    <div class="board-picker-wrap">
+      <span class="picker-label">Board</span>
+      <select id="board-select" onchange="onBoardPickerChange(this.value)">
+        <option value="">— loading portfolio… —</option>
+      </select>
+      <span id="picker-status"></span>
+      <span class="tb-project" id="proj-title" style="display:none">—</span>
+    </div>
     <div class="url-bar">
-      <input type="text" id="switch-inp" placeholder="Paste another board URL…" onkeydown="if(event.key==='Enter')switchBoard()" />
+      <input type="text" id="switch-inp" placeholder="Paste a board URL to override…" onkeydown="if(event.key==='Enter')switchBoard()" />
       <button class="tb-btn" onclick="switchBoard()">Load</button>
     </div>
     <div class="zoom-wrap">
@@ -532,6 +645,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <div class="filterbars">
     <div class="filterbar" id="filterbar-section"><span class="f-label">Section</span></div>
     <div class="filterbar" id="filterbar-domain"><span class="f-label">Domain</span></div>
+    <div class="filterbar" id="filterbar-phase"><span class="f-label">Phase</span></div>
   </div>
 
   <!-- ── TAB 1: TIMELINE ── -->
@@ -587,6 +701,34 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     </div>
   </div><!-- /panel-goals -->
 
+  <!-- ── TAB 3: FORECAST ── -->
+  <div class="tab-panel" id="panel-excel">
+    <div class="excel-toolbar">
+      <div class="excel-local-note">
+        🔒 <strong style="color:var(--text2);font-weight:400">Local only</strong> — file is read entirely in your browser. Nothing is uploaded or sent anywhere.
+      </div>
+      <button class="excel-btn accent" onclick="document.getElementById('excel-file-inp').click()">Open forecast file…</button>
+      <input type="file" id="excel-file-inp" accept=".xlsx,.xls,.xlsm" onchange="loadExcelFile(this)" />
+      <span id="excel-file-name" style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:2px"></span>
+      <div class="excel-col-config" style="margin-left:auto">
+        <span class="picker-label">Column EP header</span>
+        <input type="text" id="col-a-inp" value="EP" />
+        <span class="picker-label">Column EQ header</span>
+        <input type="text" id="col-b-inp" value="EQ" />
+      </div>
+    </div>
+    <div id="excel-scroll">
+      <div class="excel-empty" id="excel-empty">
+        <div>No forecast loaded.</div>
+        <div style="font-size:11px; line-height:1.7; color:var(--text3)">
+          Click <strong style="color:var(--text2)">Open forecast file…</strong> to pick your Excel file.<br>
+          The file is read locally — it never leaves your browser.
+        </div>
+      </div>
+      <div class="fc-grid" id="fc-grid" style="display:none"></div>
+    </div>
+  </div><!-- /panel-excel -->
+
 </div><!-- /screen-app -->
 
 <!-- ── TOOLTIP ── -->
@@ -624,6 +766,47 @@ const SECTION_ORDER = [
   { match: '1st party',      label: '1st Party',      color: '#50f0a0' },
 ];
 const SKIP_SECTIONS = new Set(['budget tracker','goal excersize results','untitled section','other']);
+
+/* ─── Product Board Map ───
+   Maps Portfolio-Overview product names → Product Board GIDs.
+   Built from live Asana data. Used by the board picker dropdown.    */
+const PRODUCT_BOARD_MAP = {
+  'Appulse':                  '1213508049767992',   // APP Product Board
+  'Blake Manor':              '1211968270657884',   // SBM Product Board
+  'Blue Prince':              '1211875734575549',   // BP Product Board
+  'Cassette Beasts 2002':     '1211911867621234',   // CB2002 Product Board
+  'Deep Dish Dungeon':        '1211967053427418',   // DDD Product Board
+  'Dome Keeper':              '1212013201863467',   // DK Product Board
+  'Esoteric Ebb':             '1212013205439519',   // EE Product Board
+  'KTC':                      '1212081395447699',   // KTC Product Board
+  'Kingdom 3':                '1212151115389244',   // K3 Product Board
+  'KuloNiku: Bowl Up!':       '1211912056412903',   // KNBU Product Board
+  'Last Man Sitting':         '1211911723653147',   // LMS Product Board
+  'Llamalandia':              '1213537831150285',   // LL Product Board
+  'Monsters Are Coming':      '1211966243305065',   // (mapped to RIV - verify)
+  'My Cannibal Family':       '1211911867619071',   // MC Product Board
+  'ROUTINE':                  '1212148535011307',   // ROUTINE Product Board
+  'Regions of Ruin: Runegate':'1211899818368463',   // RR2 Product Board
+  'Rivage':                   '1211966243305065',   // RIV Product Board
+  'Star Trucker':             '1211962398846254',   // ST Product Board
+  'Sulfur Coast':             '1211990738288419',   // SC Product Board
+};
+
+// Portfolio Overview project GID
+const PORTFOLIO_OVERVIEW_GID = '1211782261893247';
+const CF_PRODUCT_FIELD = '1211792266685509';  // (FoF) Product enum field
+const CF_PHASE_FIELD   = '1211542317034887';  // (FoF) Flow of Fury Phase
+
+// All phases in order
+const ALL_PHASES = [
+  'Scouting','Pre-Signing','Kick-Off','Announcement Ready',
+  'Release Ready','Release','Post Release','Back Catalogue'
+];
+
+/* ─── Portfolio state ─── */
+let portfolioProducts = [];   // [{name, boardGid, phase}]
+let activePhaseFilter = new Set(ALL_PHASES); // show all by default
+
 const MONTHLY_GREY_INNER = '#4a4845';
 
 const CF_RAG       = '1211609680601811';
@@ -791,6 +974,7 @@ async function connect(){
     const tasks=await fetchAllTasks(pid);
     buildApp(projResp.data,tasks);
     show('screen-app');
+    loadPortfolio();  // populate board picker from Portfolio Overview
   }catch(e){
     PAT='';currentPid='';
     showErr('Connection failed: '+e.message+(e.message.includes('401')?' — check your token.':(e.message.includes('403')?' — no access to this project.':'')));
@@ -904,7 +1088,21 @@ function buildBudgetBar(tasks){
 
 /* ─── Build app ─── */
 function buildApp(proj,tasks){
-  $('proj-title').innerHTML=`<strong>${esc(proj.name)}</strong>`;
+  // Update picker status label with loaded board name
+  const pickerSel = document.getElementById('board-select');
+  if (pickerSel) {
+    // Try to select the matching option
+    const matchOpt = [...pickerSel.options].find(o => o.value === currentPid);
+    if (!matchOpt) {
+      // Manually loaded via URL — add a temporary option
+      const tmp = document.createElement('option');
+      tmp.value = currentPid; tmp.selected = true;
+      tmp.textContent = proj.name;
+      pickerSel.insertBefore(tmp, pickerSel.options[0]);
+    } else {
+      pickerSel.value = currentPid;
+    }
+  }
   const parsed=tasks.filter(t=>t.name).map(t=>{
     const gt=getGoalType(t);
     const moParsed = parseGoalMonth(t);
@@ -1209,6 +1407,9 @@ function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'tab-btn-' + tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+  // Phase filter bar only visible on Goals Board tab
+  const phaseBar = document.getElementById('filterbar-phase');
+  if (phaseBar) phaseBar.classList.toggle('visible', tab === 'goals');
   if (tab === 'goals' && allEvents.length) renderGoalsBoard();
   unpinTT();
 }
@@ -1415,6 +1616,315 @@ function gbUnpin() {
 document.addEventListener('click', e => {
   if (activeTab === 'goals' && gbPinnedEvt && !e.target.closest('.gb-goal-row') && !e.target.closest('#tt')) gbUnpin();
 });
+
+/* ═══════════════════════════════════════════════════════════════════
+   BOARD PICKER — loads Portfolio Overview, populates dropdown
+   ═══════════════════════════════════════════════════════════════════ */
+
+async function loadPortfolio() {
+  if (!PAT) return;
+  const sel = document.getElementById('board-select');
+  const status = document.getElementById('picker-status');
+  sel.innerHTML = '<option value="">— loading… —</option>';
+  status.textContent = '';
+
+  try {
+    // Fetch all tasks from the Portfolio Overview project
+    const fields = [
+      'name', 'custom_fields', 'custom_fields.gid',
+      'custom_fields.display_value', 'custom_fields.enum_value'
+    ].join(',');
+
+    let tasks = [], offset = null;
+    do {
+      const qs = new URLSearchParams({ opt_fields: fields, limit: '100' });
+      if (offset) qs.set('offset', offset);
+      const resp = await api(`/projects/${PORTFOLIO_OVERVIEW_GID}/tasks?${qs}`);
+      tasks = tasks.concat(resp.data || []);
+      offset = resp.next_page?.offset || null;
+    } while (offset);
+
+    // Extract unique products with their phase
+    const productMap = {};  // name → { name, boardGid, phase }
+    tasks.forEach(t => {
+      let product = null, phase = null;
+      for (const cf of (t.custom_fields || [])) {
+        if (cf.gid === CF_PRODUCT_FIELD && cf.enum_value) product = cf.enum_value.name;
+        if (cf.gid === CF_PHASE_FIELD   && cf.enum_value) phase   = cf.enum_value.name;
+      }
+      if (product && !productMap[product]) {
+        productMap[product] = {
+          name: product,
+          boardGid: PRODUCT_BOARD_MAP[product] || null,
+          phase: phase || 'Unknown',
+        };
+      } else if (product && phase && productMap[product].phase === 'Unknown') {
+        productMap[product].phase = phase;
+      }
+    });
+
+    portfolioProducts = Object.values(productMap)
+      .filter(p => p.boardGid)  // only those we can actually navigate to
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    buildPhaseFilterBar();
+    buildBoardDropdown();
+    status.textContent = `${portfolioProducts.length} boards`;
+  } catch (e) {
+    sel.innerHTML = '<option value="">— portfolio load failed —</option>';
+    status.textContent = '';
+    console.warn('Portfolio load failed:', e);
+  }
+}
+
+function buildPhaseFilterBar() {
+  // Collect phases actually present
+  const presentPhases = [...new Set(portfolioProducts.map(p => p.phase))];
+  const bar = document.getElementById('filterbar-phase');
+  bar.innerHTML = '<span class="f-label">Phase</span>';
+
+  // All chip
+  bar.appendChild(makeChipEl('All', '#888580', 'ALL', activePhaseFilter.has('ALL'), 'phase'));
+
+  ALL_PHASES.forEach(ph => {
+    if (!presentPhases.includes(ph)) return;
+    bar.appendChild(makeChipEl(ph, '#888580', ph, activePhaseFilter.has(ph), 'phase'));
+  });
+  // Unknown bucket
+  if (presentPhases.includes('Unknown')) {
+    bar.appendChild(makeChipEl('Unknown', '#888580', 'Unknown', activePhaseFilter.has('Unknown'), 'phase'));
+  }
+}
+
+function makeChipEl(label, color, key, active, group) {
+  const c = document.createElement('button');
+  c.className = 'chip' + (active ? ' on' : '');
+  c.dataset.key = key; c.dataset.group = group;
+  const dot = document.createElement('span'); dot.className = 'chip-dot'; dot.style.background = color;
+  c.appendChild(dot); c.appendChild(document.createTextNode(label));
+  c.onclick = () => togglePhaseFilter(key);
+  return c;
+}
+
+function togglePhaseFilter(key) {
+  if (key === 'ALL') {
+    activePhaseFilter = new Set(ALL_PHASES.concat(['Unknown']));
+    activePhaseFilter.add('ALL');
+  } else {
+    activePhaseFilter.delete('ALL');
+    activePhaseFilter.has(key) ? activePhaseFilter.delete(key) : activePhaseFilter.add(key);
+    if (!activePhaseFilter.size) activePhaseFilter = new Set(ALL_PHASES.concat(['Unknown', 'ALL']));
+  }
+  document.querySelectorAll('.chip[data-group="phase"]').forEach(c => {
+    c.classList.toggle('on',
+      c.dataset.key === 'ALL' ? activePhaseFilter.has('ALL') : activePhaseFilter.has(c.dataset.key));
+  });
+  buildBoardDropdown();
+}
+
+function buildBoardDropdown() {
+  const sel = document.getElementById('board-select');
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">— select a game —</option>';
+
+  const visible = portfolioProducts.filter(p =>
+    activePhaseFilter.has('ALL') || activePhaseFilter.has(p.phase)
+  );
+
+  // Group by phase
+  const byPhase = {};
+  visible.forEach(p => {
+    if (!byPhase[p.phase]) byPhase[p.phase] = [];
+    byPhase[p.phase].push(p);
+  });
+
+  ALL_PHASES.concat(['Unknown']).forEach(ph => {
+    if (!byPhase[ph]) return;
+    const grp = document.createElement('optgroup');
+    grp.label = ph;
+    byPhase[ph].forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.boardGid;
+      opt.textContent = p.name;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+
+  // Restore previous selection if still visible
+  if (currentVal && [...sel.options].find(o => o.value === currentVal)) {
+    sel.value = currentVal;
+  }
+}
+
+async function onBoardPickerChange(gid) {
+  if (!gid || !PAT) return;
+  // Find the product name for the title
+  const product = portfolioProducts.find(p => p.boardGid === gid);
+  try {
+    setLoad('Connecting…');
+    const projResp = await api(`/projects/${gid}?opt_fields=name`);
+    setLoad('Fetching tasks…');
+    const tasks = await fetchAllTasks(gid);
+    buildApp(projResp.data, tasks);
+    // Also update phase for this product based on loaded tasks
+    updatePhaseFromTasks(tasks, product);
+    show('screen-app');
+  } catch (e) {
+    alert('Failed to load board: ' + e.message);
+  } finally { setLoad(null); }
+}
+
+function updatePhaseFromTasks(tasks, product) {
+  if (!product) return;
+  // Find the phase from the Flow of Fury tasks in this board
+  for (const t of tasks) {
+    const phaseCF = (t.custom_fields || []).find(cf => cf.gid === CF_PHASE_FIELD);
+    if (phaseCF?.enum_value) {
+      product.phase = phaseCF.enum_value.name;
+      return;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE FILTER BAR visibility on tab switch
+   ═══════════════════════════════════════════════════════════════════ */
+// Patch into switchTab
+const _origSwitchTab = switchTab;
+// We'll redefine switchTab below and call phase bar visibility there.
+
+/* ═══════════════════════════════════════════════════════════════════
+   EXCEL / FORECAST TAB
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* loadExcelUrl removed — file picker only for security */
+
+function loadExcelFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const nameEl = document.getElementById('excel-file-name');
+  if (nameEl) nameEl.textContent = file.name;
+  setLoad('Reading ' + file.name + '…');
+  const reader = new FileReader();
+  reader.onload = e => { parseExcelBuffer(e.target.result); setLoad(null); };
+  reader.onerror = () => { setLoad(null); alert('Failed to read file.'); };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseExcelBuffer(ab) {
+  if (typeof XLSX === 'undefined') {
+    alert('SheetJS library not loaded. Check your internet connection.');
+    return;
+  }
+  const wb = XLSX.read(ab, { type: 'array' });
+  const colAInput = (document.getElementById('col-a-inp').value.trim() || 'EP').toUpperCase();
+  const colBInput = (document.getElementById('col-b-inp').value.trim() || 'EQ').toUpperCase();
+
+  // Convert Excel column letter(s) to 0-based index
+  function colLetterToIdx(letters) {
+    let n = 0;
+    for (let i = 0; i < letters.length; i++) {
+      n = n * 26 + (letters.charCodeAt(i) - 64);
+    }
+    return n - 1;
+  }
+
+  // Is it a pure column letter reference (A-Z, AA-ZZ, etc.)?
+  const isColLetter = s => /^[A-Z]{1,3}$/.test(s);
+
+  const idxAFixed = isColLetter(colAInput) ? colLetterToIdx(colAInput) : null;
+  const idxBFixed = isColLetter(colBInput) ? colLetterToIdx(colBInput) : null;
+
+  const results = [];
+  wb.SheetNames.forEach(sheetName => {
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if (!rows.length) return;
+
+    // Find header row (first row with any content)
+    let headerRowIdx = 0;
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+      if (rows[i].some(c => String(c).trim())) { headerRowIdx = i; break; }
+    }
+    const headers = rows[headerRowIdx].map(c => String(c).trim());
+
+    // Resolve column index: prefer header-name match, fall back to column letter
+    const resolveIdx = (input, fixedIdx) => {
+      if (fixedIdx !== null) {
+        // Column letter: check if header row has a label here, use as-is
+        return fixedIdx;
+      }
+      // Try header name match
+      return headers.findIndex(h => h.toLowerCase() === input.toLowerCase());
+    };
+
+    const idxA = resolveIdx(colAInput, idxAFixed);
+    const idxB = resolveIdx(colBInput, idxBFixed);
+
+    if (idxA < 0 && idxB < 0) return;
+
+    // Collect the header label at that column (for display)
+    const labelA = headers[idxA] || colAInput;
+    const labelB = headers[idxB] || colBInput;
+
+    // Scan all data rows; take last non-empty value per column
+    let valA = '', valB = '';
+    for (let r = headerRowIdx + 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (idxA >= 0 && row[idxA] !== '' && row[idxA] != null) valA = row[idxA];
+      if (idxB >= 0 && row[idxB] !== '' && row[idxB] != null) valB = row[idxB];
+    }
+
+    results.push({ game: sheetName, valA, valB, labelA, labelB });
+  });
+
+  // Use the labels from the first result sheet for card headers
+  const displayLabelA = results[0]?.labelA || colAInput;
+  const displayLabelB = results[0]?.labelB || colBInput;
+
+  renderForecast(results, displayLabelA, displayLabelB);
+}
+
+function renderForecast(results, labelA, labelB) {
+  const empty = document.getElementById('excel-empty');
+  const grid  = document.getElementById('fc-grid');
+
+  if (!results.length) {
+    empty.style.display = 'flex';
+    empty.querySelector('div').textContent =
+      'No matching columns found. Check that the column headers match exactly.';
+    grid.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  grid.style.display = 'grid';
+  grid.innerHTML = '';
+
+  results.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'fc-card';
+
+    card.innerHTML = `
+      <div class="fc-card-header">
+        <span class="fc-game-name">${esc(r.game)}</span>
+      </div>
+      <div class="fc-card-body">
+        ${labelA ? `<div class="fc-row">
+          <span class="fc-col-label">${esc(labelA)}</span>
+          <span class="fc-col-value accent">${esc(String(r.valA !== '' ? r.valA : '—'))}</span>
+        </div>` : ''}
+        ${labelB ? `<div class="fc-row">
+          <span class="fc-col-label">${esc(labelB)}</span>
+          <span class="fc-col-value">${esc(String(r.valB !== '' ? r.valB : '—'))}</span>
+        </div>` : ''}
+      </div>`;
+
+    grid.appendChild(card);
+  });
+}
+
 </script>
 </body>
 </html>
