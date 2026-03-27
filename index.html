@@ -497,7 +497,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── EXCEL TAB ── */
 #panel-excel {
-  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  /* display controlled by .tab-panel / .tab-panel.active — do NOT set display here */
+  flex: 1; flex-direction: column; min-height: 0;
 }
 .excel-toolbar {
   display: flex; align-items: center; gap: 10px;
@@ -1411,6 +1412,7 @@ function switchTab(tab) {
   const phaseBar = document.getElementById('filterbar-phase');
   if (phaseBar) phaseBar.classList.toggle('visible', tab === 'goals');
   if (tab === 'goals' && allEvents.length) renderGoalsBoard();
+  if (tab === 'excel') renderForecastForCurrentBoard();
   unpinTT();
 }
 
@@ -1772,7 +1774,10 @@ async function onBoardPickerChange(gid) {
     show('screen-app');
   } catch (e) {
     alert('Failed to load board: ' + e.message);
-  } finally { setLoad(null); }
+  } finally {
+    setLoad(null);
+    if (activeTab === 'excel') renderForecastForCurrentBoard();
+  }
 }
 
 function updatePhaseFromTasks(tasks, product) {
@@ -1812,88 +1817,128 @@ function loadExcelFile(input) {
   reader.readAsArrayBuffer(file);
 }
 
+/* Cached workbook — persists across board switches */
+let _cachedWorkbook = null;
+
 function parseExcelBuffer(ab) {
   if (typeof XLSX === 'undefined') {
     alert('SheetJS library not loaded. Check your internet connection.');
     return;
   }
-  const wb = XLSX.read(ab, { type: 'array' });
+  _cachedWorkbook = XLSX.read(ab, { type: 'array' });
+  renderForecastForCurrentBoard();
+}
+
+/* Derive the game acronym from the currently selected board name.
+   "MC Product Board"      → "MC"
+   "ROUTINE Product Board" → "ROUTINE"
+   "K3 Product Board"      → "K3"                                    */
+function boardAcronym() {
+  const sel = document.getElementById('board-select');
+  const opt = sel ? sel.options[sel.selectedIndex] : null;
+  let name = (opt && opt.value) ? opt.textContent.trim() : '';
+  // Strip "Product Board", "(FoF)", whitespace; uppercase; take first token
+  return name
+    .replace(/product\s*board/i, '')
+    .replace(/\(FoF\)/i, '')
+    .replace(/[^A-Za-z0-9 ]/g, ' ')
+    .trim()
+    .toUpperCase()
+    .split(/\s+/)[0] || '';
+}
+
+/* Score how well a sheet name matches an acronym.
+   3 = exact, 2 = one starts with the other, 1 = one contains the other */
+function sheetMatchScore(sheetName, acronym) {
+  if (!acronym) return 0;
+  const s = sheetName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const a = acronym.replace(/[^A-Z0-9]/g, '');
+  if (!a) return 0;
+  if (s === a) return 3;
+  if (s.startsWith(a) || a.startsWith(s)) return 2;
+  if (s.includes(a) || a.includes(s)) return 1;
+  return 0;
+}
+
+function colLetterToIdx(letters) {
+  let n = 0;
+  for (let i = 0; i < letters.length; i++) n = n * 26 + (letters.charCodeAt(i) - 64);
+  return n - 1;
+}
+
+function extractSheetData(wb, sheetName) {
   const colAInput = (document.getElementById('col-a-inp').value.trim() || 'EP').toUpperCase();
   const colBInput = (document.getElementById('col-b-inp').value.trim() || 'EQ').toUpperCase();
-
-  // Convert Excel column letter(s) to 0-based index
-  function colLetterToIdx(letters) {
-    let n = 0;
-    for (let i = 0; i < letters.length; i++) {
-      n = n * 26 + (letters.charCodeAt(i) - 64);
-    }
-    return n - 1;
-  }
-
-  // Is it a pure column letter reference (A-Z, AA-ZZ, etc.)?
   const isColLetter = s => /^[A-Z]{1,3}$/.test(s);
-
   const idxAFixed = isColLetter(colAInput) ? colLetterToIdx(colAInput) : null;
   const idxBFixed = isColLetter(colBInput) ? colLetterToIdx(colBInput) : null;
 
-  const results = [];
-  wb.SheetNames.forEach(sheetName => {
-    const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-    if (!rows.length) return;
+  const ws = wb.Sheets[sheetName];
+  if (!ws) return null;
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  if (!rows.length) return null;
 
-    // Find header row (first row with any content)
-    let headerRowIdx = 0;
-    for (let i = 0; i < Math.min(10, rows.length); i++) {
-      if (rows[i].some(c => String(c).trim())) { headerRowIdx = i; break; }
-    }
-    const headers = rows[headerRowIdx].map(c => String(c).trim());
+  let headerRowIdx = 0;
+  for (let i = 0; i < Math.min(10, rows.length); i++) {
+    if (rows[i].some(c => String(c).trim())) { headerRowIdx = i; break; }
+  }
+  const headers = rows[headerRowIdx].map(c => String(c).trim());
 
-    // Resolve column index: prefer header-name match, fall back to column letter
-    const resolveIdx = (input, fixedIdx) => {
-      if (fixedIdx !== null) {
-        // Column letter: check if header row has a label here, use as-is
-        return fixedIdx;
-      }
-      // Try header name match
-      return headers.findIndex(h => h.toLowerCase() === input.toLowerCase());
-    };
+  const resolveIdx = (input, fixedIdx) => {
+    if (fixedIdx !== null) return fixedIdx;
+    return headers.findIndex(h => h.toLowerCase() === input.toLowerCase());
+  };
+  const idxA = resolveIdx(colAInput, idxAFixed);
+  const idxB = resolveIdx(colBInput, idxBFixed);
 
-    const idxA = resolveIdx(colAInput, idxAFixed);
-    const idxB = resolveIdx(colBInput, idxBFixed);
+  const labelA = (idxA >= 0 && headers[idxA]) ? headers[idxA] : colAInput;
+  const labelB = (idxB >= 0 && headers[idxB]) ? headers[idxB] : colBInput;
 
-    if (idxA < 0 && idxB < 0) return;
-
-    // Collect the header label at that column (for display)
-    const labelA = headers[idxA] || colAInput;
-    const labelB = headers[idxB] || colBInput;
-
-    // Scan all data rows; take last non-empty value per column
-    let valA = '', valB = '';
-    for (let r = headerRowIdx + 1; r < rows.length; r++) {
-      const row = rows[r];
-      if (idxA >= 0 && row[idxA] !== '' && row[idxA] != null) valA = row[idxA];
-      if (idxB >= 0 && row[idxB] !== '' && row[idxB] != null) valB = row[idxB];
-    }
-
-    results.push({ game: sheetName, valA, valB, labelA, labelB });
-  });
-
-  // Use the labels from the first result sheet for card headers
-  const displayLabelA = results[0]?.labelA || colAInput;
-  const displayLabelB = results[0]?.labelB || colBInput;
-
-  renderForecast(results, displayLabelA, displayLabelB);
+  let valA = '', valB = '';
+  for (let r = headerRowIdx + 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (idxA >= 0 && row[idxA] !== '' && row[idxA] != null) valA = row[idxA];
+    if (idxB >= 0 && row[idxB] !== '' && row[idxB] != null) valB = row[idxB];
+  }
+  return { game: sheetName, valA, valB, labelA, labelB };
 }
 
-function renderForecast(results, labelA, labelB) {
+function renderForecastForCurrentBoard() {
+  if (!_cachedWorkbook) return;
+  const wb = _cachedWorkbook;
+  const acronym = boardAcronym();
+
+  // Score every sheet and pick the best match
+  const scored = wb.SheetNames
+    .map(name => ({ name, score: sheetMatchScore(name, acronym) }))
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (!scored.length) {
+    renderForecast(null, 'EP', 'EQ', acronym, wb.SheetNames);
+    return;
+  }
+
+  const data = extractSheetData(wb, scored[0].name);
+  if (data) renderForecast(data, data.labelA, data.labelB, acronym, null);
+  else renderForecast(null, 'EP', 'EQ', acronym, wb.SheetNames);
+}
+
+function renderForecast(data, labelA, labelB, acronym, allSheets) {
   const empty = document.getElementById('excel-empty');
   const grid  = document.getElementById('fc-grid');
 
-  if (!results.length) {
+  if (!data) {
+    // No match found — show helpful message
     empty.style.display = 'flex';
-    empty.querySelector('div').textContent =
-      'No matching columns found. Check that the column headers match exactly.';
+    const msg = allSheets
+      ? `No sheet matching "${acronym}" found.\nAvailable sheets: ${allSheets.join(', ')}`
+      : 'No data found.';
+    empty.innerHTML = `
+      <div>No matching tab found for <strong style="color:var(--text2)">${esc(acronym || '(no board loaded)')}</strong></div>
+      <div style="font-size:11px;line-height:1.7;color:var(--text3)">
+        ${allSheets ? 'Available sheets: ' + esc(allSheets.join(', ')) : ''}
+      </div>`;
     grid.style.display = 'none';
     return;
   }
@@ -1902,27 +1947,28 @@ function renderForecast(results, labelA, labelB) {
   grid.style.display = 'grid';
   grid.innerHTML = '';
 
-  results.forEach(r => {
-    const card = document.createElement('div');
-    card.className = 'fc-card';
+  // Single card for the matched game
+  const card = document.createElement('div');
+  card.className = 'fc-card';
+  card.style.maxWidth = '420px';
 
-    card.innerHTML = `
-      <div class="fc-card-header">
-        <span class="fc-game-name">${esc(r.game)}</span>
-      </div>
-      <div class="fc-card-body">
-        ${labelA ? `<div class="fc-row">
-          <span class="fc-col-label">${esc(labelA)}</span>
-          <span class="fc-col-value accent">${esc(String(r.valA !== '' ? r.valA : '—'))}</span>
-        </div>` : ''}
-        ${labelB ? `<div class="fc-row">
-          <span class="fc-col-label">${esc(labelB)}</span>
-          <span class="fc-col-value">${esc(String(r.valB !== '' ? r.valB : '—'))}</span>
-        </div>` : ''}
-      </div>`;
+  card.innerHTML = `
+    <div class="fc-card-header">
+      <span class="fc-game-name">${esc(data.game)}</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.06em">Matched to ${esc(acronym)}</span>
+    </div>
+    <div class="fc-card-body">
+      ${labelA ? `<div class="fc-row">
+        <span class="fc-col-label">${esc(labelA)}</span>
+        <span class="fc-col-value accent">${esc(String(data.valA !== '' ? data.valA : '—'))}</span>
+      </div>` : ''}
+      ${labelB ? `<div class="fc-row">
+        <span class="fc-col-label">${esc(labelB)}</span>
+        <span class="fc-col-value">${esc(String(data.valB !== '' ? data.valB : '—'))}</span>
+      </div>` : ''}
+    </div>`;
 
-    grid.appendChild(card);
-  });
+  grid.appendChild(card);
 }
 
 </script>
