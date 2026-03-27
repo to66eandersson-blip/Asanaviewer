@@ -2054,104 +2054,82 @@ function extractSheetData(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
   if (!ws) return null;
 
-  /* Read a cell by Excel address e.g. cellVal('EU', 5) → 'My Cannibal Family' */
-  function cellVal(col, row1based) {
-    const cell = ws[col + row1based];
-    if (!cell || cell.v === undefined || cell.v === null) return '';
+  function cv(col, r) {
+    const cell = ws[col + r];
+    if (!cell || cell.v == null) return '';
     if (cell.t === 'd') return cell.v.toISOString().slice(0, 10);
-    if (cell.t === 'n') {
-      const v = cell.v;
-      // Excel date serials: dates fall roughly in 40000-60000 range
-      if (v >= 40000 && v <= 60000) {
-        const d = new Date(Math.round((v - 25569) * 86400000));
-        if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
-      }
-      return String(v);
+    if (cell.t === 'n' && cell.v >= 40000 && cell.v <= 60000) {
+      const d = new Date(Math.round((cell.v - 25569) * 86400000));
+      if (!isNaN(d)) return d.toISOString().slice(0, 10);
     }
     return String(cell.v).trim();
   }
-
-  function cellNum(col, row1based) {
-    const v = parseFloat(cellVal(col, row1based));
-    return isNaN(v) ? 0 : v;
-  }
+  function cn(col, r) { const v = parseFloat(cv(col, r)); return isNaN(v) ? 0 : v; }
 
   const ref = ws['!ref'];
   if (!ref) return { game: sheetName, changelog: [], general: {}, budget: {} };
   const maxRow = XLSX.utils.decode_range(ref).e.r + 1;
 
-  // ── CHANGELOG: EP = Date, EQ = Description ──────────────────────────────
+  // ── CHANGELOG ─────────────────────────────────────────────────────────
   const changelog = [];
-  let clHeaderRow = -1;
+  let clHdr = -1;
   for (let r = 1; r <= Math.min(40, maxRow); r++) {
-    const ep = cellVal('EP', r).toLowerCase();
-    const eq = cellVal('EQ', r).toLowerCase();
-    if (ep === 'date' || ep === 'changelog' || eq === 'description') {
-      clHeaderRow = r; break;
-    }
+    const ep = cv('EP', r).toLowerCase();
+    const eq = cv('EQ', r).toLowerCase();
+    if (ep === 'date' || eq === 'description' || ep === 'changelog') { clHdr = r; break; }
   }
-  for (let r = (clHeaderRow > 0 ? clHeaderRow + 1 : 1); r <= maxRow; r++) {
-    const epRaw = cellVal('EP', r);
-    const eqRaw = cellVal('EQ', r);
+  for (let r = clHdr > 0 ? clHdr + 1 : 1; r <= maxRow; r++) {
+    const epRaw = cv('EP', r), eqRaw = cv('EQ', r);
     if (!epRaw && !eqRaw) continue;
-    const date = /^\d{4}-\d{2}-\d{2}/.test(epRaw) ? epRaw.slice(0, 10) : (epRaw || null);
+    const date = /^\d{4}-\d{2}-\d{2}/.test(epRaw) ? epRaw.slice(0,10) : (epRaw||null);
     if (date || eqRaw) changelog.push({ date, desc: eqRaw });
   }
 
-  // ── GENERAL: scan EU column for known labels, read ET→EZ values ─────────
-  // We look for exactly these labels (case-insensitive), matching on EU column.
-  // For text labels: value is in EV column.
-  // For budget labels: Max=EW, Spent=EX, Remaining=EY, Planned=EZ.
-  // We stop scanning after "Total Contracted Budget".
+  // ── GENERAL: collect all non-empty EU rows with spreadsheet row numbers ──
+  function fuzzy(s, ...kws) { const lc = s.toLowerCase(); return kws.every(k => lc.includes(k)); }
 
-  const TEXT_LABELS = {
-    'title name (finance)': 'titleFinance',
-    'title name (indiebi)': 'titleIndie',
-    'revenue share':        'revenueShare',
-    'principal markup':     'principalMarkup',
-    'release date (steam)': 'releaseSteam',
-    'release m1':           'releaseM1',
-    'release m12':          'releaseM12',
-    'revenue model':        'revenueModel',
-    'sustain rate m13-':    'sustainRate',
-    'product manager':      'pm',
-    'publishing producer(s)': 'pp',
-  };
-  const BUDGET_LABELS = {
-    'contracted principal spend': 'dev',
-    'contracted service spend':   'svc',
-    'contracted marketing spend': 'mkt',
-    'total contracted budget':    'total',
-  };
-  // Brand manager is in EX/EY of its row (from the screenshot layout)
-  const BM_LABELS = { 'brand manager(s)': 'bm', 'player experience manager(s)': 'pem' };
-
-  const general = {};
-  const budget  = {};
-  let hitTotal  = false;
-
+  // rawRows keeps {label, r, ev, ew, ex, ey, ez} — r is the actual sheet row number
+  const rawRows = [];
+  let hitTotal = false;
   for (let r = 1; r <= maxRow && !hitTotal; r++) {
-    const rawLabel = cellVal('EU', r);
-    if (!rawLabel) continue;
-    const lc = rawLabel.trim().toLowerCase();
-
-    if (TEXT_LABELS[lc]) {
-      general[TEXT_LABELS[lc]] = cellVal('EV', r) || cellVal('EW', r);
-    } else if (BM_LABELS[lc]) {
-      // From screenshot, BM is in EX/EY column
-      general[BM_LABELS[lc]] = cellVal('EX', r) || cellVal('EY', r);
-    } else if (BUDGET_LABELS[lc]) {
-      const key = BUDGET_LABELS[lc];
-      const bMax  = cellNum('EW', r) || cellNum('EV', r);
-      const spent = cellNum('EX', r);
-      const rem   = cellNum('EY', r);
-      const plan  = cellNum('EZ', r);
-      budget[key] = { budget: bMax, spend: spent, remaining: rem, planned: plan };
-      if (key === 'total') hitTotal = true;
-    }
+    const label = cv('EU', r);
+    if (!label) continue;
+    rawRows.push({ label, r, ev: cv('EV',r), ew: cv('EW',r), ex: cv('EX',r), ey: cv('EY',r), ez: cv('EZ',r) });
+    if (fuzzy(label, 'total') && fuzzy(label, 'budget')) hitTotal = true;
   }
 
-  // Derive total if not found explicitly
+  const gen = {};
+  const budget = {};
+
+  for (const row of rawRows) {
+    const lc  = row.label.toLowerCase();
+    const val = row.ev || row.ew || row.ex;  // best text value for text rows
+    const bMax  = cn('EW', row.r) || cn('EV', row.r);
+    const spent = cn('EX', row.r);
+    const rem   = cn('EY', row.r);
+
+    // Text fields
+    if      (fuzzy(lc,'title','finance') && !gen.titleFinance) gen.titleFinance = val;
+    else if ((fuzzy(lc,'title','indie') || fuzzy(lc,'title','indiebi')) && !gen.titleIndie) gen.titleIndie = val;
+    else if ((fuzzy(lc,'release') && fuzzy(lc,'steam')) || (fuzzy(lc,'release') && fuzzy(lc,'date'))) gen.releaseSteam = val;
+    else if  (fuzzy(lc,'release') && fuzzy(lc,'m1') && !fuzzy(lc,'m12')) gen.releaseM1 = val;
+    else if  (fuzzy(lc,'release') && fuzzy(lc,'m12')) gen.releaseM12 = val;
+    else if  (fuzzy(lc,'revenue') && fuzzy(lc,'model')) gen.revenueModel = val;
+    else if  (fuzzy(lc,'revenue') && fuzzy(lc,'share')) gen.revenueShare = val;
+    else if  (fuzzy(lc,'principal') && fuzzy(lc,'markup')) gen.principalMarkup = val;
+    else if  (fuzzy(lc,'sustain')) gen.sustainRate = val;
+    else if  (fuzzy(lc,'product') && fuzzy(lc,'manager') && !gen.pm) gen.pm = val;
+    else if ((fuzzy(lc,'publishing') || fuzzy(lc,'producer')) && !gen.pp) gen.pp = val;
+    else if  (fuzzy(lc,'brand') && fuzzy(lc,'manager') && !gen.bm) gen.bm = row.ex || row.ey || val;
+    else if  (fuzzy(lc,'player') && fuzzy(lc,'experience') && !gen.pem) gen.pem = row.ex || row.ey || val;
+
+    // Budget rows (have numeric values)
+    if      (fuzzy(lc,'principal') && fuzzy(lc,'spend') && !fuzzy(lc,'signing')) budget.dev   = { budget: bMax, spend: spent, remaining: rem };
+    else if  (fuzzy(lc,'service')  && fuzzy(lc,'spend')) budget.svc   = { budget: bMax, spend: spent, remaining: rem };
+    else if  (fuzzy(lc,'marketing')&& fuzzy(lc,'spend')) budget.mkt   = { budget: bMax, spend: spent, remaining: rem };
+    else if  (fuzzy(lc,'total')    && fuzzy(lc,'budget'))budget.total  = { budget: bMax, spend: spent, remaining: rem };
+  }
+
   if (!budget.total && (budget.dev || budget.svc || budget.mkt)) {
     budget.total = {
       budget:    (budget.dev?.budget||0)    + (budget.svc?.budget||0)    + (budget.mkt?.budget||0),
@@ -2160,7 +2138,13 @@ function extractSheetData(wb, sheetName) {
     };
   }
 
-  return { game: sheetName, changelog, general, budget };
+  // Fallback title
+  if (!gen.titleFinance && !gen.titleIndie) {
+    const tRow = rawRows.find(r => r.label.toLowerCase().includes('title'));
+    if (tRow) gen.titleFinance = tRow.ev || tRow.ew;
+  }
+
+  return { game: sheetName, changelog, general: gen, budget, _rawRows: rawRows };
 }
 
 function renderForecastForCurrentBoard() {
@@ -2201,23 +2185,7 @@ function renderForecastForCurrentBoard() {
 function onManualSheetPick(sheetName) {
   if (!sheetName || !_cachedWorkbook) return;
   const data = extractSheetData(_cachedWorkbook, sheetName);
-  if (data) {
-    // ── Temporary: dump raw EU column to diagnose label matching ──
-    data._euDump = [];
-    if (_cachedWorkbook && scored[0]) {
-      const ws2 = _cachedWorkbook.Sheets[scored[0].name];
-      if (ws2 && ws2['!ref']) {
-        const maxR = XLSX.utils.decode_range(ws2['!ref']).e.r + 1;
-        for (let r = 1; r <= maxR; r++) {
-          const cell = ws2['EU' + r];
-          if (cell && cell.v !== undefined && cell.v !== null && String(cell.v).trim()) {
-            data._euDump.push({ row: r, val: String(cell.v), t: cell.t });
-          }
-        }
-      }
-    }
-    renderForecast(data, data.labelA, data.labelB, boardAcronym(), null);
-  }
+  if (data) renderForecast(data, null, null, boardAcronym(), null);
 }
 
 function renderForecast(data, _u1, _u2, acronym, allSheets) {
@@ -2241,16 +2209,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
 
   const { game, changelog, general, budget } = data;
 
-  // ── TEMP: Show EU column dump ──
-  if (data._euDump && data._euDump.length > 0) {
-    const dump = document.createElement('details');
-    dump.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text3);padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:4px;margin-bottom:8px;';
-    dump.innerHTML = `<summary style="cursor:pointer;color:var(--rag-a)">▶ EU column debug (${data._euDump.length} non-empty rows) — click to expand</summary>
-      <div style="margin-top:6px;line-height:1.9;max-height:200px;overflow-y:auto;">${
-        data._euDump.map(r => `<div>Row ${r.row} [${r.t}]: <span style="color:var(--text2)">${esc(r.val)}</span></div>`).join('')
-      }</div>`;
-    fcView.appendChild(dump);
-  }
+
 
   // ── Helper ────────────────────────────────────────────────────────────
   function fmtV(n) {
@@ -2299,6 +2258,23 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
       strip.appendChild(card);
     });
     fcView.appendChild(strip);
+  }
+
+  // ── INLINE DEBUG: always visible, shows what parser found ──────────
+  {
+    const dbg = document.createElement('details');
+    dbg.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text3);padding:5px 10px;background:rgba(255,200,0,0.05);border:0.5px solid rgba(255,200,0,0.15);border-radius:4px;';
+    const genKeys = Object.keys(data.general || {}).join(', ') || 'NONE';
+    const budKeys = Object.keys(data.budget || {}).join(', ') || 'NONE';
+    const rawCount = (data._rawRows || []).length;
+    const rawSample = (data._rawRows || []).slice(0,8).map(r=>`row${r.r}:"${esc(r.label)}"`).join(', ');
+    dbg.innerHTML = `<summary style="cursor:pointer;color:#ffcc00">⚙ Parser debug (${rawCount} EU rows read) — click to expand</summary>
+      <div style="margin-top:5px;line-height:1.8">
+        <div>General keys: <span style="color:var(--text2)">${genKeys}</span></div>
+        <div>Budget keys: <span style="color:var(--text2)">${budKeys}</span></div>
+        <div>First EU labels: <span style="color:var(--text2)">${rawSample||'(none)'}</span></div>
+      </div>`;
+    fcView.appendChild(dbg);
   }
 
   // ── TWO-COLUMN BODY ───────────────────────────────────────────────────
