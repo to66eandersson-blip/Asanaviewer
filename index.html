@@ -2013,65 +2013,80 @@ function extractSheetData(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
   if (!ws) return null;
 
-  // Use sheet_to_json with header:1 to get raw 2D array
-  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-  if (!rows.length) return null;
-
-  const IDX_EP = colLetterToIdx('EP');  // 119
-  const IDX_EQ = colLetterToIdx('EQ');  // 120
-  const IDX_EU = colLetterToIdx('EU');  // 124
-  const IDX_EV = colLetterToIdx('EV');  // 125
-  const IDX_EW = colLetterToIdx('EW');  // 126
-  const IDX_EX = colLetterToIdx('EX');  // 127
-  const IDX_EY = colLetterToIdx('EY');  // 128
-
-  // ── Changelog: collect all rows where EP or EQ has content ──────────────
-  // First try to find a header row with "Date" in EP or nearby cols
-  let changelogHeaderRow = -1;
-  for (let i = 0; i < Math.min(30, rows.length); i++) {
-    // Check EP and a few columns around it
-    for (let c = Math.max(0, IDX_EP - 2); c <= IDX_EP + 2; c++) {
-      const cell = String(rows[i][c] || '').trim().toLowerCase();
-      if (cell === 'date' || cell === 'changelog') {
-        changelogHeaderRow = i;
-        break;
-      }
+  // ── Read a specific cell by column letter + row number (1-based) ──────
+  // This approach works even for sparse sheets where sheet_to_json may
+  // truncate rows that don't extend to the target column.
+  function cellVal(col, row1based) {
+    const addr = col + row1based;
+    const cell = ws[addr];
+    if (!cell || cell.v === undefined || cell.v === null) return '';
+    // Format dates properly
+    if (cell.t === 'd') return cell.v.toISOString().slice(0, 10);
+    if (cell.t === 'n' && cell.z && /[dmy]/i.test(cell.z)) {
+      // Likely a date formatted number
+      const d = new Date(Math.round((cell.v - 25569) * 86400000));
+      if (!isNaN(d)) return d.toISOString().slice(0, 10);
     }
-    if (changelogHeaderRow >= 0) break;
+    return String(cell.v).trim();
   }
 
+  // Find the sheet's row range from its !ref
+  const ref = ws['!ref'];
+  if (!ref) return { game: sheetName, changelog: [], info: {}, budget: {} };
+  const decoded = XLSX.utils.decode_range(ref);
+  const maxRow = decoded.e.r + 1; // 1-based max row
+
+  // ── Changelog: read EP (date) and EQ (description) for every row ──────
   const changelog = [];
-  const startRow = changelogHeaderRow >= 0 ? changelogHeaderRow + 1 : 0;
-  for (let r = startRow; r < rows.length; r++) {
-    const epRaw = rows[r][IDX_EP];
-    const eqRaw = rows[r][IDX_EQ];
-    const dateStr = fmtDate(epRaw);
-    const desc    = String(eqRaw || '').trim();
-    // Include row if EP looks like a date OR EQ has content
-    if ((dateStr && dateStr !== String(epRaw).trim()) || desc) {
-      changelog.push({ date: dateStr || String(epRaw || '').trim() || null, desc });
+
+  // First: find the header row — look for "Date" or "Changelog" in EP within first 40 rows
+  let headerRow1 = -1;
+  for (let r = 1; r <= Math.min(40, maxRow); r++) {
+    const epCell = cellVal('EP', r).toLowerCase();
+    const eqCell = cellVal('EQ', r).toLowerCase();
+    if (epCell === 'date' || epCell === 'changelog' || eqCell === 'description') {
+      headerRow1 = r;
+      break;
     }
   }
 
-  // ── General info: search EU column for known labels ───────────────────
+  const startRow1 = headerRow1 > 0 ? headerRow1 + 1 : 1;
+  for (let r = startRow1; r <= maxRow; r++) {
+    const epRaw = cellVal('EP', r);
+    const eqRaw = cellVal('EQ', r);
+    if (!epRaw && !eqRaw) continue;
+
+    // Treat EP as a date if it looks like one, otherwise keep as-is
+    let dateDisplay = null;
+    if (epRaw) {
+      // Already formatted by cellVal for date cells
+      dateDisplay = /^\d{4}-\d{2}-\d{2}/.test(epRaw) ? epRaw.slice(0, 10) : epRaw;
+    }
+
+    if (dateDisplay || eqRaw) {
+      changelog.push({ date: dateDisplay, desc: eqRaw });
+    }
+  }
+
+  // ── General info: read EU (label) + EV/EW (value) ────────────────────
   const info = {};
-  for (let r = 0; r < rows.length; r++) {
-    const labelRaw = String(rows[r][IDX_EU] || '').trim();
-    if (!labelRaw) continue;
-    const lc = labelRaw.toLowerCase();
-    const val  = String(rows[r][IDX_EV] || '').trim();
-    const val2 = String(rows[r][IDX_EW] || '').trim();
+  for (let r = 1; r <= maxRow; r++) {
+    const label = cellVal('EU', r);
+    if (!label) continue;
+    const lc = label.toLowerCase();
+    const val  = cellVal('EV', r);
+    const val2 = cellVal('EW', r);
     const valBest = val || val2;
 
-    if (lc.includes('title name') && !info.title)       info.title        = valBest;
-    else if (lc.includes('release date'))                info.releaseDate  = fmtDate(valBest) || valBest;
-    else if (lc === 'product manager')                   info.pm           = valBest;
-    else if (lc.includes('publishing producer'))         info.pp           = valBest;
-    else if (lc.includes('brand manager'))               info.bm           = String(rows[r][IDX_EX] || rows[r][IDX_EY] || '').trim() || valBest;
-    else if (lc === 'revenue model')                     info.revenueModel = valBest;
+    if (lc.includes('title name') && !info.title)  info.title        = valBest;
+    else if (lc.includes('release date'))           info.releaseDate  = valBest;
+    else if (lc === 'product manager')              info.pm           = valBest;
+    else if (lc.includes('publishing producer'))    info.pp           = valBest;
+    else if (lc.includes('brand manager'))          info.bm           = cellVal('EX', r) || cellVal('EY', r) || valBest;
+    else if (lc === 'revenue model')                info.revenueModel = valBest;
   }
 
-  // ── Budget: look for known spend labels in EU column ──────────────────
+  // ── Budget: read contracted spend rows from EU/EV/EW/EX columns ──────
   const budget = {};
   const budgetLabelMap = {
     'contracted principal spend': 'dev',
@@ -2079,17 +2094,15 @@ function extractSheetData(wb, sheetName) {
     'contracted marketing spend': 'mkt',
     'total contracted budget':    'total',
   };
-  for (let r = 0; r < rows.length; r++) {
-    const label = String(rows[r][IDX_EU] || '').trim().toLowerCase();
+  for (let r = 1; r <= maxRow; r++) {
+    const label = cellVal('EU', r).trim().toLowerCase();
     const key   = budgetLabelMap[label];
     if (!key) continue;
-    // Try EW as Max/budget, EX as Spent — fall back to EV
-    const budgetVal = fmtMoney(rows[r][IDX_EW]) || fmtMoney(rows[r][IDX_EV]) || 0;
-    const spendVal  = fmtMoney(rows[r][IDX_EX]) || 0;
-    if (budgetVal > 0 || spendVal > 0) {
-      budget[key] = { budget: budgetVal, spend: spendVal };
-    }
+    const bMax   = parseFloat(cellVal('EW', r)) || parseFloat(cellVal('EV', r)) || 0;
+    const spent  = parseFloat(cellVal('EX', r)) || 0;
+    if (bMax > 0 || spent > 0) budget[key] = { budget: bMax, spend: spent };
   }
+
   // Derive total if missing
   if (!budget.total && (budget.dev || budget.svc || budget.mkt)) {
     budget.total = {
@@ -2162,6 +2175,18 @@ function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
   fcView.innerHTML = '';
 
   const { game, changelog, info, budget } = data;
+
+  // ── Debug strip (remove once parsing confirmed working) ──────────────
+  const debugDiv = document.createElement('div');
+  debugDiv.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text3);padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:4px;line-height:1.7;';
+  debugDiv.innerHTML = [
+    `Sheet: <span style="color:var(--text2)">${esc(game)}</span>`,
+    `Changelog rows found: <span style="color:var(--text2)">${changelog.length}</span>`,
+    `Info keys: <span style="color:var(--text2)">${Object.keys(info).join(', ') || 'none'}</span>`,
+    `Budget keys: <span style="color:var(--text2)">${Object.keys(budget).join(', ') || 'none'}</span>`,
+    changelog.length === 0 ? `<span style="color:var(--rag-a)">⚠ No rows found in EP/EQ — check column positions in the Excel file</span>` : '',
+  ].filter(Boolean).join(' · ');
+  fcView.appendChild(debugDiv);
 
   // ── Game title + meta row ───────────────────────────────────────────────
   const header = document.createElement('div');
