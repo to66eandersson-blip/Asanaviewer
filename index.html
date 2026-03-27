@@ -600,20 +600,56 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* General info table */
 .fc-info-table { display: flex; flex-direction: column; gap: 0; }
-.fc-info-row {
-  display: flex; align-items: baseline; gap: 8px;
-  padding: 7px 0; border-bottom: 0.5px solid var(--border);
-}
-.fc-info-row:last-child { border-bottom: none; }
-.fc-info-key {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--text3); flex-shrink: 0;
-  min-width: 110px;
-}
-.fc-info-val { font-size: 12px; color: var(--text2); flex: 1; }
-.fc-info-val.accent { color: var(--accent); }
 
-/* Fallback grid (still used for no-match state) */
+/* General table rows */
+.fc-gen-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 80px 80px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 0.5px solid var(--border);
+  gap: 4px;
+}
+.fc-gen-row:last-child { border-bottom: none; }
+.fc-gen-row.header-row {
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--border2);
+}
+.fc-gen-label {
+  font-size: 11.5px; color: var(--text2);
+}
+.fc-gen-label.text-only {
+  /* rows that only have a text value — span all value columns */
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fc-gen-label.text-only .fc-gen-val-text {
+  font-size: 11.5px; color: var(--text);
+}
+.fc-gen-col-hdr {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--text3);
+  text-align: right;
+}
+.fc-gen-val {
+  font-family: var(--mono); font-size: 11px; color: var(--text2);
+  text-align: right;
+}
+.fc-gen-val.accent { color: var(--accent); }
+.fc-gen-val.dim    { color: var(--text3); }
+
+/* Divider row between sections */
+.fc-gen-divider {
+  height: 1px; background: var(--border2);
+  margin: 6px 0; grid-column: 1/-1;
+}
+
+/* Old compat */
+.fc-info-row { display:none; }
+.fc-info-key { display:none; }
+.fc-info-val { display:none; }
+
+/* Fallback grid (not used for match state) */
 .fc-grid { display: none; }
 
 .excel-empty {
@@ -2013,80 +2049,79 @@ function extractSheetData(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
   if (!ws) return null;
 
-  // ── Read a specific cell by column letter + row number (1-based) ──────
-  // This approach works even for sparse sheets where sheet_to_json may
-  // truncate rows that don't extend to the target column.
   function cellVal(col, row1based) {
     const addr = col + row1based;
     const cell = ws[addr];
     if (!cell || cell.v === undefined || cell.v === null) return '';
-    // Format dates properly
+    // Date type
     if (cell.t === 'd') return cell.v.toISOString().slice(0, 10);
-    if (cell.t === 'n' && cell.z && /[dmy]/i.test(cell.z)) {
-      // Likely a date formatted number
-      const d = new Date(Math.round((cell.v - 25569) * 86400000));
-      if (!isNaN(d)) return d.toISOString().slice(0, 10);
+    // Numeric that looks like an Excel date serial (1900-01-01 = 1, 2025 ≈ 45000+)
+    if (cell.t === 'n') {
+      const v = cell.v;
+      if (v >= 40000 && v <= 60000) {
+        // Likely a date — convert
+        const d = new Date(Math.round((v - 25569) * 86400000));
+        if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+      }
+      // Plain number — return as-is (for budget values)
+      return String(cell.v);
     }
     return String(cell.v).trim();
   }
 
-  // Find the sheet's row range from its !ref
-  const ref = ws['!ref'];
-  if (!ref) return { game: sheetName, changelog: [], info: {}, budget: {} };
-  const decoded = XLSX.utils.decode_range(ref);
-  const maxRow = decoded.e.r + 1; // 1-based max row
-
-  // ── Changelog: read EP (date) and EQ (description) for every row ──────
-  const changelog = [];
-
-  // First: find the header row — look for "Date" or "Changelog" in EP within first 40 rows
-  let headerRow1 = -1;
-  for (let r = 1; r <= Math.min(40, maxRow); r++) {
-    const epCell = cellVal('EP', r).toLowerCase();
-    const eqCell = cellVal('EQ', r).toLowerCase();
-    if (epCell === 'date' || epCell === 'changelog' || eqCell === 'description') {
-      headerRow1 = r;
-      break;
-    }
+  function cellNum(col, row1based) {
+    const v = parseFloat(cellVal(col, row1based));
+    return isNaN(v) ? 0 : v;
   }
 
+  const ref = ws['!ref'];
+  if (!ref) return { game: sheetName, changelog: [], general: [], budget: {} };
+  const decoded = XLSX.utils.decode_range(ref);
+  const maxRow = decoded.e.r + 1;
+
+  // ── Changelog: EP = Date, EQ = Description ────────────────────────────
+  const changelog = [];
+  let headerRow1 = -1;
+  for (let r = 1; r <= Math.min(40, maxRow); r++) {
+    const ep = cellVal('EP', r).toLowerCase();
+    const eq = cellVal('EQ', r).toLowerCase();
+    if (ep === 'date' || ep === 'changelog' || eq === 'description') {
+      headerRow1 = r; break;
+    }
+  }
   const startRow1 = headerRow1 > 0 ? headerRow1 + 1 : 1;
   for (let r = startRow1; r <= maxRow; r++) {
     const epRaw = cellVal('EP', r);
     const eqRaw = cellVal('EQ', r);
     if (!epRaw && !eqRaw) continue;
-
-    // Treat EP as a date if it looks like one, otherwise keep as-is
-    let dateDisplay = null;
-    if (epRaw) {
-      // Already formatted by cellVal for date cells
-      dateDisplay = /^\d{4}-\d{2}-\d{2}/.test(epRaw) ? epRaw.slice(0, 10) : epRaw;
-    }
-
-    if (dateDisplay || eqRaw) {
-      changelog.push({ date: dateDisplay, desc: eqRaw });
-    }
+    const dateDisplay = /^\d{4}-\d{2}-\d{2}/.test(epRaw) ? epRaw.slice(0, 10) : (epRaw || null);
+    if (dateDisplay || eqRaw) changelog.push({ date: dateDisplay, desc: eqRaw });
   }
 
-  // ── General info: read EU (label) + EV/EW (value) ────────────────────
-  const info = {};
+  // ── General table: read EU→EZ rows, stop after "Total Contracted Budget" ──
+  // Returns array of { label, min, max, spent, remaining } for ALL rows in range
+  // Simple text rows (like Title, Release Date) have only the 'min' (EV) value.
+  const general = [];
+  const STOP_LABEL = 'total contracted budget';
+
   for (let r = 1; r <= maxRow; r++) {
-    const label = cellVal('EU', r);
+    const label = cellVal('EU', r).trim();
     if (!label) continue;
     const lc = label.toLowerCase();
-    const val  = cellVal('EV', r);
-    const val2 = cellVal('EW', r);
-    const valBest = val || val2;
 
-    if (lc.includes('title name') && !info.title)  info.title        = valBest;
-    else if (lc.includes('release date'))           info.releaseDate  = valBest;
-    else if (lc === 'product manager')              info.pm           = valBest;
-    else if (lc.includes('publishing producer'))    info.pp           = valBest;
-    else if (lc.includes('brand manager'))          info.bm           = cellVal('EX', r) || cellVal('EY', r) || valBest;
-    else if (lc === 'revenue model')                info.revenueModel = valBest;
+    // Skip pure header/section rows (coloured headers like "General", "Original Contract")
+    const ev = cellVal('EV', r);
+    const ew = cellVal('EW', r);
+    const ex = cellVal('EX', r);
+    const ey = cellVal('EY', r);
+    const ez = cellVal('EZ', r);
+
+    general.push({ label, ev, ew, ex, ey, ez });
+
+    if (lc === STOP_LABEL) break;  // stop reading after Total Contracted Budget
   }
 
-  // ── Budget: read contracted spend rows from EU/EV/EW/EX columns ──────
+  // ── Budget: extract the 4 spend rows specifically for donuts ─────────
   const budget = {};
   const budgetLabelMap = {
     'contracted principal spend': 'dev',
@@ -2094,24 +2129,21 @@ function extractSheetData(wb, sheetName) {
     'contracted marketing spend': 'mkt',
     'total contracted budget':    'total',
   };
-  for (let r = 1; r <= maxRow; r++) {
-    const label = cellVal('EU', r).trim().toLowerCase();
-    const key   = budgetLabelMap[label];
+  for (const row of general) {
+    const key = budgetLabelMap[row.label.toLowerCase()];
     if (!key) continue;
-    const bMax   = parseFloat(cellVal('EW', r)) || parseFloat(cellVal('EV', r)) || 0;
-    const spent  = parseFloat(cellVal('EX', r)) || 0;
+    const bMax  = parseFloat(row.ew) || parseFloat(row.ev) || 0;
+    const spent = parseFloat(row.ex) || 0;
     if (bMax > 0 || spent > 0) budget[key] = { budget: bMax, spend: spent };
   }
-
-  // Derive total if missing
   if (!budget.total && (budget.dev || budget.svc || budget.mkt)) {
     budget.total = {
-      budget: (budget.dev?.budget||0) + (budget.svc?.budget||0) + (budget.mkt?.budget||0),
-      spend:  (budget.dev?.spend||0)  + (budget.svc?.spend||0)  + (budget.mkt?.spend||0),
+      budget: (budget.dev?.budget||0)+(budget.svc?.budget||0)+(budget.mkt?.budget||0),
+      spend:  (budget.dev?.spend||0) +(budget.svc?.spend||0) +(budget.mkt?.spend||0),
     };
   }
 
-  return { game: sheetName, changelog, info, budget };
+  return { game: sheetName, changelog, general, budget };
 }
 
 function renderForecastForCurrentBoard() {
@@ -2174,57 +2206,44 @@ function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
   fcView.style.display = 'flex';
   fcView.innerHTML = '';
 
-  const { game, changelog, info, budget } = data;
+  const { game, changelog, general, budget } = data;
 
-  // ── Debug strip (remove once parsing confirmed working) ──────────────
-  const debugDiv = document.createElement('div');
-  debugDiv.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text3);padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:4px;line-height:1.7;';
-  debugDiv.innerHTML = [
-    `Sheet: <span style="color:var(--text2)">${esc(game)}</span>`,
-    `Changelog rows found: <span style="color:var(--text2)">${changelog.length}</span>`,
-    `Info keys: <span style="color:var(--text2)">${Object.keys(info).join(', ') || 'none'}</span>`,
-    `Budget keys: <span style="color:var(--text2)">${Object.keys(budget).join(', ') || 'none'}</span>`,
-    changelog.length === 0 ? `<span style="color:var(--rag-a)">⚠ No rows found in EP/EQ — check column positions in the Excel file</span>` : '',
-  ].filter(Boolean).join(' · ');
-  fcView.appendChild(debugDiv);
+  // ── Helper: format a number value nicely ──────────────────────────────
+  function fmtVal(v) {
+    if (v === '' || v === null || v === undefined) return '—';
+    const n = parseFloat(v);
+    if (!isNaN(n) && Math.abs(n) > 1) return fmtK(n);
+    return String(v);
+  }
 
-  // ── Game title + meta row ───────────────────────────────────────────────
+  // ── Classify each general row: does it have numeric values or just text? ──
+  function hasNumbers(row) {
+    return [row.ew, row.ex, row.ey].some(v => v !== '' && !isNaN(parseFloat(v)));
+  }
+
+  // ── Game title block ─────────────────────────────────────────────────
+  // Find title from general rows
+  const titleRow = general.find(r => r.label.toLowerCase().includes('title name'));
+  const titleText = (titleRow?.ev) || game;
+
   const header = document.createElement('div');
-  const titleText = info.title || game;
-  const metaItems = [];
-  if (info.releaseDate) metaItems.push({ label: 'Release', value: info.releaseDate });
-  if (info.revenueModel) metaItems.push({ label: 'Revenue Model', value: info.revenueModel });
-  if (info.pm)  metaItems.push({ label: 'PM',  value: info.pm });
-  if (info.pp)  metaItems.push({ label: 'PP',  value: info.pp });
-  if (info.bm)  metaItems.push({ label: 'BM',  value: info.bm });
-
-  header.innerHTML = `
-    <div class="fc-game-title">${esc(titleText)}</div>
-    <div class="fc-game-meta">
-      ${metaItems.map(m => `
-        <div class="fc-meta-item">
-          <span class="fc-meta-label">${esc(m.label)}</span>
-          <span class="fc-meta-value">${esc(m.value)}</span>
-        </div>`).join('')}
-    </div>`;
+  header.className = 'fc-game-header';
+  header.innerHTML = `<div class="fc-game-title">${esc(titleText)}</div>`;
   fcView.appendChild(header);
 
-  // ── Budget donuts strip ─────────────────────────────────────────────────
-  const hasBudget = budget && (budget.total?.budget || budget.dev?.budget || budget.svc?.budget || budget.mkt?.budget);
+  // ── Budget donuts strip ──────────────────────────────────────────────
+  const hasBudget = budget && (budget.total?.budget || budget.dev?.budget ||
+                               budget.svc?.budget   || budget.mkt?.budget);
   if (hasBudget) {
     const strip = document.createElement('div');
     strip.className = 'fc-budget-strip';
-
-    const budgetCards = [
-      { label: 'Total',       color: 'var(--accent)', data: budget.total || { budget: 0, spend: 0 } },
-      { label: 'Development', color: '#50c8f0',       data: budget.dev   || { budget: 0, spend: 0 } },
-      { label: 'Marketing',   color: '#c850f0',       data: budget.mkt   || { budget: 0, spend: 0 } },
-      { label: 'Service',     color: '#f09650',       data: budget.svc   || { budget: 0, spend: 0 } },
-    ].filter(c => c.data.budget > 0);
-
-    budgetCards.forEach(c => {
-      const pct = c.data.budget > 0 ? Math.round(c.data.spend / c.data.budget * 100) : 0;
-      const pctColor = pct > 100 ? 'var(--rag-r)' : pct >= 80 ? 'var(--rag-a)' : 'var(--text2)';
+    [
+      { label: 'Total',       color: 'var(--accent)', data: budget.total },
+      { label: 'Development', color: '#50c8f0',        data: budget.dev   },
+      { label: 'Marketing',   color: '#c850f0',        data: budget.mkt   },
+      { label: 'Service',     color: '#f09650',        data: budget.svc   },
+    ].filter(c => c.data?.budget > 0).forEach(c => {
+      const pct  = Math.round(c.data.spend / c.data.budget * 100);
       const card = document.createElement('div');
       card.className = 'fc-budget-card';
       card.innerHTML = `
@@ -2239,18 +2258,17 @@ function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
     fcView.appendChild(strip);
   }
 
-  // ── Two-column: changelog + general info ────────────────────────────────
+  // ── Two-column layout: Changelog left, General table right ───────────
   const cols = document.createElement('div');
   cols.className = 'fc-columns';
 
-  // Changelog
+  // ── LEFT: Changelog ───────────────────────────────────────────────────
   const clCol = document.createElement('div');
   clCol.className = 'fc-col-changelog';
   clCol.innerHTML = `<div class="fc-section-title">Changelog</div>`;
   const clList = document.createElement('div');
   clList.className = 'fc-changelog';
 
-  // Sort descending by date, show all entries
   const sortedLog = [...changelog]
     .filter(e => e.date || e.desc)
     .sort((a, b) => {
@@ -2275,34 +2293,64 @@ function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
   clCol.appendChild(clList);
   cols.appendChild(clCol);
 
-  // General info
-  const hasInfo = Object.keys(info).length > 0;
-  if (hasInfo) {
-    const infoCol = document.createElement('div');
-    infoCol.className = 'fc-col-general';
-    infoCol.innerHTML = `<div class="fc-section-title">General</div>`;
-    const infoTable = document.createElement('div');
-    infoTable.className = 'fc-info-table';
+  // ── RIGHT: General table (EU→EZ, up to Total Contracted Budget) ───────
+  if (general.length > 0) {
+    const genCol = document.createElement('div');
+    genCol.className = 'fc-col-general';
+    genCol.innerHTML = `<div class="fc-section-title">General</div>`;
 
-    const infoFields = [
-      { key: 'title',        label: 'Title'         },
-      { key: 'releaseDate',  label: 'Release Date'  },
-      { key: 'revenueModel', label: 'Revenue Model' },
-      { key: 'pm',           label: 'Product Manager' },
-      { key: 'pp',           label: 'Prod. Producer'  },
-      { key: 'bm',           label: 'Brand Manager'   },
-    ].filter(f => info[f.key]);
+    const table = document.createElement('div');
+    table.className = 'fc-info-table';
 
-    infoFields.forEach(f => {
-      const row = document.createElement('div');
-      row.className = 'fc-info-row';
-      row.innerHTML = `
-        <span class="fc-info-key">${esc(f.label)}</span>
-        <span class="fc-info-val">${esc(info[f.key])}</span>`;
-      infoTable.appendChild(row);
+    // Check if ANY row has numeric columns — if so, show the column headers
+    const anyNumbers = general.some(hasNumbers);
+
+    if (anyNumbers) {
+      // Column header row
+      const hdr = document.createElement('div');
+      hdr.className = 'fc-gen-row header-row';
+      hdr.innerHTML = `
+        <span class="fc-gen-col-hdr" style="text-align:left"></span>
+        <span class="fc-gen-col-hdr">Max</span>
+        <span class="fc-gen-col-hdr">Spent</span>
+        <span class="fc-gen-col-hdr">Remaining</span>
+        <span class="fc-gen-col-hdr">Planned</span>`;
+      table.appendChild(hdr);
+    }
+
+    general.forEach(row => {
+      const lc = row.label.toLowerCase();
+      const isMonetary = hasNumbers(row);
+
+      const div = document.createElement('div');
+      div.className = 'fc-gen-row';
+
+      // Bold the total row
+      const labelStyle = lc.includes('total') ? 'color:var(--text);font-weight:500' : '';
+
+      if (isMonetary) {
+        div.innerHTML = `
+          <span class="fc-gen-label" style="${labelStyle}">${esc(row.label)}</span>
+          <span class="fc-gen-val">${fmtVal(row.ew)}</span>
+          <span class="fc-gen-val ${parseFloat(row.ex) > parseFloat(row.ew)*0.8 ? 'accent' : ''}">${fmtVal(row.ex)}</span>
+          <span class="fc-gen-val">${fmtVal(row.ey)}</span>
+          <span class="fc-gen-val dim">${fmtVal(row.ez)}</span>`;
+      } else {
+        // Text-only row: label on left, value on right
+        const textVal = row.ev || row.ew || row.ex || '';
+        // Skip pure section header rows (no value at all)
+        if (!textVal) return;
+        div.classList.add('text-only-row');
+        div.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:0.5px solid var(--border);gap:12px;';
+        div.innerHTML = `
+          <span style="font-size:11.5px;color:var(--text3);">${esc(row.label)}</span>
+          <span style="font-size:11.5px;color:var(--text2);text-align:right;">${esc(textVal)}</span>`;
+      }
+      table.appendChild(div);
     });
-    infoCol.appendChild(infoTable);
-    cols.appendChild(infoCol);
+
+    genCol.appendChild(table);
+    cols.appendChild(genCol);
   }
 
   fcView.appendChild(cols);
