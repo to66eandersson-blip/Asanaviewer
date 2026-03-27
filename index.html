@@ -528,35 +528,34 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── FORECAST VIEW ── */
 #fc-view {
-  padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;
+  padding: 1.75rem 1.5rem 2rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+  min-height: 0;
 }
 
-/* Game header */
-.fc-game-header {
-  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+/* ── Title block ── */
+.fc-title-row {
+  display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
 }
 .fc-game-title {
-  font-size: 22px; font-weight: 300; letter-spacing: -0.02em; color: var(--text);
+  font-size: 28px; font-weight: 300; letter-spacing: -0.03em; color: var(--text);
+  line-height: 1;
 }
-.fc-game-meta {
-  display: flex; gap: 16px; flex-wrap: wrap; margin-top: 2px;
+.fc-title-tag {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text3); padding: 3px 7px;
+  border: 0.5px solid var(--border2); border-radius: 20px;
 }
-.fc-meta-item {
-  display: flex; align-items: center; gap: 6px;
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-}
-.fc-meta-label { letter-spacing: 0.06em; text-transform: uppercase; }
-.fc-meta-value { color: var(--text2); }
 
-/* Budget strip */
+/* ── Budget donuts — prominent horizontal strip ── */
 .fc-budget-strip {
-  display: flex; gap: 0; background: var(--surface);
-  border: 0.5px solid var(--border2); border-radius: var(--r-lg);
-  overflow: hidden;
+  display: flex; gap: 0;
+  background: var(--surface); border: 0.5px solid var(--border2);
+  border-radius: var(--r-lg); overflow: hidden;
 }
 .fc-budget-card {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 20px; flex: 1; border-right: 0.5px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 22px; flex: 1; border-right: 0.5px solid var(--border);
 }
 .fc-budget-card:last-child { border-right: none; }
 .fc-budget-info { display: flex; flex-direction: column; gap: 2px; }
@@ -564,93 +563,99 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--text3);
 }
-.fc-budget-spent { font-size: 16px; font-weight: 300; color: var(--text); letter-spacing: -0.02em; }
-.fc-budget-of    { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.fc-budget-spent {
+  font-size: 18px; font-weight: 300; color: var(--text);
+  letter-spacing: -0.02em; line-height: 1.1;
+}
+.fc-budget-of { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.fc-budget-sub {
+  display: flex; gap: 10px; margin-top: 2px;
+}
+.fc-budget-sub-item {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+}
+.fc-budget-sub-item span { color: var(--text2); }
 
-/* Two-column layout: changelog + general */
-.fc-columns { display: flex; gap: 1.25rem; align-items: flex-start; }
-.fc-col-changelog { flex: 1.4; min-width: 0; }
-.fc-col-general   { flex: 1;   min-width: 240px; flex-shrink: 0; }
+/* ── Two-column body ── */
+.fc-columns { display: flex; gap: 1.5rem; align-items: flex-start; flex: 1; min-height: 0; }
+.fc-col-changelog { flex: 1.6; min-width: 0; }
+.fc-col-general   { flex: 1; min-width: 260px; flex-shrink: 0; }
 
 .fc-section-title {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--text3); margin-bottom: 10px;
-  padding-bottom: 6px; border-bottom: 0.5px solid var(--border);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 12px;
+  padding-bottom: 7px; border-bottom: 0.5px solid var(--border2);
 }
 
-/* Changelog timeline feed */
-.fc-changelog { display: flex; flex-direction: column; gap: 0; }
+/* ── Changelog timeline ── */
+.fc-changelog { display: flex; flex-direction: column; }
 .fc-cl-entry {
-  display: flex; gap: 14px; padding: 10px 0;
+  display: grid; grid-template-columns: 88px 1fr;
+  gap: 12px; padding: 9px 0;
   border-bottom: 0.5px solid var(--border);
-  transition: background 0.1s;
 }
-.fc-cl-entry:first-child { padding-top: 0; }
-.fc-cl-entry:last-child  { border-bottom: none; }
+.fc-cl-entry:last-child { border-bottom: none; }
 .fc-cl-date {
   font-family: var(--mono); font-size: 10px; color: var(--text3);
-  white-space: nowrap; flex-shrink: 0; padding-top: 1px;
-  min-width: 76px;
+  padding-top: 1px; letter-spacing: 0.02em;
 }
-.fc-cl-desc {
-  font-size: 12px; color: var(--text2); line-height: 1.55; flex: 1;
-}
+.fc-cl-desc { font-size: 12px; color: var(--text2); line-height: 1.55; }
 .fc-cl-entry.latest .fc-cl-date { color: var(--accent); }
 .fc-cl-entry.latest .fc-cl-desc { color: var(--text); }
 
-/* General info table */
-.fc-info-table { display: flex; flex-direction: column; gap: 0; }
-
-/* General table rows */
-.fc-gen-row {
-  display: grid;
-  grid-template-columns: 1fr 80px 80px 80px 80px;
-  align-items: center;
-  padding: 6px 0;
+/* ── General info card ── */
+.fc-general-card {
+  background: var(--surface); border: 0.5px solid var(--border2);
+  border-radius: var(--r-lg); overflow: hidden;
+}
+.fc-gen-section {
+  padding: 12px 16px 4px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text3);
   border-bottom: 0.5px solid var(--border);
-  gap: 4px;
+}
+.fc-gen-row {
+  display: flex; align-items: baseline;
+  padding: 8px 16px; gap: 10px;
+  border-bottom: 0.5px solid var(--border);
 }
 .fc-gen-row:last-child { border-bottom: none; }
-.fc-gen-row.header-row {
-  padding: 4px 0 6px;
-  border-bottom: 1px solid var(--border2);
+.fc-gen-key {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em;
+  color: var(--text3); flex-shrink: 0; min-width: 100px;
 }
-.fc-gen-label {
-  font-size: 11.5px; color: var(--text2);
-}
-.fc-gen-label.text-only {
-  /* rows that only have a text value — span all value columns */
-  grid-column: 1 / -1;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.fc-gen-label.text-only .fc-gen-val-text {
-  font-size: 11.5px; color: var(--text);
-}
-.fc-gen-col-hdr {
+.fc-gen-val { font-size: 12px; color: var(--text2); flex: 1; text-align: right; }
+.fc-gen-val.bright { color: var(--text); }
+
+/* ── Budget breakdown table ── */
+.fc-bud-table { padding: 0; }
+.fc-bud-hdr {
+  display: grid; grid-template-columns: 1fr 72px 72px 72px;
+  padding: 6px 16px 4px;
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.07em;
   text-transform: uppercase; color: var(--text3);
-  text-align: right;
+  border-bottom: 0.5px solid var(--border2);
 }
-.fc-gen-val {
+.fc-bud-hdr span:not(:first-child) { text-align: right; }
+.fc-bud-row {
+  display: grid; grid-template-columns: 1fr 72px 72px 72px;
+  padding: 7px 16px; border-bottom: 0.5px solid var(--border);
+  align-items: center;
+}
+.fc-bud-row:last-child { border-bottom: none; }
+.fc-bud-row.total { background: rgba(255,255,255,0.025); }
+.fc-bud-label { font-size: 11px; color: var(--text2); }
+.fc-bud-row.total .fc-bud-label { color: var(--text); font-weight: 500; }
+.fc-bud-num {
   font-family: var(--mono); font-size: 11px; color: var(--text2);
   text-align: right;
 }
-.fc-gen-val.accent { color: var(--accent); }
-.fc-gen-val.dim    { color: var(--text3); }
+.fc-bud-num.hi { color: var(--accent); }
+.fc-bud-num.neg { color: var(--rag-r); }
 
-/* Divider row between sections */
-.fc-gen-divider {
-  height: 1px; background: var(--border2);
-  margin: 6px 0; grid-column: 1/-1;
-}
-
-/* Old compat */
-.fc-info-row { display:none; }
-.fc-info-key { display:none; }
-.fc-info-val { display:none; }
-
-/* Fallback grid (not used for match state) */
+/* Fallback */
 .fc-grid { display: none; }
+.excel-empty { padding: 3rem 1.25rem; font-size: 12px; color: var(--text3); font-family: var(--mono); display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 
 .excel-empty {
   padding: 3rem 1.25rem; font-size: 12px;
@@ -2049,22 +2054,19 @@ function extractSheetData(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
   if (!ws) return null;
 
+  /* Read a cell by Excel address e.g. cellVal('EU', 5) → 'My Cannibal Family' */
   function cellVal(col, row1based) {
-    const addr = col + row1based;
-    const cell = ws[addr];
+    const cell = ws[col + row1based];
     if (!cell || cell.v === undefined || cell.v === null) return '';
-    // Date type
     if (cell.t === 'd') return cell.v.toISOString().slice(0, 10);
-    // Numeric that looks like an Excel date serial (1900-01-01 = 1, 2025 ≈ 45000+)
     if (cell.t === 'n') {
       const v = cell.v;
+      // Excel date serials: dates fall roughly in 40000-60000 range
       if (v >= 40000 && v <= 60000) {
-        // Likely a date — convert
         const d = new Date(Math.round((v - 25569) * 86400000));
         if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
       }
-      // Plain number — return as-is (for budget values)
-      return String(cell.v);
+      return String(v);
     }
     return String(cell.v).trim();
   }
@@ -2075,71 +2077,86 @@ function extractSheetData(wb, sheetName) {
   }
 
   const ref = ws['!ref'];
-  if (!ref) return { game: sheetName, changelog: [], general: [], budget: {} };
-  const decoded = XLSX.utils.decode_range(ref);
-  const maxRow = decoded.e.r + 1;
+  if (!ref) return { game: sheetName, changelog: [], general: {}, budget: {} };
+  const maxRow = XLSX.utils.decode_range(ref).e.r + 1;
 
-  // ── Changelog: EP = Date, EQ = Description ────────────────────────────
+  // ── CHANGELOG: EP = Date, EQ = Description ──────────────────────────────
   const changelog = [];
-  let headerRow1 = -1;
+  let clHeaderRow = -1;
   for (let r = 1; r <= Math.min(40, maxRow); r++) {
     const ep = cellVal('EP', r).toLowerCase();
     const eq = cellVal('EQ', r).toLowerCase();
     if (ep === 'date' || ep === 'changelog' || eq === 'description') {
-      headerRow1 = r; break;
+      clHeaderRow = r; break;
     }
   }
-  const startRow1 = headerRow1 > 0 ? headerRow1 + 1 : 1;
-  for (let r = startRow1; r <= maxRow; r++) {
+  for (let r = (clHeaderRow > 0 ? clHeaderRow + 1 : 1); r <= maxRow; r++) {
     const epRaw = cellVal('EP', r);
     const eqRaw = cellVal('EQ', r);
     if (!epRaw && !eqRaw) continue;
-    const dateDisplay = /^\d{4}-\d{2}-\d{2}/.test(epRaw) ? epRaw.slice(0, 10) : (epRaw || null);
-    if (dateDisplay || eqRaw) changelog.push({ date: dateDisplay, desc: eqRaw });
+    const date = /^\d{4}-\d{2}-\d{2}/.test(epRaw) ? epRaw.slice(0, 10) : (epRaw || null);
+    if (date || eqRaw) changelog.push({ date, desc: eqRaw });
   }
 
-  // ── General table: read EU→EZ rows, stop after "Total Contracted Budget" ──
-  // Returns array of { label, min, max, spent, remaining } for ALL rows in range
-  // Simple text rows (like Title, Release Date) have only the 'min' (EV) value.
-  const general = [];
-  const STOP_LABEL = 'total contracted budget';
+  // ── GENERAL: scan EU column for known labels, read ET→EZ values ─────────
+  // We look for exactly these labels (case-insensitive), matching on EU column.
+  // For text labels: value is in EV column.
+  // For budget labels: Max=EW, Spent=EX, Remaining=EY, Planned=EZ.
+  // We stop scanning after "Total Contracted Budget".
 
-  for (let r = 1; r <= maxRow; r++) {
-    const label = cellVal('EU', r).trim();
-    if (!label) continue;
-    const lc = label.toLowerCase();
-
-    // Skip pure header/section rows (coloured headers like "General", "Original Contract")
-    const ev = cellVal('EV', r);
-    const ew = cellVal('EW', r);
-    const ex = cellVal('EX', r);
-    const ey = cellVal('EY', r);
-    const ez = cellVal('EZ', r);
-
-    general.push({ label, ev, ew, ex, ey, ez });
-
-    if (lc === STOP_LABEL) break;  // stop reading after Total Contracted Budget
-  }
-
-  // ── Budget: extract the 4 spend rows specifically for donuts ─────────
-  const budget = {};
-  const budgetLabelMap = {
+  const TEXT_LABELS = {
+    'title name (finance)': 'titleFinance',
+    'title name (indiebi)': 'titleIndie',
+    'revenue share':        'revenueShare',
+    'principal markup':     'principalMarkup',
+    'release date (steam)': 'releaseSteam',
+    'release m1':           'releaseM1',
+    'release m12':          'releaseM12',
+    'revenue model':        'revenueModel',
+    'sustain rate m13-':    'sustainRate',
+    'product manager':      'pm',
+    'publishing producer(s)': 'pp',
+  };
+  const BUDGET_LABELS = {
     'contracted principal spend': 'dev',
     'contracted service spend':   'svc',
     'contracted marketing spend': 'mkt',
     'total contracted budget':    'total',
   };
-  for (const row of general) {
-    const key = budgetLabelMap[row.label.toLowerCase()];
-    if (!key) continue;
-    const bMax  = parseFloat(row.ew) || parseFloat(row.ev) || 0;
-    const spent = parseFloat(row.ex) || 0;
-    if (bMax > 0 || spent > 0) budget[key] = { budget: bMax, spend: spent };
+  // Brand manager is in EX/EY of its row (from the screenshot layout)
+  const BM_LABELS = { 'brand manager(s)': 'bm', 'player experience manager(s)': 'pem' };
+
+  const general = {};
+  const budget  = {};
+  let hitTotal  = false;
+
+  for (let r = 1; r <= maxRow && !hitTotal; r++) {
+    const rawLabel = cellVal('EU', r);
+    if (!rawLabel) continue;
+    const lc = rawLabel.trim().toLowerCase();
+
+    if (TEXT_LABELS[lc]) {
+      general[TEXT_LABELS[lc]] = cellVal('EV', r) || cellVal('EW', r);
+    } else if (BM_LABELS[lc]) {
+      // From screenshot, BM is in EX/EY column
+      general[BM_LABELS[lc]] = cellVal('EX', r) || cellVal('EY', r);
+    } else if (BUDGET_LABELS[lc]) {
+      const key = BUDGET_LABELS[lc];
+      const bMax  = cellNum('EW', r) || cellNum('EV', r);
+      const spent = cellNum('EX', r);
+      const rem   = cellNum('EY', r);
+      const plan  = cellNum('EZ', r);
+      budget[key] = { budget: bMax, spend: spent, remaining: rem, planned: plan };
+      if (key === 'total') hitTotal = true;
+    }
   }
+
+  // Derive total if not found explicitly
   if (!budget.total && (budget.dev || budget.svc || budget.mkt)) {
     budget.total = {
-      budget: (budget.dev?.budget||0)+(budget.svc?.budget||0)+(budget.mkt?.budget||0),
-      spend:  (budget.dev?.spend||0) +(budget.svc?.spend||0) +(budget.mkt?.spend||0),
+      budget:    (budget.dev?.budget||0)    + (budget.svc?.budget||0)    + (budget.mkt?.budget||0),
+      spend:     (budget.dev?.spend||0)     + (budget.svc?.spend||0)     + (budget.mkt?.spend||0),
+      remaining: (budget.dev?.remaining||0) + (budget.svc?.remaining||0) + (budget.mkt?.remaining||0),
     };
   }
 
@@ -2187,7 +2204,7 @@ function onManualSheetPick(sheetName) {
   if (data) renderForecast(data, data.labelA, data.labelB, boardAcronym(), null);
 }
 
-function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
+function renderForecast(data, _u1, _u2, acronym, allSheets) {
   const empty  = document.getElementById('excel-empty');
   const fcView = document.getElementById('fc-view');
 
@@ -2208,32 +2225,28 @@ function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
 
   const { game, changelog, general, budget } = data;
 
-  // ── Helper: format a number value nicely ──────────────────────────────
-  function fmtVal(v) {
-    if (v === '' || v === null || v === undefined) return '—';
-    const n = parseFloat(v);
-    if (!isNaN(n) && Math.abs(n) > 1) return fmtK(n);
-    return String(v);
+  // ── Helper ────────────────────────────────────────────────────────────
+  function fmtV(n) {
+    if (n === 0 || n === '' || n === null || n === undefined) return '—';
+    const num = parseFloat(n);
+    if (isNaN(num)) return String(n);
+    return fmtK(num);
   }
 
-  // ── Classify each general row: does it have numeric values or just text? ──
-  function hasNumbers(row) {
-    return [row.ew, row.ex, row.ey].some(v => v !== '' && !isNaN(parseFloat(v)));
-  }
+  // ── TITLE ─────────────────────────────────────────────────────────────
+  const titleText = general.titleFinance || general.titleIndie || game;
+  const titleRow  = document.createElement('div');
+  titleRow.className = 'fc-title-row';
+  titleRow.innerHTML = `
+    <div class="fc-game-title">${esc(titleText)}</div>
+    ${general.revenueModel ? `<span class="fc-title-tag">${esc(general.revenueModel)}</span>` : ''}
+    ${general.releaseSteam ? `<span class="fc-title-tag">🗓 ${esc(general.releaseSteam)}</span>` : ''}
+  `;
+  fcView.appendChild(titleRow);
 
-  // ── Game title block ─────────────────────────────────────────────────
-  // Find title from general rows
-  const titleRow = general.find(r => r.label.toLowerCase().includes('title name'));
-  const titleText = (titleRow?.ev) || game;
-
-  const header = document.createElement('div');
-  header.className = 'fc-game-header';
-  header.innerHTML = `<div class="fc-game-title">${esc(titleText)}</div>`;
-  fcView.appendChild(header);
-
-  // ── Budget donuts strip ──────────────────────────────────────────────
-  const hasBudget = budget && (budget.total?.budget || budget.dev?.budget ||
-                               budget.svc?.budget   || budget.mkt?.budget);
+  // ── BUDGET DONUTS ─────────────────────────────────────────────────────
+  const hasBudget = budget.total?.budget || budget.dev?.budget ||
+                    budget.svc?.budget   || budget.mkt?.budget;
   if (hasBudget) {
     const strip = document.createElement('div');
     strip.className = 'fc-budget-strip';
@@ -2243,33 +2256,36 @@ function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
       { label: 'Marketing',   color: '#c850f0',        data: budget.mkt   },
       { label: 'Service',     color: '#f09650',        data: budget.svc   },
     ].filter(c => c.data?.budget > 0).forEach(c => {
-      const pct  = Math.round(c.data.spend / c.data.budget * 100);
+      const pct  = c.data.budget > 0 ? Math.round(c.data.spend / c.data.budget * 100) : 0;
       const card = document.createElement('div');
       card.className = 'fc-budget-card';
+      const subParts = [];
+      if (c.data.remaining) subParts.push(`Rem <span>${fmtK(c.data.remaining)}</span>`);
       card.innerHTML = `
-        ${donutSvg(pct, c.color, 52, 6)}
+        ${donutSvg(pct, c.color, 56, 6)}
         <div class="fc-budget-info">
           <span class="fc-budget-label">${esc(c.label)}</span>
           <span class="fc-budget-spent">${fmtK(c.data.spend)}</span>
           <span class="fc-budget-of">of ${fmtK(c.data.budget)}</span>
+          ${subParts.length ? `<div class="fc-budget-sub"><span class="fc-budget-sub-item">${subParts.join(' · ')}</span></div>` : ''}
         </div>`;
       strip.appendChild(card);
     });
     fcView.appendChild(strip);
   }
 
-  // ── Two-column layout: Changelog left, General table right ───────────
+  // ── TWO-COLUMN BODY ───────────────────────────────────────────────────
   const cols = document.createElement('div');
   cols.className = 'fc-columns';
 
-  // ── LEFT: Changelog ───────────────────────────────────────────────────
+  // LEFT: Changelog
   const clCol = document.createElement('div');
   clCol.className = 'fc-col-changelog';
   clCol.innerHTML = `<div class="fc-section-title">Changelog</div>`;
   const clList = document.createElement('div');
   clList.className = 'fc-changelog';
 
-  const sortedLog = [...changelog]
+  const sorted = [...changelog]
     .filter(e => e.date || e.desc)
     .sort((a, b) => {
       if (!a.date && !b.date) return 0;
@@ -2278,10 +2294,10 @@ function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
       return b.date.localeCompare(a.date);
     });
 
-  if (!sortedLog.length) {
-    clList.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--text3)">No changelog entries found.</div>';
+  if (!sorted.length) {
+    clList.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--text3)">No changelog entries found.</div>`;
   } else {
-    sortedLog.forEach((entry, idx) => {
+    sorted.forEach((entry, idx) => {
       const row = document.createElement('div');
       row.className = 'fc-cl-entry' + (idx === 0 ? ' latest' : '');
       row.innerHTML = `
@@ -2293,66 +2309,77 @@ function renderForecast(data, _unused1, _unused2, acronym, allSheets) {
   clCol.appendChild(clList);
   cols.appendChild(clCol);
 
-  // ── RIGHT: General table (EU→EZ, up to Total Contracted Budget) ───────
-  if (general.length > 0) {
-    const genCol = document.createElement('div');
-    genCol.className = 'fc-col-general';
-    genCol.innerHTML = `<div class="fc-section-title">General</div>`;
+  // RIGHT: General card
+  const genCol = document.createElement('div');
+  genCol.className = 'fc-col-general';
+  genCol.innerHTML = `<div class="fc-section-title">General</div>`;
 
-    const table = document.createElement('div');
-    table.className = 'fc-info-table';
+  const card = document.createElement('div');
+  card.className = 'fc-general-card';
 
-    // Check if ANY row has numeric columns — if so, show the column headers
-    const anyNumbers = general.some(hasNumbers);
+  // Text info rows
+  const infoSection = document.createElement('div');
+  [
+    { key: 'releaseSteam',   label: 'Release (Steam)' },
+    { key: 'releaseM1',      label: 'Release M1'      },
+    { key: 'releaseM12',     label: 'Release M12'     },
+    { key: 'revenueShare',   label: 'Rev. Share'      },
+    { key: 'principalMarkup',label: 'Principal Markup'},
+    { key: 'sustainRate',    label: 'Sustain M13+'    },
+    { key: 'pm',             label: 'Product Manager' },
+    { key: 'pp',             label: 'Producer(s)'     },
+    { key: 'bm',             label: 'Brand Manager'   },
+    { key: 'pem',            label: 'Player Exp. Mgr' },
+  ].filter(f => general[f.key]).forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'fc-gen-row';
+    row.innerHTML = `
+      <span class="fc-gen-key">${esc(f.label)}</span>
+      <span class="fc-gen-val bright">${esc(general[f.key])}</span>`;
+    infoSection.appendChild(row);
+  });
+  if (infoSection.children.length) card.appendChild(infoSection);
 
-    if (anyNumbers) {
-      // Column header row
-      const hdr = document.createElement('div');
-      hdr.className = 'fc-gen-row header-row';
-      hdr.innerHTML = `
-        <span class="fc-gen-col-hdr" style="text-align:left"></span>
-        <span class="fc-gen-col-hdr">Max</span>
-        <span class="fc-gen-col-hdr">Spent</span>
-        <span class="fc-gen-col-hdr">Remaining</span>
-        <span class="fc-gen-col-hdr">Planned</span>`;
-      table.appendChild(hdr);
-    }
+  // Budget breakdown table
+  const budgetRows = [
+    { key: 'dev',   label: 'Development' },
+    { key: 'svc',   label: 'Service'     },
+    { key: 'mkt',   label: 'Marketing'   },
+    { key: 'total', label: 'Total'       },
+  ].filter(r => budget[r.key]?.budget > 0);
 
-    general.forEach(row => {
-      const lc = row.label.toLowerCase();
-      const isMonetary = hasNumbers(row);
+  if (budgetRows.length) {
+    const sec = document.createElement('div');
+    sec.className = 'fc-gen-section';
+    sec.textContent = 'Budget';
+    card.appendChild(sec);
 
-      const div = document.createElement('div');
-      div.className = 'fc-gen-row';
+    const tbl = document.createElement('div');
+    tbl.className = 'fc-bud-table';
 
-      // Bold the total row
-      const labelStyle = lc.includes('total') ? 'color:var(--text);font-weight:500' : '';
+    const hdr = document.createElement('div');
+    hdr.className = 'fc-bud-hdr';
+    hdr.innerHTML = `<span></span><span>Max</span><span>Spent</span><span>Rem.</span>`;
+    tbl.appendChild(hdr);
 
-      if (isMonetary) {
-        div.innerHTML = `
-          <span class="fc-gen-label" style="${labelStyle}">${esc(row.label)}</span>
-          <span class="fc-gen-val">${fmtVal(row.ew)}</span>
-          <span class="fc-gen-val ${parseFloat(row.ex) > parseFloat(row.ew)*0.8 ? 'accent' : ''}">${fmtVal(row.ex)}</span>
-          <span class="fc-gen-val">${fmtVal(row.ey)}</span>
-          <span class="fc-gen-val dim">${fmtVal(row.ez)}</span>`;
-      } else {
-        // Text-only row: label on left, value on right
-        const textVal = row.ev || row.ew || row.ex || '';
-        // Skip pure section header rows (no value at all)
-        if (!textVal) return;
-        div.classList.add('text-only-row');
-        div.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:0.5px solid var(--border);gap:12px;';
-        div.innerHTML = `
-          <span style="font-size:11.5px;color:var(--text3);">${esc(row.label)}</span>
-          <span style="font-size:11.5px;color:var(--text2);text-align:right;">${esc(textVal)}</span>`;
-      }
-      table.appendChild(div);
+    budgetRows.forEach(({ key, label }) => {
+      const b   = budget[key];
+      const pct = b.budget > 0 ? b.spend / b.budget : 0;
+      const hiCls = pct >= 1 ? 'neg' : pct >= 0.8 ? 'hi' : '';
+      const row = document.createElement('div');
+      row.className = 'fc-bud-row' + (key === 'total' ? ' total' : '');
+      row.innerHTML = `
+        <span class="fc-bud-label">${esc(label)}</span>
+        <span class="fc-bud-num">${fmtV(b.budget)}</span>
+        <span class="fc-bud-num ${hiCls}">${fmtV(b.spend)}</span>
+        <span class="fc-bud-num">${fmtV(b.remaining)}</span>`;
+      tbl.appendChild(row);
     });
-
-    genCol.appendChild(table);
-    cols.appendChild(genCol);
+    card.appendChild(tbl);
   }
 
+  genCol.appendChild(card);
+  cols.appendChild(genCol);
   fcView.appendChild(cols);
 }
 
