@@ -2201,7 +2201,23 @@ function renderForecastForCurrentBoard() {
 function onManualSheetPick(sheetName) {
   if (!sheetName || !_cachedWorkbook) return;
   const data = extractSheetData(_cachedWorkbook, sheetName);
-  if (data) renderForecast(data, data.labelA, data.labelB, boardAcronym(), null);
+  if (data) {
+    // ── Temporary: dump raw EU column to diagnose label matching ──
+    data._euDump = [];
+    if (_cachedWorkbook && scored[0]) {
+      const ws2 = _cachedWorkbook.Sheets[scored[0].name];
+      if (ws2 && ws2['!ref']) {
+        const maxR = XLSX.utils.decode_range(ws2['!ref']).e.r + 1;
+        for (let r = 1; r <= maxR; r++) {
+          const cell = ws2['EU' + r];
+          if (cell && cell.v !== undefined && cell.v !== null && String(cell.v).trim()) {
+            data._euDump.push({ row: r, val: String(cell.v), t: cell.t });
+          }
+        }
+      }
+    }
+    renderForecast(data, data.labelA, data.labelB, boardAcronym(), null);
+  }
 }
 
 function renderForecast(data, _u1, _u2, acronym, allSheets) {
@@ -2224,6 +2240,17 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   fcView.innerHTML = '';
 
   const { game, changelog, general, budget } = data;
+
+  // ── TEMP: Show EU column dump ──
+  if (data._euDump && data._euDump.length > 0) {
+    const dump = document.createElement('details');
+    dump.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text3);padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:4px;margin-bottom:8px;';
+    dump.innerHTML = `<summary style="cursor:pointer;color:var(--rag-a)">▶ EU column debug (${data._euDump.length} non-empty rows) — click to expand</summary>
+      <div style="margin-top:6px;line-height:1.9;max-height:200px;overflow-y:auto;">${
+        data._euDump.map(r => `<div>Row ${r.row} [${r.t}]: <span style="color:var(--text2)">${esc(r.val)}</span></div>`).join('')
+      }</div>`;
+    fcView.appendChild(dump);
+  }
 
   // ── Helper ────────────────────────────────────────────────────────────
   function fmtV(n) {
