@@ -83,6 +83,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tb-gem { width: 8px; height: 8px; background: var(--accent); border-radius: 1px; transform: rotate(45deg); }
 .tb-wordmark { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; }
 .tb-sep { width: 0.5px; height: 18px; background: var(--border2); flex-shrink: 0; }
+.tb-game-title {
+  font-size: 15px; font-weight: 300; color: var(--text);
+  letter-spacing: -0.01em; flex-shrink: 0;
+  padding-left: 2px;
+}
 .tb-project { font-size: 13px; color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tb-project strong { color: var(--text); font-weight: 400; }
 .url-bar { display: flex; align-items: center; gap: 5px; }
@@ -733,6 +738,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen">
   <div class="topbar">
     <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span></div>
+    <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
       <button class="tab-btn" id="tab-btn-goals" onclick="switchTab('goals')">Goals Board</button>
@@ -1215,6 +1221,13 @@ function buildBudgetBar(tasks){
 
 /* ─── Build app ─── */
 function buildApp(proj,tasks){
+  // Update game title in topbar
+  const titleEl = document.getElementById('tb-game-title');
+  if (titleEl) {
+    // Prefer the full product name from portfolioProducts, fall back to Asana project name
+    const product = portfolioProducts.find(p => p.boardGid === currentPid);
+    titleEl.textContent = product ? product.name : (proj.name || '');
+  }
   // Update picker status label with loaded board name
   const pickerSel = document.getElementById('board-select');
   if (pickerSel) {
@@ -2108,11 +2121,12 @@ function extractSheetData(wb, sheetName) {
     // For text fields, the value is in EU (first value col after label)
     const val = row.eu || row.ev;
     // Budget numbers: Min=EU, Max=EW, Spent=EX, Remaining=EY, Planned=EZ
-    const bMin  = cn('EU', row.r);
-    const bMax  = cn('EW', row.r) || cn('EV', row.r);
-    const spent = cn('EX', row.r);
-    const rem   = cn('EY', row.r);
-    const plan  = cn('EZ', row.r);
+    const bMin  = cn('EU', row.r);   // Min
+    const bMax  = cn('EV', row.r);   // Max
+    const spent = cn('EW', row.r);   // Spent
+    const rem   = cn('EX', row.r);   // Remaining
+    const plan  = cn('EY', row.r);   // Planned
+    // EZ = Unallocated (not shown but available)
 
     // ── Text fields ──────────────────────────────────────────────────
     if      (fuzzy(lc,'title','finance')  && !gen.titleFinance)   gen.titleFinance    = val;
@@ -2130,9 +2144,9 @@ function extractSheetData(wb, sheetName) {
     else if ((fuzzy(lc,'publishing') || fuzzy(lc,'producer')) && !gen.pp) gen.pp      = val;
     // Brand Manager and PEM are label-only rows; actual name is in EX or EY (separate cell to the right)
     else if  (fuzzy(lc,'brand') && fuzzy(lc,'manager') && !gen.bm)
-      gen.bm  = row.ex || row.ey || row.ew || val;
+      gen.bm  = cv('EX', row.r) || cv('EY', row.r) || val;
     else if  (fuzzy(lc,'player') && fuzzy(lc,'experience') && !gen.pem)
-      gen.pem = row.ex || row.ey || row.ew || val;
+      gen.pem = cv('EX', row.r) || cv('EY', row.r) || val;
 
     // ── Budget rows ──────────────────────────────────────────────────
     if      (fuzzy(lc,'principal') && fuzzy(lc,'spend') && !fuzzy(lc,'signing'))
@@ -2236,6 +2250,11 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
 
   // ── TITLE ─────────────────────────────────────────────────────────────
   const titleText = gen.titleFinance || gen.titleIndie || game;
+  // Also update topbar title with the proper name from the Excel file
+  const tbTitle = document.getElementById('tb-game-title');
+  if (tbTitle && (gen.titleFinance || gen.titleIndie)) {
+    tbTitle.textContent = gen.titleFinance || gen.titleIndie;
+  }
   const titleRow  = document.createElement('div');
   titleRow.className = 'fc-title-row';
   titleRow.innerHTML = `
