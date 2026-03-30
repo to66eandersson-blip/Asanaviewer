@@ -2070,12 +2070,11 @@ function extractSheetData(wb, sheetName) {
   if (!ref) return { game: sheetName, changelog: [], general: {}, budget: {} };
   const maxRow = XLSX.utils.decode_range(ref).e.r + 1;
 
-  // ── CHANGELOG: EP = Date, EQ = Description ────────────────────────────
+  // ── CHANGELOG: EP=Date, EQ=Description ───────────────────────────────
   const changelog = [];
   let clHdr = -1;
   for (let r = 1; r <= Math.min(40, maxRow); r++) {
-    const ep = cv('EP', r).toLowerCase();
-    const eq = cv('EQ', r).toLowerCase();
+    const ep = cv('EP', r).toLowerCase(), eq = cv('EQ', r).toLowerCase();
     if (ep === 'date' || eq === 'description' || ep === 'changelog') { clHdr = r; break; }
   }
   for (let r = clHdr > 0 ? clHdr + 1 : 1; r <= maxRow; r++) {
@@ -2085,66 +2084,75 @@ function extractSheetData(wb, sheetName) {
     if (date || eqRaw) changelog.push({ date, desc: eqRaw });
   }
 
-  // ── GENERAL: labels are in ET, values in EU (and EV/EW/EX/EY for budgets) ──
-  // We scan ET for the row labels, EU for text values, EW/EX/EY for budget numbers.
-  // Stop after "Total Contracted Budget".
+  // ── GENERAL: ET=label, EU=value (text) / EU=Min, EV=Min2, EW=Max, EX=Spent, EY=Remaining, EZ=Planned ──
   function fuzzy(s, ...kws) { const lc = s.toLowerCase(); return kws.every(k => lc.includes(k)); }
 
   const rawRows = [];
   let hitTotal = false;
   for (let r = 1; r <= maxRow && !hitTotal; r++) {
-    const label = cv('ET', r);   // labels are in ET
+    const label = cv('ET', r);
     if (!label) continue;
-    const eu = cv('EU', r), ev = cv('EV', r), ew = cv('EW', r),
-          ex = cv('EX', r), ey = cv('EY', r), ez = cv('EZ', r);
-    rawRows.push({ label, r, eu, ev, ew, ex, ey, ez });
-    if (fuzzy(label, 'total') && fuzzy(label, 'budget')) hitTotal = true;
+    rawRows.push({
+      label, r,
+      eu: cv('EU',r), ev: cv('EV',r), ew: cv('EW',r),
+      ex: cv('EX',r), ey: cv('EY',r), ez: cv('EZ',r)
+    });
+    if (fuzzy(label,'total') && fuzzy(label,'budget')) hitTotal = true;
   }
 
   const gen = {};
   const budget = {};
 
   for (const row of rawRows) {
-    const lc  = row.label.toLowerCase();
-    // For text fields: value is in EU (first value column after the ET label)
-    const val = row.eu || row.ev || row.ew;
-    // For budget rows: Max=EW, Spent=EX, Remaining=EY
+    const lc = row.label.toLowerCase();
+    // For text fields, the value is in EU (first value col after label)
+    const val = row.eu || row.ev;
+    // Budget numbers: Min=EU, Max=EW, Spent=EX, Remaining=EY, Planned=EZ
+    const bMin  = cn('EU', row.r);
     const bMax  = cn('EW', row.r) || cn('EV', row.r);
     const spent = cn('EX', row.r);
     const rem   = cn('EY', row.r);
+    const plan  = cn('EZ', row.r);
 
-    // Text fields
-    if      (fuzzy(lc,'title','finance') && !gen.titleFinance)           gen.titleFinance     = val;
+    // ── Text fields ──────────────────────────────────────────────────
+    if      (fuzzy(lc,'title','finance')  && !gen.titleFinance)   gen.titleFinance    = val;
     else if ((fuzzy(lc,'title','indie') || fuzzy(lc,'title','indiebi')) && !gen.titleIndie) gen.titleIndie = val;
-    else if  (fuzzy(lc,'title') && !gen.titleFinance && !gen.titleIndie) gen.titleFinance     = val;
-    else if ((fuzzy(lc,'release') && fuzzy(lc,'steam')) || (fuzzy(lc,'release') && fuzzy(lc,'date'))) gen.releaseSteam = val;
-    else if  (fuzzy(lc,'release') && fuzzy(lc,'m1') && !fuzzy(lc,'m12')) gen.releaseM1       = val;
-    else if  (fuzzy(lc,'release') && fuzzy(lc,'m12'))                    gen.releaseM12       = val;
-    else if  (fuzzy(lc,'revenue') && fuzzy(lc,'model'))                  gen.revenueModel     = val;
-    else if  (fuzzy(lc,'revenue') && fuzzy(lc,'share'))                  gen.revenueShare     = val;
-    else if  (fuzzy(lc,'principal') && fuzzy(lc,'markup'))               gen.principalMarkup  = val;
-    else if  (fuzzy(lc,'sustain'))                                        gen.sustainRate      = val;
-    else if  (fuzzy(lc,'product') && fuzzy(lc,'manager') && !gen.pm)     gen.pm               = val;
-    else if ((fuzzy(lc,'publishing') || fuzzy(lc,'producer')) && !gen.pp)gen.pp               = val;
-    else if  (fuzzy(lc,'brand') && fuzzy(lc,'manager') && !gen.bm)       gen.bm               = row.ev || row.ew || val;
-    else if  (fuzzy(lc,'player') && fuzzy(lc,'experience') && !gen.pem)  gen.pem              = row.ev || row.ew || val;
+    else if  (fuzzy(lc,'title') && !gen.titleFinance)             gen.titleFinance    = val;
+    else if ((fuzzy(lc,'release') && fuzzy(lc,'steam')) ||
+             (fuzzy(lc,'release') && fuzzy(lc,'date')))           gen.releaseSteam    = val;
+    else if  (fuzzy(lc,'release') && fuzzy(lc,'m1') && !fuzzy(lc,'m12')) gen.releaseM1 = val;
+    else if  (fuzzy(lc,'release') && fuzzy(lc,'m12'))             gen.releaseM12      = val;
+    else if  (fuzzy(lc,'revenue') && fuzzy(lc,'model'))           gen.revenueModel    = val;
+    else if  (fuzzy(lc,'revenue') && fuzzy(lc,'share'))           gen.revenueShare    = val;
+    else if  (fuzzy(lc,'principal') && fuzzy(lc,'markup'))        gen.principalMarkup = val;
+    else if  (fuzzy(lc,'sustain'))                                 gen.sustainRate     = val;
+    else if  (fuzzy(lc,'product')  && fuzzy(lc,'manager') && !gen.pm)  gen.pm         = val;
+    else if ((fuzzy(lc,'publishing') || fuzzy(lc,'producer')) && !gen.pp) gen.pp      = val;
+    // Brand Manager and PEM are label-only rows; actual name is in EX or EY (separate cell to the right)
+    else if  (fuzzy(lc,'brand') && fuzzy(lc,'manager') && !gen.bm)
+      gen.bm  = row.ex || row.ey || row.ew || val;
+    else if  (fuzzy(lc,'player') && fuzzy(lc,'experience') && !gen.pem)
+      gen.pem = row.ex || row.ey || row.ew || val;
 
-    // Budget rows
+    // ── Budget rows ──────────────────────────────────────────────────
     if      (fuzzy(lc,'principal') && fuzzy(lc,'spend') && !fuzzy(lc,'signing'))
-      budget.dev   = { budget: bMax, spend: spent, remaining: rem };
+      budget.dev   = { min: bMin, budget: bMax, spend: spent, remaining: rem, planned: plan };
     else if  (fuzzy(lc,'service')   && fuzzy(lc,'spend'))
-      budget.svc   = { budget: bMax, spend: spent, remaining: rem };
+      budget.svc   = { min: bMin, budget: bMax, spend: spent, remaining: rem, planned: plan };
     else if  (fuzzy(lc,'marketing') && fuzzy(lc,'spend'))
-      budget.mkt   = { budget: bMax, spend: spent, remaining: rem };
+      budget.mkt   = { min: bMin, budget: bMax, spend: spent, remaining: rem, planned: plan };
     else if  (fuzzy(lc,'total')     && fuzzy(lc,'budget'))
-      budget.total = { budget: bMax, spend: spent, remaining: rem };
+      budget.total = { min: bMin, budget: bMax, spend: spent, remaining: rem, planned: plan };
   }
 
+  // Derive total if not found explicitly
   if (!budget.total && (budget.dev || budget.svc || budget.mkt)) {
     budget.total = {
-      budget:    (budget.dev?.budget||0)    + (budget.svc?.budget||0)    + (budget.mkt?.budget||0),
-      spend:     (budget.dev?.spend||0)     + (budget.svc?.spend||0)     + (budget.mkt?.spend||0),
-      remaining: (budget.dev?.remaining||0) + (budget.svc?.remaining||0) + (budget.mkt?.remaining||0),
+      min:       (budget.dev?.min||0)      + (budget.svc?.min||0)      + (budget.mkt?.min||0),
+      budget:    (budget.dev?.budget||0)   + (budget.svc?.budget||0)   + (budget.mkt?.budget||0),
+      spend:     (budget.dev?.spend||0)    + (budget.svc?.spend||0)    + (budget.mkt?.spend||0),
+      remaining: (budget.dev?.remaining||0)+ (budget.svc?.remaining||0)+ (budget.mkt?.remaining||0),
+      planned:   (budget.dev?.planned||0)  + (budget.svc?.planned||0)  + (budget.mkt?.planned||0),
     };
   }
 
@@ -2217,26 +2225,23 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   fcView.style.display = 'flex';
   fcView.innerHTML = '';
 
-  const { game, changelog, general, budget } = data;
+  const { game, changelog, general: gen, budget } = data;
 
-
-
-  // ── Helper ────────────────────────────────────────────────────────────
   function fmtV(n) {
-    if (n === 0 || n === '' || n === null || n === undefined) return '—';
+    if (!n && n !== 0) return '—';
     const num = parseFloat(n);
-    if (isNaN(num)) return String(n);
+    if (isNaN(num) || num === 0) return '—';
     return fmtK(num);
   }
 
   // ── TITLE ─────────────────────────────────────────────────────────────
-  const titleText = general.titleFinance || general.titleIndie || game;
+  const titleText = gen.titleFinance || gen.titleIndie || game;
   const titleRow  = document.createElement('div');
   titleRow.className = 'fc-title-row';
   titleRow.innerHTML = `
     <div class="fc-game-title">${esc(titleText)}</div>
-    ${general.revenueModel ? `<span class="fc-title-tag">${esc(general.revenueModel)}</span>` : ''}
-    ${general.releaseSteam ? `<span class="fc-title-tag">🗓 ${esc(general.releaseSteam)}</span>` : ''}
+    ${gen.revenueModel  ? `<span class="fc-title-tag">${esc(gen.revenueModel)}</span>` : ''}
+    ${gen.releaseSteam  ? `<span class="fc-title-tag">🗓 ${esc(gen.releaseSteam)}</span>` : ''}
   `;
   fcView.appendChild(titleRow);
 
@@ -2255,36 +2260,17 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
       const pct  = c.data.budget > 0 ? Math.round(c.data.spend / c.data.budget * 100) : 0;
       const card = document.createElement('div');
       card.className = 'fc-budget-card';
-      const subParts = [];
-      if (c.data.remaining) subParts.push(`Rem <span>${fmtK(c.data.remaining)}</span>`);
       card.innerHTML = `
         ${donutSvg(pct, c.color, 56, 6)}
         <div class="fc-budget-info">
           <span class="fc-budget-label">${esc(c.label)}</span>
           <span class="fc-budget-spent">${fmtK(c.data.spend)}</span>
           <span class="fc-budget-of">of ${fmtK(c.data.budget)}</span>
-          ${subParts.length ? `<div class="fc-budget-sub"><span class="fc-budget-sub-item">${subParts.join(' · ')}</span></div>` : ''}
+          ${c.data.remaining ? `<div class="fc-budget-sub"><span class="fc-budget-sub-item">Rem <span>${fmtK(c.data.remaining)}</span></span></div>` : ''}
         </div>`;
       strip.appendChild(card);
     });
     fcView.appendChild(strip);
-  }
-
-  // ── INLINE DEBUG: always visible, shows what parser found ──────────
-  {
-    const dbg = document.createElement('details');
-    dbg.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text3);padding:5px 10px;background:rgba(255,200,0,0.05);border:0.5px solid rgba(255,200,0,0.15);border-radius:4px;';
-    const genKeys = Object.keys(data.general || {}).join(', ') || 'NONE';
-    const budKeys = Object.keys(data.budget || {}).join(', ') || 'NONE';
-    const rawCount = (data._rawRows || []).length;
-    const rawSample = (data._rawRows || []).slice(0,8).map(r=>`row${r.r}:"${esc(r.label)}"`).join(', ');
-    dbg.innerHTML = `<summary style="cursor:pointer;color:#ffcc00">⚙ Parser debug (${rawCount} EU rows read) — click to expand</summary>
-      <div style="margin-top:5px;line-height:1.8">
-        <div>General keys: <span style="color:var(--text2)">${genKeys}</span></div>
-        <div>Budget keys: <span style="color:var(--text2)">${budKeys}</span></div>
-        <div>First EU labels: <span style="color:var(--text2)">${rawSample||'(none)'}</span></div>
-      </div>`;
-    fcView.appendChild(dbg);
   }
 
   // ── TWO-COLUMN BODY ───────────────────────────────────────────────────
@@ -2302,8 +2288,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
     .filter(e => e.date || e.desc)
     .sort((a, b) => {
       if (!a.date && !b.date) return 0;
-      if (!a.date) return 1;
-      if (!b.date) return -1;
+      if (!a.date) return 1; if (!b.date) return -1;
       return b.date.localeCompare(a.date);
     });
 
@@ -2326,40 +2311,42 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   const genCol = document.createElement('div');
   genCol.className = 'fc-col-general';
   genCol.innerHTML = `<div class="fc-section-title">General</div>`;
-
   const card = document.createElement('div');
   card.className = 'fc-general-card';
 
-  // Text info rows
+  // Info rows — all fields from the Excel General section
   const infoSection = document.createElement('div');
   [
-    { key: 'releaseSteam',   label: 'Release (Steam)' },
-    { key: 'releaseM1',      label: 'Release M1'      },
-    { key: 'releaseM12',     label: 'Release M12'     },
-    { key: 'revenueShare',   label: 'Rev. Share'      },
-    { key: 'principalMarkup',label: 'Principal Markup'},
-    { key: 'sustainRate',    label: 'Sustain M13+'    },
-    { key: 'pm',             label: 'Product Manager' },
-    { key: 'pp',             label: 'Producer(s)'     },
-    { key: 'bm',             label: 'Brand Manager'   },
-    { key: 'pem',            label: 'Player Exp. Mgr' },
-  ].filter(f => general[f.key]).forEach(f => {
+    { key: 'titleFinance',   label: 'Title (Finance)'    },
+    { key: 'titleIndie',     label: 'Title (IndieBI)'    },
+    { key: 'releaseSteam',   label: 'Release (Steam)'    },
+    { key: 'releaseM1',      label: 'Release M1'         },
+    { key: 'releaseM12',     label: 'Release M12'        },
+    { key: 'revenueModel',   label: 'Revenue Model'      },
+    { key: 'revenueShare',   label: 'Revenue Share'      },
+    { key: 'principalMarkup',label: 'Principal Markup'   },
+    { key: 'sustainRate',    label: 'Sustain M13+'       },
+    { key: 'pm',             label: 'Product Manager'    },
+    { key: 'pp',             label: 'Producer(s)'        },
+    { key: 'bm',             label: 'Brand Manager'      },
+    { key: 'pem',            label: 'Player Exp. Mgr'    },
+  ].filter(f => gen[f.key]).forEach(f => {
     const row = document.createElement('div');
     row.className = 'fc-gen-row';
     row.innerHTML = `
       <span class="fc-gen-key">${esc(f.label)}</span>
-      <span class="fc-gen-val bright">${esc(general[f.key])}</span>`;
+      <span class="fc-gen-val bright">${esc(gen[f.key])}</span>`;
     infoSection.appendChild(row);
   });
   if (infoSection.children.length) card.appendChild(infoSection);
 
-  // Budget breakdown table
+  // Budget breakdown table — Min / Max / Spent / Remaining / Planned
   const budgetRows = [
     { key: 'dev',   label: 'Development' },
     { key: 'svc',   label: 'Service'     },
     { key: 'mkt',   label: 'Marketing'   },
     { key: 'total', label: 'Total'       },
-  ].filter(r => budget[r.key]?.budget > 0);
+  ].filter(r => budget[r.key]?.budget > 0 || budget[r.key]?.spend > 0);
 
   if (budgetRows.length) {
     const sec = document.createElement('div');
@@ -2370,9 +2357,14 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
     const tbl = document.createElement('div');
     tbl.className = 'fc-bud-table';
 
+    // Show Min column only if any row has a non-zero min
+    const showMin = budgetRows.some(({ key }) => budget[key]?.min > 0);
+    const cols4 = showMin ? '1fr 60px 72px 72px 72px' : '1fr 72px 72px 72px';
+
     const hdr = document.createElement('div');
     hdr.className = 'fc-bud-hdr';
-    hdr.innerHTML = `<span></span><span>Max</span><span>Spent</span><span>Rem.</span>`;
+    hdr.style.gridTemplateColumns = cols4;
+    hdr.innerHTML = `<span></span>${showMin ? '<span>Min</span>' : ''}<span>Max</span><span>Spent</span><span>Rem.</span>`;
     tbl.appendChild(hdr);
 
     budgetRows.forEach(({ key, label }) => {
@@ -2381,8 +2373,10 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
       const hiCls = pct >= 1 ? 'neg' : pct >= 0.8 ? 'hi' : '';
       const row = document.createElement('div');
       row.className = 'fc-bud-row' + (key === 'total' ? ' total' : '');
+      row.style.gridTemplateColumns = cols4;
       row.innerHTML = `
         <span class="fc-bud-label">${esc(label)}</span>
+        ${showMin ? `<span class="fc-bud-num">${fmtV(b.min)}</span>` : ''}
         <span class="fc-bud-num">${fmtV(b.budget)}</span>
         <span class="fc-bud-num ${hiCls}">${fmtV(b.spend)}</span>
         <span class="fc-bud-num">${fmtV(b.remaining)}</span>`;
