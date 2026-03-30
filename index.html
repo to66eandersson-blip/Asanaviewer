@@ -83,6 +83,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tb-gem { width: 8px; height: 8px; background: var(--accent); border-radius: 1px; transform: rotate(45deg); }
 .tb-wordmark { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; }
 .tb-sep { width: 0.5px; height: 18px; background: var(--border2); flex-shrink: 0; }
+.tb-version {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em;
+  color: var(--text3); margin-left: 4px; align-self: center;
+  border: 0.5px solid var(--border2); border-radius: 3px;
+  padding: 1px 5px; flex-shrink: 0;
+}
 .tb-game-title {
   font-size: 15px; font-weight: 300; color: var(--text);
   letter-spacing: -0.01em; flex-shrink: 0;
@@ -713,11 +719,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <div class="field-hint">See the instructions below to generate this.</div>
       </div>
       <div class="field">
-        <label>Asana Board URL</label>
-        <input type="text" id="inp-url" placeholder="https://app.asana.com/1/…/project/PROJECT_ID/…" />
-        <div class="field-hint">Paste any view URL from your Product Board — the project ID is extracted automatically.</div>
+        <label>Asana Board URL <span style="font-family:var(--sans);font-size:10px;color:var(--text3);font-weight:300;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="inp-url" placeholder="https://app.asana.com/1/…/project/PROJECT_ID/… (leave blank to use dropdown)" />
+        <div class="field-hint">Leave blank to connect with the token only and pick a game from the dropdown. Or paste a board URL to load it directly.</div>
       </div>
-      <button class="btn-main" onclick="connect()">Load Timeline →</button>
+      <button class="btn-main" onclick="connect()">Connect →</button>
       <div id="setup-error"></div>
     </div>
     <div class="instructions-card">
@@ -737,7 +743,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v1.8</span></div>
     <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
@@ -1068,33 +1074,48 @@ async function api(path){
   return r.json();
 }
 async function fetchAllTasks(pid){
-  /* Request html_notes in addition to all other fields */
   const fields=[
     'name','due_on','start_on','completed','resource_subtype',
     'memberships.section.name','memberships.project.gid',
     'followers','followers.name',
     'custom_fields','notes','html_notes','permalink_url'
   ].join(',');
-  let tasks=[],offset=null;
+  let tasks=[],offset=null,pages=0;
   do{
     const qs=new URLSearchParams({opt_fields:fields,limit:'100'});
     if(offset)qs.set('offset',offset);
     const resp=await api(`/projects/${pid}/tasks?${qs}`);
     tasks=tasks.concat(resp.data||[]);
     offset=resp.next_page?.offset||null;
+    pages++;
+    if(pages>25){console.warn('fetchAllTasks: page limit reached');break;}
   }while(offset);
   return tasks;
 }
 
 /* ─── Connect ─── */
 async function connect(){
-  const pat=$('inp-pat').value.trim(),url=$('inp-url').value.trim();
+  const pat=$('inp-pat').value.trim(),url=($('inp-url').value||'').trim();
   $('setup-error').style.display='none';
   if(!pat){showErr('Please enter your Personal Access Token.');return;}
-  if(!url){showErr('Please enter an Asana board URL.');return;}
+  PAT=pat;
+  // If no URL given, go straight to app and let user pick from dropdown
+  if(!url){
+    try{
+      setLoad('Connecting…');
+      // Validate the token with a lightweight API call
+      await api('/users/me?opt_fields=name');
+      loadPortfolio();
+      show('screen-app');
+    }catch(e){
+      PAT='';
+      showErr('Connection failed: '+e.message+(e.message.includes('401')?' — check your token.':''));
+    }finally{setLoad(null);}
+    return;
+  }
   const pid=extractPid(url);
   if(!pid){showErr('Could not find a project ID in that URL — paste the full Asana board URL.');return;}
-  PAT=pat;currentPid=pid;
+  currentPid=pid;
   try{
     setLoad('Connecting to Asana…');
     const projResp=await api(`/projects/${pid}?opt_fields=name`);
@@ -1102,7 +1123,7 @@ async function connect(){
     const tasks=await fetchAllTasks(pid);
     buildApp(projResp.data,tasks);
     show('screen-app');
-    loadPortfolio();  // populate board picker from Portfolio Overview
+    loadPortfolio();
   }catch(e){
     PAT='';currentPid='';
     showErr('Connection failed: '+e.message+(e.message.includes('401')?' — check your token.':(e.message.includes('403')?' — no access to this project.':'')));
