@@ -901,42 +901,37 @@ const SKIP_SECTIONS = new Set(['budget tracker','goal excersize results','untitl
 /* ─── Product Board Map ───
    Maps Portfolio-Overview product names → Product Board GIDs.
    Built from live Asana data. Used by the board picker dropdown.    */
-// Map: Portfolio product name → { gid, code }
-// 'code' is the acronym used in the Excel sheet tab names
+// Authoritative board map — GID → { code, title }
+// Sourced directly from the (FoF) Game Title custom field on each Product Board
+// via the portfolio at app.asana.com/0/portfolio/1211541493171405
 const PRODUCT_BOARD_MAP = {
-  'Appulse':                  { gid: '1213508049767992', code: 'APP'     },
-  'Blake Manor':              { gid: '1211968270657884', code: 'SBM'     },
-  'Blue Prince':              { gid: '1211875734575549', code: 'BP'      },
-  'Cassette Beasts 2002':     { gid: '1211911867621234', code: 'CB2'     },
-  'Deep Dish Dungeon':        { gid: '1211967053427418', code: 'DDD'     },
-  'Dome Keeper':              { gid: '1212013201863467', code: 'DK'      },
-  'Esoteric Ebb':             { gid: '1212013205439519', code: 'EE'      },
-  'KTC':                      { gid: '1212081395447699', code: 'KTC'     },
-  'Kingdom 3':                { gid: '1212151115389244', code: 'K3'      },
-  'KuloNiku: Bowl Up!':       { gid: '1211912056412903', code: 'KNBU'    },
-  'Last Man Sitting':         { gid: '1211911723653147', code: 'LMS'     },
-  'Llamalandia':              { gid: '1213537831150285', code: 'LLA'     },
-  'Monsters Are Coming':      { gid: '1211966243305065', code: 'MSI'     },
-  'My Cannibal Family':       { gid: '1211911867619071', code: 'MC'      },
-  'ROUTINE':                  { gid: '1212148535011307', code: 'ROU'     },
-  'Regions of Ruin: Runegate':{ gid: '1211899818368463', code: 'RR2'     },
-  'Rivage':                   { gid: '1211966243305065', code: 'RIV'     },
-  'Star Trucker':             { gid: '1211962398846254', code: 'ST'      },
-  'Sulfur Coast':             { gid: '1211990738288419', code: 'SC'      },
+  '1213508049767992': { code: 'APP',     title: 'Appulse'                   },
+  '1213448651913558': { code: 'TCA',     title: 'Terracotta'                },
+  '1212081395447699': { code: 'KTC',     title: 'Kingdom Two Crowns'        },
+  '1212151115389244': { code: 'K3',      title: 'Kingdom 3'                 },
+  '1212149353345742': { code: 'MCF',     title: 'My Cannibal Family'        },
+  '1212148535011307': { code: 'ROUTINE', title: 'ROUTINE'                   },
+  '1212013205439519': { code: 'EE',      title: ''                          },
+  '1212013201863467': { code: 'DK',      title: ''                          },
+  '1211911867621234': { code: 'CB2',     title: 'Cassette Beasts 2002'      },
+  '1211990738288419': { code: 'SC',      title: 'Sulphur Coast'             },
+  '1211968270657884': { code: 'SBM',     title: 'Seance of Blake Manor'     },
+  '1211966243305065': { code: 'RIV',     title: 'Rivage'                    },
+  '1211967053427418': { code: 'DDD',     title: ''                          },
+  '1211962398846254': { code: 'ST',      title: 'Star Trucker'              },
+  '1211875734575549': { code: 'BP',      title: 'Blue Prince'               },
+  '1211911723653147': { code: 'LMS',     title: 'Last Man Sitting'          },
+  '1211911867619071': { code: 'MC',      title: 'Monsters Are Coming'       },
+  '1211912056412903': { code: 'KNBU',    title: 'Kulo Niku Bowl Up!'        },
+  '1211899818368463': { code: 'RR2',     title: 'Regions of Ruin: Runegate' },
+  '1213537831150285': { code: 'LL',      title: ''                          },
+  '1211793000194536': { code: 'MCF',     title: 'My Cannibal Family'        },
 };
 
-// Portfolio Overview project GID
-const PORTFOLIO_OVERVIEW_GID = '1211782261893247';
-const CF_PRODUCT_FIELD = '1211792266685509';  // (FoF) Product enum field
-const CF_PHASE_FIELD   = '1211542317034887';  // (FoF) Flow of Fury Phase
+// Custom field GID for "(FoF) Game Title" on portfolio items
+const CF_GAME_TITLE = '1213881197306441';
+const PORTFOLIO_GID = '1211541493171405';
 
-// All phases in order
-const ALL_PHASES = [
-  'Scouting','Pre-Signing','Kick-Off','Announcement Ready',
-  'Release Ready','Release','Post Release','Back Catalogue'
-];
-
-/* ─── Portfolio state ─── */
 let portfolioProducts = [];   // [{name, boardGid, phase}]
 let activePhaseFilter = new Set([...ALL_PHASES, 'Unknown', 'ALL']); // show all by default
 
@@ -1221,12 +1216,13 @@ function buildBudgetBar(tasks){
 
 /* ─── Build app ─── */
 function buildApp(proj,tasks){
-  // Update game title in topbar
+  // Update game title in topbar — use authoritative title from map
   const titleEl = document.getElementById('tb-game-title');
   if (titleEl) {
-    // Prefer the full product name from portfolioProducts, fall back to Asana project name
-    const product = portfolioProducts.find(p => p.boardGid === currentPid);
-    titleEl.textContent = product ? product.name : (proj.name || '');
+    const mapEntry = PRODUCT_BOARD_MAP[currentPid];
+    const product  = portfolioProducts.find(p => p.boardGid === currentPid);
+    // Priority: map title > portfolio product name > Asana project name
+    titleEl.textContent = (mapEntry?.title) || (product?.name) || proj.name || '';
   }
   // Update picker status label with loaded board name
   const pickerSel = document.getElementById('board-select');
@@ -1791,30 +1787,39 @@ async function loadPortfolio() {
       offset = resp.next_page?.offset || null;
     } while (offset);
 
-    // Extract unique products with their phase
-    const productMap = {};  // name → { name, boardGid, phase }
+    // Build products directly from PRODUCT_BOARD_MAP — authoritative source
+    // Also collect phase from portfolio overview tasks as before
+    const phaseMap = {};  // boardGid → phase
     tasks.forEach(t => {
       let product = null, phase = null;
       for (const cf of (t.custom_fields || [])) {
         if (cf.gid === CF_PRODUCT_FIELD && cf.enum_value) product = cf.enum_value.name;
         if (cf.gid === CF_PHASE_FIELD   && cf.enum_value) phase   = cf.enum_value.name;
       }
-      if (product && !productMap[product]) {
-        const entry = PRODUCT_BOARD_MAP[product] || null;
-        productMap[product] = {
-          name: product,
-          boardGid: entry ? entry.gid : null,
-          code: entry ? entry.code : null,
-          phase: phase || 'Unknown',
-        };
-      } else if (product && phase && productMap[product].phase === 'Unknown') {
-        productMap[product].phase = phase;
+      // Map product name to board GID to find phase
+      if (product && phase) {
+        const entry = Object.entries(PRODUCT_BOARD_MAP).find(([gid, e]) =>
+          e.title === product || e.code === product
+        );
+        if (entry) phaseMap[entry[0]] = phase;
       }
     });
 
-    portfolioProducts = Object.values(productMap)
-      .filter(p => p.boardGid)  // only those we can actually navigate to
-      .sort((a, b) => a.name.localeCompare(b.name));
+    // Build portfolioProducts from the authoritative map
+    portfolioProducts = Object.entries(PRODUCT_BOARD_MAP)
+      .filter(([gid, e]) => e.title || e.code)  // skip empty entries
+      .map(([gid, e]) => ({
+        boardGid: gid,
+        name: e.title || e.code,   // display name: prefer full title
+        code: e.code,
+        title: e.title,
+        phase: phaseMap[gid] || 'Unknown',
+      }))
+      .filter((p, i, arr) =>
+        // deduplicate by boardGid (keep first)
+        arr.findIndex(q => q.boardGid === p.boardGid) === i
+      )
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
     buildPhaseFilterBar();
     buildBoardDropdown();
@@ -1998,30 +2003,48 @@ function parseExcelBuffer(ab) {
    "MC Product Board"      → "MC"
    "ROUTINE Product Board" → "ROUTINE"
    "K3 Product Board"      → "K3"                                    */
-function boardAcronym() {
+function boardInfo() {
+  // Returns { code, title } for the currently selected board
   const sel = document.getElementById('board-select');
   const gid = sel ? sel.value : '';
-  if (!gid) return '';
-  // Look up the product entry that matches the selected GID
+  if (!gid) return { code: '', title: '' };
+  // First: look in portfolioProducts (populated from PRODUCT_BOARD_MAP)
   const product = portfolioProducts.find(p => p.boardGid === gid);
-  if (product && product.code) return product.code.toUpperCase();
-  // Fallback: use data-code stored on the option element during buildBoardDropdown
+  if (product) return { code: product.code || '', title: product.title || product.name || '' };
+  // Fallback: look up directly in PRODUCT_BOARD_MAP by GID
+  const mapEntry = PRODUCT_BOARD_MAP[gid];
+  if (mapEntry) return { code: mapEntry.code || '', title: mapEntry.title || '' };
+  // Last resort: parse from option element
   const opt = sel.options[sel.selectedIndex];
-  if (opt && opt.dataset.code) return opt.dataset.code.toUpperCase();
-  // Last resort: return empty (will trigger manual picker)
-  return '';
+  return { code: (opt?.dataset.code || '').toUpperCase(), title: '' };
 }
 
-/* Score how well a sheet name matches an acronym.
-   3 = exact, 2 = one starts with the other, 1 = one contains the other */
+function boardAcronym() {
+  return boardInfo().code;
+}
+
+/* Score how well a sheet name matches the current board.
+   Uses both the board code (e.g. "MCF") and full game title (e.g. "My Cannibal Family").
+   4 = exact code match, 3 = exact title match, 2 = starts-with, 1 = contains */
 function sheetMatchScore(sheetName, acronym) {
-  if (!acronym) return 0;
-  const s = sheetName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const a = acronym.replace(/[^A-Z0-9]/g, '');
-  if (!a) return 0;
-  if (s === a) return 3;
-  if (s.startsWith(a) || a.startsWith(s)) return 2;
-  if (s.includes(a) || a.includes(s)) return 1;
+  const info  = boardInfo();
+  const code  = (info.code  || acronym || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const title = (info.title || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const s     = sheetName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  if (!s) return 0;
+
+  // Exact code match (highest priority)
+  if (code && s === code) return 4;
+  // Exact title match (normalised)
+  if (title && s === title) return 3;
+  // Code starts-with or contains
+  if (code) {
+    if (s.startsWith(code) || code.startsWith(s)) return 2;
+    if (s.includes(code) || code.includes(s)) return 1;
+  }
+  // Title word match
+  if (title && (s.includes(title) || title.includes(s))) return 1;
   return 0;
 }
 
