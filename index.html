@@ -905,27 +905,27 @@ const SKIP_SECTIONS = new Set(['budget tracker','goal excersize results','untitl
 // Sourced directly from the (FoF) Game Title custom field on each Product Board
 // via the portfolio at app.asana.com/0/portfolio/1211541493171405
 const PRODUCT_BOARD_MAP = {
-  '1213508049767992': { code: 'APP',     title: 'Appulse'                   },
-  '1213448651913558': { code: 'TCA',     title: 'Terracotta'                },
-  '1212081395447699': { code: 'KTC',     title: 'Kingdom Two Crowns'        },
-  '1212151115389244': { code: 'K3',      title: 'Kingdom 3'                 },
-  '1212149353345742': { code: 'MCF',     title: 'My Cannibal Family'        },
-  '1212148535011307': { code: 'ROUTINE', title: 'ROUTINE'                   },
-  '1212013205439519': { code: 'EE',      title: ''                          },
-  '1212013201863467': { code: 'DK',      title: ''                          },
-  '1211911867621234': { code: 'CB2',     title: 'Cassette Beasts 2002'      },
-  '1211990738288419': { code: 'SC',      title: 'Sulphur Coast'             },
-  '1211968270657884': { code: 'SBM',     title: 'Seance of Blake Manor'     },
-  '1211966243305065': { code: 'RIV',     title: 'Rivage'                    },
-  '1211967053427418': { code: 'DDD',     title: ''                          },
-  '1211962398846254': { code: 'ST',      title: 'Star Trucker'              },
-  '1211875734575549': { code: 'BP',      title: 'Blue Prince'               },
-  '1211911723653147': { code: 'LMS',     title: 'Last Man Sitting'          },
-  '1211911867619071': { code: 'MC',      title: 'Monsters Are Coming'       },
-  '1211912056412903': { code: 'KNBU',    title: 'Kulo Niku Bowl Up!'        },
-  '1211899818368463': { code: 'RR2',     title: 'Regions of Ruin: Runegate' },
-  '1213537831150285': { code: 'LL',      title: ''                          },
-  '1211793000194536': { code: 'MCF',     title: 'My Cannibal Family'        },
+  '1213508049767992': { code: 'APP',     title: 'Appulse',                    phase: 'Kick-Off'           },
+  '1213448651913558': { code: 'TCA',     title: 'Terracotta'                , phase: 'Kick-Off' },
+  '1212081395447699': { code: 'KTC',     title: 'Kingdom Two Crowns'        , phase: 'Post Release' },
+  '1212151115389244': { code: 'K3',      title: 'Kingdom 3'                 , phase: 'Kick-Off' },
+  '1212149353345742': { code: 'MCF',     title: 'My Cannibal Family'        , phase: 'Kick-Off' },
+  '1212148535011307': { code: 'ROUTINE', title: 'ROUTINE'                   , phase: 'Post Release' },
+  '1212013205439519': { code: 'EE',      title: ''                          , phase: 'Post Release' },
+  '1212013201863467': { code: 'DK',      title: ''                          , phase: 'Post Release' },
+  '1211911867621234': { code: 'CB2',     title: 'Cassette Beasts 2002'      , phase: 'Kick-Off' },
+  '1211990738288419': { code: 'SC',      title: 'Sulphur Coast'             , phase: 'Kick-Off' },
+  '1211968270657884': { code: 'SBM',     title: 'Seance of Blake Manor'     , phase: 'Post Release' },
+  '1211966243305065': { code: 'RIV',     title: 'Rivage'                    , phase: 'Announcement Ready' },
+  '1211967053427418': { code: 'DDD',     title: ''                          , phase: 'Release Ready' },
+  '1211962398846254': { code: 'ST',      title: 'Star Trucker'              , phase: 'Post Release' },
+  '1211875734575549': { code: 'BP',      title: 'Blue Prince'               , phase: 'Post Release' },
+  '1211911723653147': { code: 'LMS',     title: 'Last Man Sitting'          , phase: 'Announcement Ready' },
+  '1211911867619071': { code: 'MC',      title: 'Monsters Are Coming'       , phase: 'Release Ready' },
+  '1211912056412903': { code: 'KNBU',    title: 'Kulo Niku Bowl Up!'        , phase: 'Release Ready' },
+  '1211899818368463': { code: 'RR2',     title: 'Regions of Ruin: Runegate' , phase: 'Release Ready' },
+  '1213537831150285': { code: 'LL',      title: ''                          , phase: 'Unknown' },
+  '1211793000194536': { code: 'MCF',     title: 'My Cannibal Family'        , phase: 'Unknown' },
 };
 
 // Custom field GID for "(FoF) Game Title" on portfolio items
@@ -1764,81 +1764,37 @@ document.addEventListener('click', e => {
    BOARD PICKER — loads Portfolio Overview, populates dropdown
    ═══════════════════════════════════════════════════════════════════ */
 
-async function loadPortfolio() {
-  if (!PAT) return;
-  const sel = document.getElementById('board-select');
+function loadPortfolio() {
+  // Build dropdown directly from the authoritative PRODUCT_BOARD_MAP —
+  // no API call needed since we have verified data from the portfolio.
   const status = document.getElementById('picker-status');
-  sel.innerHTML = '<option value="">— loading… —</option>';
-  status.textContent = '';
 
-  try {
-    // Fetch all tasks from the Portfolio Overview project
-    const fields = [
-      'name', 'custom_fields', 'custom_fields.gid',
-      'custom_fields.display_value', 'custom_fields.enum_value'
-    ].join(',');
+  portfolioProducts = Object.entries(PRODUCT_BOARD_MAP)
+    .filter(([gid, e]) => e.code && e.code !== 'MY')  // skip duplicates / placeholders
+    .map(([gid, e]) => ({
+      boardGid: gid,
+      name:  e.title || e.code,  // display name: full game title preferred
+      code:  e.code,
+      title: e.title,
+      phase: e.phase || 'Unknown',
+    }))
+    .filter((p, i, arr) =>
+      arr.findIndex(q => q.boardGid === p.boardGid) === i  // deduplicate
+    )
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-    let tasks = [], offset = null;
-    do {
-      const qs = new URLSearchParams({ opt_fields: fields, limit: '100' });
-      if (offset) qs.set('offset', offset);
-      const resp = await api(`/projects/${PORTFOLIO_OVERVIEW_GID}/tasks?${qs}`);
-      tasks = tasks.concat(resp.data || []);
-      offset = resp.next_page?.offset || null;
-    } while (offset);
+  buildPhaseFilterBar();
+  buildBoardDropdown();
 
-    // Build products directly from PRODUCT_BOARD_MAP — authoritative source
-    // Also collect phase from portfolio overview tasks as before
-    const phaseMap = {};  // boardGid → phase
-    tasks.forEach(t => {
-      let product = null, phase = null;
-      for (const cf of (t.custom_fields || [])) {
-        if (cf.gid === CF_PRODUCT_FIELD && cf.enum_value) product = cf.enum_value.name;
-        if (cf.gid === CF_PHASE_FIELD   && cf.enum_value) phase   = cf.enum_value.name;
-      }
-      // Map product name to board GID to find phase
-      if (product && phase) {
-        const entry = Object.entries(PRODUCT_BOARD_MAP).find(([gid, e]) =>
-          e.title === product || e.code === product
-        );
-        if (entry) phaseMap[entry[0]] = phase;
-      }
-    });
-
-    // Build portfolioProducts from the authoritative map
-    portfolioProducts = Object.entries(PRODUCT_BOARD_MAP)
-      .filter(([gid, e]) => e.title || e.code)  // skip empty entries
-      .map(([gid, e]) => ({
-        boardGid: gid,
-        name: e.title || e.code,   // display name: prefer full title
-        code: e.code,
-        title: e.title,
-        phase: phaseMap[gid] || 'Unknown',
-      }))
-      .filter((p, i, arr) =>
-        // deduplicate by boardGid (keep first)
-        arr.findIndex(q => q.boardGid === p.boardGid) === i
-      )
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-    buildPhaseFilterBar();
-    buildBoardDropdown();
-    // Restore selection to the currently-loaded board (currentPid may be set already)
-    if (currentPid) {
-      const selEl = document.getElementById('board-select');
-      for (let i = 0; i < selEl.options.length; i++) {
-        if (selEl.options[i].value === currentPid) {
-          selEl.selectedIndex = i;
-          break;
-        }
-      }
+  // Restore selection if a board was already loaded
+  if (currentPid) {
+    const selEl = document.getElementById('board-select');
+    for (let i = 0; i < selEl.options.length; i++) {
+      if (selEl.options[i].value === currentPid) { selEl.selectedIndex = i; break; }
     }
-    status.textContent = `${portfolioProducts.length} boards`;
-  } catch (e) {
-    sel.innerHTML = '<option value="">— portfolio load failed —</option>';
-    status.textContent = '';
-    console.warn('Portfolio load failed:', e);
   }
+
+  if (status) status.textContent = `${portfolioProducts.length} boards`;
 }
 
 function buildPhaseFilterBar() {
