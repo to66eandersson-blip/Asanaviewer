@@ -709,7 +709,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen active">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board Timeline</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v1.9</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -743,7 +743,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v1.8</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v1.9</span></div>
     <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
@@ -1069,17 +1069,29 @@ function resolveSection(task){
 
 /* ─── API ─── */
 async function api(path){
-  const r=await fetch('https://app.asana.com/api/1.0'+path,{headers:{'Authorization':'Bearer '+PAT,'Accept':'application/json'}});
-  if(!r.ok){const b=await r.json().catch(()=>({}));throw new Error(b.errors?.[0]?.message||`HTTP ${r.status}`);}
-  return r.json();
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),30000); // 30s timeout
+  try{
+    const r=await fetch('https://app.asana.com/api/1.0'+path,{
+      headers:{'Authorization':'Bearer '+PAT,'Accept':'application/json'},
+      signal:controller.signal
+    });
+    clearTimeout(timer);
+    if(!r.ok){const b=await r.json().catch(()=>({}));throw new Error(b.errors?.[0]?.message||`HTTP ${r.status}`);}
+    return r.json();
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError')throw new Error('Request timed out — check your network connection.');
+    throw e;
+  }
 }
 async function fetchAllTasks(pid){
   const fields=[
     'name','due_on','start_on','completed','resource_subtype',
     'memberships.section.name','memberships.project.gid',
     'followers','followers.name',
-    'custom_fields','notes','html_notes','permalink_url'
-  ].join(',');
+    'custom_fields','notes','permalink_url'
+  ].join(',');  // html_notes loaded on-demand to keep initial fetch fast
   let tasks=[],offset=null,pages=0;
   do{
     const qs=new URLSearchParams({opt_fields:fields,limit:'100'});
@@ -1534,6 +1546,18 @@ function pinTT(evt,evEl){
   pinnedEvt=evt;$('tt').classList.add('pinned');
   document.querySelectorAll('.ev.pinned').forEach(e=>e.classList.remove('pinned'));
   evEl.classList.add('pinned');
+  // Load html_notes lazily if not yet fetched
+  if(evt.htmlNotes===''&&evt.gid&&PAT){
+    api(`/tasks/${evt.gid}?opt_fields=html_notes,notes`).then(resp=>{
+      evt.htmlNotes=resp.data?.html_notes||'';
+      evt.notes=resp.data?.notes||evt.notes;
+      // Re-render tooltip notes section if still pinned
+      if(pinnedEvt&&pinnedEvt.gid===evt.gid){
+        const sec=sections.find(s=>s.events.some(e=>e.gid===evt.gid));
+        if(sec)populateTT(evt,sec);
+      }
+    }).catch(()=>{});
+  }
 }
 function unpinTT(){
   pinnedEvt=null;$('tt').classList.remove('pinned','show');
