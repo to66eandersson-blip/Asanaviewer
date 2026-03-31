@@ -41,8 +41,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .screen.active { display: flex; }
 
 /* ── SETUP ── */
-#screen-setup { min-height: 100vh; align-items: center; justify-content: center; padding: 3rem 1.5rem; flex-direction: column; overflow-y: auto; }
-.setup-wrap { width: 100%; max-width: 680px; display: flex; flex-direction: column; gap: 1.5rem; }
+#screen-setup { min-height: 100vh; align-items: flex-start; justify-content: center; padding: 2rem 2rem; flex-direction: column; overflow-y: auto; }
+.setup-wrap { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 420px 1fr; gap: 1.5rem; align-items: start; margin: 0 auto; }
 .setup-card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--r-xl); padding: 2.5rem; }
 .logo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2rem; }
 .logo-gem { width: 13px; height: 13px; background: var(--accent); border-radius: 2px; transform: rotate(45deg); flex-shrink: 0; }
@@ -281,11 +281,18 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .leg-note { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--text3); }
 
 .no-data { padding: 3rem 1.25rem; font-size: 12px; color: var(--text3); font-family: var(--mono); }
-#loading { display: none; position: fixed; inset: 0; background: rgba(13,14,16,0.82); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
+#loading { display: none; position: fixed; inset: 0; background: rgba(13,14,16,0.88); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 0; }
 #loading.show { display: flex; }
-.spinner { width: 22px; height: 22px; border: 1.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
+.load-card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--r-xl); padding: 2rem 2.5rem; width: 340px; display: flex; flex-direction: column; gap: 1.25rem; }
+.load-top { display: flex; align-items: center; gap: 14px; }
+.spinner { width: 22px; height: 22px; border: 1.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.load-txt { font-family: var(--mono); font-size: 11px; color: var(--text2); letter-spacing: 0.1em; }
+.load-txt { font-family: var(--mono); font-size: 11px; color: var(--text2); letter-spacing: 0.06em; flex: 1; }
+.load-sub { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.08em; }
+.load-bar-wrap { height: 3px; background: var(--border2); border-radius: 99px; overflow: hidden; }
+.load-bar-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 0%; transition: width 0.3s ease; }
+.load-cancel { background: transparent; border: 0.5px solid var(--border2); border-radius: var(--r); color: var(--text3); font-family: var(--mono); font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; padding: 5px 10px; cursor: pointer; align-self: flex-end; transition: all 0.12s; }
+.load-cancel:hover { color: var(--text2); border-color: var(--border3); }
 
 /* ── TAB NAV ── */
 .tab-nav { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
@@ -709,7 +716,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen active">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v1.9</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v2.0</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -743,7 +750,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v1.9</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v2.0</span></div>
     <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
@@ -886,7 +893,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 </div>
 
 <!-- ── LOADING ── -->
-<div id="loading"><div class="spinner"></div><div class="load-txt" id="load-txt">Loading…</div></div>
+<div id="loading">
+  <div class="load-card">
+    <div class="load-top">
+      <div class="spinner"></div>
+      <span class="load-txt" id="load-txt">Loading…</span>
+    </div>
+    <div class="load-sub" id="load-sub"></div>
+    <div class="load-bar-wrap"><div class="load-bar-fill" id="load-bar"></div></div>
+    <button class="load-cancel" onclick="cancelLoad()">Cancel</button>
+  </div>
+</div>
 
 <script>
 /* ─── Config ─── */
@@ -978,7 +995,27 @@ let pinnedEvt = null;
 const $ = id => document.getElementById(id);
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
-function setLoad(msg){const el=$('loading');if(msg){el.classList.add('show');$('load-txt').textContent=msg;}else el.classList.remove('show');}
+let _loadAbortCtrl = null;
+
+function setLoad(msg, sub, pct){
+  const el=$('loading');
+  if(msg){
+    el.classList.add('show');
+    $('load-txt').textContent=msg;
+    const subEl=$('load-sub'); if(subEl) subEl.textContent=sub||'';
+    const bar=$('load-bar');   if(bar)   bar.style.width=(pct!=null?pct:0)+'%';
+  } else {
+    el.classList.remove('show');
+    const bar=$('load-bar'); if(bar) bar.style.width='0%';
+    _loadAbortCtrl=null;
+  }
+}
+
+function cancelLoad(){
+  if(_loadAbortCtrl) _loadAbortCtrl.abort();
+  setLoad(null);
+  PAT=''; currentPid='';
+}
 function showErr(msg){const el=$('setup-error');el.textContent=msg;el.style.display='block';}
 function extractPid(url){const m=url.match(/\/project\/(\d+)/)||url.match(/[?&]project[=\/](\d+)/)||url.match(/\/(\d{10,})/);return m?m[1]:null;}
 function initials(name){return(name||'?').split(' ').filter(Boolean).slice(0,2).map(p=>p[0].toUpperCase()).join('');}
@@ -1085,14 +1122,15 @@ async function api(path){
     throw e;
   }
 }
-async function fetchAllTasks(pid){
+async function fetchAllTasks(pid, onProgress){
   const fields=[
     'name','due_on','start_on','completed','resource_subtype',
     'memberships.section.name','memberships.project.gid',
     'followers','followers.name',
     'custom_fields','notes','permalink_url'
-  ].join(',');  // html_notes loaded on-demand to keep initial fetch fast
+  ].join(',');
   let tasks=[],offset=null,pages=0;
+  const MAX_PAGES=25;
   do{
     const qs=new URLSearchParams({opt_fields:fields,limit:'100'});
     if(offset)qs.set('offset',offset);
@@ -1100,7 +1138,13 @@ async function fetchAllTasks(pid){
     tasks=tasks.concat(resp.data||[]);
     offset=resp.next_page?.offset||null;
     pages++;
-    if(pages>25){console.warn('fetchAllTasks: page limit reached');break;}
+    // Report progress: each page is ~100 tasks; estimate based on pages fetched
+    const hasMore=!!offset;
+    const pct=hasMore ? Math.min(90, pages*100/MAX_PAGES) : 95;
+    const sub=`Page ${pages}${hasMore?' — more to load…':''} · ${tasks.length} tasks`;
+    if(onProgress) onProgress(sub, pct);
+    else { const bar=$('load-bar'); if(bar) bar.style.width=pct+'%'; const subEl=$('load-sub'); if(subEl) subEl.textContent=sub; }
+    if(pages>=MAX_PAGES){ console.warn('fetchAllTasks: page limit reached'); break; }
   }while(offset);
   return tasks;
 }
@@ -1129,10 +1173,11 @@ async function connect(){
   if(!pid){showErr('Could not find a project ID in that URL — paste the full Asana board URL.');return;}
   currentPid=pid;
   try{
-    setLoad('Connecting to Asana…');
+    setLoad('Connecting to Asana…','Verifying token…',5);
     const projResp=await api(`/projects/${pid}?opt_fields=name`);
-    setLoad('Fetching tasks…');
-    const tasks=await fetchAllTasks(pid);
+    setLoad('Fetching tasks…','Starting…',10);
+    const tasks=await fetchAllTasks(pid,(sub,pct)=>setLoad('Fetching tasks…',sub,pct));
+    setLoad('Building view…','Almost done…',98);
     buildApp(projResp.data,tasks);
     show('screen-app');
     loadPortfolio();
@@ -1146,9 +1191,11 @@ async function switchBoard(){
   const pid=extractPid(url);if(!pid){alert('Could not extract a project ID.');return;}
   currentPid=pid;
   try{
-    setLoad('Loading…');
+    setLoad('Loading board…','Connecting…',5);
     const projResp=await api(`/projects/${pid}?opt_fields=name`);
-    const tasks=await fetchAllTasks(pid);
+    setLoad('Fetching tasks…','Starting…',10);
+    const tasks=await fetchAllTasks(pid,(sub,pct)=>setLoad('Fetching tasks…',sub,pct));
+    setLoad('Building view…','Almost done…',98);
     buildApp(projResp.data,tasks);
     $('switch-inp').value='';
   }catch(e){alert('Failed: '+e.message);}finally{setLoad(null);}
@@ -1934,11 +1981,12 @@ async function onBoardPickerChange(gid) {
   // Find the product name for the title
   const product = portfolioProducts.find(p => p.boardGid === gid);
   try {
-    setLoad('Connecting…');
-    currentPid = gid;  // set BEFORE buildApp so selection restore works
+    currentPid = gid;
+    setLoad('Connecting…','Verifying…',5);
     const projResp = await api(`/projects/${gid}?opt_fields=name`);
-    setLoad('Fetching tasks…');
-    const tasks = await fetchAllTasks(gid);
+    setLoad('Fetching tasks…','Starting…',10);
+    const tasks = await fetchAllTasks(gid,(sub,pct)=>setLoad('Fetching tasks…',sub,pct));
+    setLoad('Building view…','Almost done…',98);
     buildApp(projResp.data, tasks);
     // Also update phase for this product based on loaded tasks
     updatePhaseFromTasks(tasks, product);
