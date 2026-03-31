@@ -716,7 +716,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen active">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v2.1</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v2.2</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -750,7 +750,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v2.1</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v2.2</span></div>
     <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
@@ -951,12 +951,11 @@ const PRODUCT_BOARD_MAP = {
   '1211793000194536': { code: 'MCF',     title: 'My Cannibal Family'        , phase: 'Unknown' },
 };
 
-// Custom field GID for "(FoF) Game Title" on portfolio items
-const CF_GAME_TITLE = '1213881197306441';
-const PORTFOLIO_GID = '1211541493171405';
+// ALL_PHASES must be defined before activePhaseFilter uses it
+const ALL_PHASES = ['Kick-Off', 'Pre-Signing', 'Scouting', 'Announcement Ready', 'Release Ready', 'Post Release'];
 
-let portfolioProducts = [];   // [{name, boardGid, phase}]
-let activePhaseFilter = new Set([...ALL_PHASES, 'Unknown', 'ALL']); // show all by default
+let portfolioProducts = [];
+let activePhaseFilter = new Set([...ALL_PHASES, 'Unknown', 'ALL']);
 
 const MONTHLY_GREY_INNER = '#4a4845';
 
@@ -1988,8 +1987,6 @@ async function onBoardPickerChange(gid) {
     const tasks = await fetchAllTasks(gid,(sub,pct)=>setLoad('Fetching tasks…',sub,pct));
     setLoad('Building view…','Almost done…',98);
     buildApp(projResp.data, tasks);
-    // Also update phase for this product based on loaded tasks
-    updatePhaseFromTasks(tasks, product);
     show('screen-app');
   } catch (e) {
     alert('Failed to load board: ' + e.message);
@@ -1999,24 +1996,9 @@ async function onBoardPickerChange(gid) {
   }
 }
 
-function updatePhaseFromTasks(tasks, product) {
-  if (!product) return;
-  // Find the phase from the Flow of Fury tasks in this board
-  for (const t of tasks) {
-    const phaseCF = (t.custom_fields || []).find(cf => cf.gid === CF_PHASE_FIELD);
-    if (phaseCF?.enum_value) {
-      product.phase = phaseCF.enum_value.name;
-      return;
-    }
-  }
-}
+// updatePhaseFromTasks removed — CF_PHASE_FIELD was undefined
 
-/* ═══════════════════════════════════════════════════════════════════
-   PHASE FILTER BAR visibility on tab switch
-   ═══════════════════════════════════════════════════════════════════ */
-// Patch into switchTab
-const _origSwitchTab = switchTab;
-// We'll redefine switchTab below and call phase bar visibility there.
+
 
 /* ═══════════════════════════════════════════════════════════════════
    EXCEL / FORECAST TAB
@@ -2104,30 +2086,7 @@ function colLetterToIdx(letters) {
   return n - 1;
 }
 
-/* ── Find column index by exact header text, case-insensitive ── */
-function findColByHeader(headers, label) {
-  return headers.findIndex(h => String(h).trim().toLowerCase() === label.toLowerCase());
-}
 
-/* ── Format an Excel date serial or date string ── */
-function fmtDate(v) {
-  if (!v) return null;
-  // Excel date serial number
-  if (typeof v === 'number' && v > 40000) {
-    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
-    return d.toISOString().slice(0, 10);
-  }
-  const s = String(v).trim();
-  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-  return s || null;
-}
-
-/* ── Format number as currency-ish ── */
-function fmtMoney(v) {
-  const n = parseFloat(String(v).replace(/[^0-9.-]/g, ''));
-  if (isNaN(n)) return null;
-  return n;
-}
 
 function extractSheetData(wb, sheetName) {
   const ws = wb.Sheets[sheetName];
