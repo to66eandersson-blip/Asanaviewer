@@ -90,9 +90,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   padding: 1px 5px; flex-shrink: 0;
 }
 .tb-game-title {
-  font-size: 15px; font-weight: 300; color: var(--text);
-  letter-spacing: -0.01em; flex-shrink: 0;
-  padding-left: 2px;
+  font-size: 22px; font-weight: 300; color: var(--text);
+  letter-spacing: -0.02em; flex-shrink: 0;
+  padding-left: 4px; line-height: 1;
 }
 .tb-project { font-size: 13px; color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tb-project strong { color: var(--text); font-weight: 400; }
@@ -551,19 +551,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   min-height: 0;
 }
 
-/* ── Title block ── */
-.fc-title-row {
-  display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
-}
-.fc-game-title {
-  font-size: 28px; font-weight: 300; letter-spacing: -0.03em; color: var(--text);
-  line-height: 1;
-}
-.fc-title-tag {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--text3); padding: 3px 7px;
-  border: 0.5px solid var(--border2); border-radius: 20px;
-}
+
 
 /* ── Budget donuts — prominent horizontal strip ── */
 .fc-budget-strip {
@@ -716,7 +704,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen active">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v2.2</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v2.3</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -750,7 +738,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v2.2</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v2.3</span></div>
     <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
@@ -2109,15 +2097,23 @@ function extractSheetData(wb, sheetName) {
   const maxRow = XLSX.utils.decode_range(ref).e.r + 1;
 
   // ── CHANGELOG: EP=Date, EQ=Description ───────────────────────────────
+  // The changelog section ends when we see a long gap (3+ consecutive empty EP+EQ rows)
+  // This prevents bleeding into other sections below.
   const changelog = [];
   let clHdr = -1;
   for (let r = 1; r <= Math.min(40, maxRow); r++) {
     const ep = cv('EP', r).toLowerCase(), eq = cv('EQ', r).toLowerCase();
     if (ep === 'date' || eq === 'description' || ep === 'changelog') { clHdr = r; break; }
   }
+  let emptyStreak = 0;
   for (let r = clHdr > 0 ? clHdr + 1 : 1; r <= maxRow; r++) {
     const epRaw = cv('EP', r), eqRaw = cv('EQ', r);
-    if (!epRaw && !eqRaw) continue;
+    if (!epRaw && !eqRaw) {
+      emptyStreak++;
+      if (emptyStreak >= 3) break; // stop after 3 consecutive empty rows
+      continue;
+    }
+    emptyStreak = 0;
     const date = /^\d{4}-\d{2}-\d{2}/.test(epRaw) ? epRaw.slice(0,10) : (epRaw||null);
     if (date || eqRaw) changelog.push({ date, desc: eqRaw });
   }
@@ -2136,6 +2132,25 @@ function extractSheetData(wb, sheetName) {
       ex: cv('EX',r), ey: cv('EY',r), ez: cv('EZ',r)
     });
     if (fuzzy(label,'total') && fuzzy(label,'budget')) hitTotal = true;
+  }
+
+  // ── ORIGINAL CONTRACT: labels in EX column, Min in EY, Max in EZ ─────
+  // Scan same row range, but reading from EX column
+  const origContract = {};
+  for (let r = 1; r <= maxRow; r++) {
+    const label = cv('EX', r);
+    if (!label) continue;
+    const lc = label.toLowerCase();
+    const minVal = cv('EY', r), maxVal = cv('EZ', r);
+    if      (fuzzy(lc,'principal'))              origContract.principal  = { min: minVal, max: maxVal };
+    else if (fuzzy(lc,'service'))                origContract.service    = { min: minVal, max: maxVal };
+    else if (fuzzy(lc,'marketing'))              origContract.marketing  = { min: minVal, max: maxVal };
+    else if (fuzzy(lc,'effective'))              origContract.effective  = maxVal || minVal;
+    else if (lc === 'm1')                        origContract.m1         = maxVal || minVal;
+    else if (fuzzy(lc,'installment'))            origContract.installments = { count: cv('EY',r), value: maxVal };
+    else if (fuzzy(lc,'initial') && fuzzy(lc,'advance')) origContract.initialAdvance = maxVal || minVal;
+    // Stop after a run of empty EX rows following contract content
+    if (fuzzy(lc,'initial') && fuzzy(lc,'advance')) break;
   }
 
   const gen = {};
@@ -2201,7 +2216,7 @@ function extractSheetData(wb, sheetName) {
     if (tRow) gen.titleFinance = tRow.eu || tRow.ev;
   }
 
-  return { game: sheetName, changelog, general: gen, budget, _rawRows: rawRows };
+  return { game: sheetName, changelog, general: gen, budget, origContract, _rawRows: rawRows };
 }
 
 function renderForecastForCurrentBoard() {
@@ -2264,30 +2279,16 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   fcView.style.display = 'flex';
   fcView.innerHTML = '';
 
-  const { game, changelog, general: gen, budget } = data;
+  const { game, changelog, general: gen, budget, origContract } = data;
 
+  // ── Format a money value cleanly ──────────────────────────────────────
   function fmtV(n) {
-    if (!n && n !== 0) return '—';
+    if (n === 0 || n === '' || n === null || n === undefined) return '—';
     const num = parseFloat(n);
-    if (isNaN(num) || num === 0) return '—';
+    if (isNaN(num)) return String(n) || '—';
+    if (Math.abs(num) < 1) return '—';  // suppress near-zero floating point noise
     return fmtK(num);
   }
-
-  // ── TITLE ─────────────────────────────────────────────────────────────
-  const titleText = gen.titleFinance || gen.titleIndie || game;
-  // Also update topbar title with the proper name from the Excel file
-  const tbTitle = document.getElementById('tb-game-title');
-  if (tbTitle && (gen.titleFinance || gen.titleIndie)) {
-    tbTitle.textContent = gen.titleFinance || gen.titleIndie;
-  }
-  const titleRow  = document.createElement('div');
-  titleRow.className = 'fc-title-row';
-  titleRow.innerHTML = `
-    <div class="fc-game-title">${esc(titleText)}</div>
-    ${gen.revenueModel  ? `<span class="fc-title-tag">${esc(gen.revenueModel)}</span>` : ''}
-    ${gen.releaseSteam  ? `<span class="fc-title-tag">🗓 ${esc(gen.releaseSteam)}</span>` : ''}
-  `;
-  fcView.appendChild(titleRow);
 
   // ── BUDGET DONUTS ─────────────────────────────────────────────────────
   const hasBudget = budget.total?.budget || budget.dev?.budget ||
@@ -2321,7 +2322,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   const cols = document.createElement('div');
   cols.className = 'fc-columns';
 
-  // LEFT: Changelog
+  // ── LEFT: Changelog ───────────────────────────────────────────────────
   const clCol = document.createElement('div');
   clCol.className = 'fc-col-changelog';
   clCol.innerHTML = `<div class="fc-section-title">Changelog</div>`;
@@ -2351,29 +2352,25 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   clCol.appendChild(clList);
   cols.appendChild(clCol);
 
-  // RIGHT: General card
+  // ── RIGHT: General + Original Contract + Budget table ─────────────────
   const genCol = document.createElement('div');
   genCol.className = 'fc-col-general';
-  genCol.innerHTML = `<div class="fc-section-title">General</div>`;
+  genCol.innerHTML = `<div class="fc-section-title">Details</div>`;
   const card = document.createElement('div');
   card.className = 'fc-general-card';
 
-  // Info rows — all fields from the Excel General section
+  // ── General info (no PM/PP/BM/PEM) ──────────────────────────────────
   const infoSection = document.createElement('div');
   [
-    { key: 'titleFinance',   label: 'Title (Finance)'    },
-    { key: 'titleIndie',     label: 'Title (IndieBI)'    },
-    { key: 'releaseSteam',   label: 'Release (Steam)'    },
-    { key: 'releaseM1',      label: 'Release M1'         },
-    { key: 'releaseM12',     label: 'Release M12'        },
-    { key: 'revenueModel',   label: 'Revenue Model'      },
-    { key: 'revenueShare',   label: 'Revenue Share'      },
-    { key: 'principalMarkup',label: 'Principal Markup'   },
-    { key: 'sustainRate',    label: 'Sustain M13+'       },
-    { key: 'pm',             label: 'Product Manager'    },
-    { key: 'pp',             label: 'Producer(s)'        },
-    { key: 'bm',             label: 'Brand Manager'      },
-    { key: 'pem',            label: 'Player Exp. Mgr'    },
+    { key: 'titleFinance',   label: 'Title (Finance)'  },
+    { key: 'titleIndie',     label: 'Title (IndieBI)'  },
+    { key: 'releaseSteam',   label: 'Release (Steam)'  },
+    { key: 'releaseM1',      label: 'Release M1'       },
+    { key: 'releaseM12',     label: 'Release M12'      },
+    { key: 'revenueModel',   label: 'Revenue Model'    },
+    { key: 'revenueShare',   label: 'Revenue Share'    },
+    { key: 'principalMarkup',label: 'Principal Markup' },
+    { key: 'sustainRate',    label: 'Sustain M13+'     },
   ].filter(f => gen[f.key]).forEach(f => {
     const row = document.createElement('div');
     row.className = 'fc-gen-row';
@@ -2384,7 +2381,61 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   });
   if (infoSection.children.length) card.appendChild(infoSection);
 
-  // Budget breakdown table — Min / Max / Spent / Remaining / Planned
+  // ── Original Contract section ─────────────────────────────────────────
+  const hasOrig = origContract && Object.keys(origContract).length > 0;
+  if (hasOrig) {
+    const sec = document.createElement('div');
+    sec.className = 'fc-gen-section';
+    sec.textContent = 'Original Contract';
+    card.appendChild(sec);
+
+    const origTable = document.createElement('div');
+    // Header row
+    origTable.innerHTML = `<div class="fc-bud-hdr" style="grid-template-columns:1fr 70px 70px">
+      <span></span><span>Min</span><span>Max</span>
+    </div>`;
+
+    [
+      { key: 'principal',  label: 'Principal'  },
+      { key: 'service',    label: 'Service'    },
+      { key: 'marketing',  label: 'Marketing'  },
+    ].filter(r => origContract[r.key]).forEach(({ key, label }) => {
+      const d = origContract[key];
+      const row = document.createElement('div');
+      row.className = 'fc-bud-row';
+      row.style.gridTemplateColumns = '1fr 70px 70px';
+      row.innerHTML = `
+        <span class="fc-bud-label">${esc(label)}</span>
+        <span class="fc-bud-num">${fmtV(d.min)}</span>
+        <span class="fc-bud-num">${fmtV(d.max)}</span>`;
+      origTable.appendChild(row);
+    });
+
+    // Text fields from orig contract
+    [
+      { key: 'effective',     label: 'Effective'     },
+      { key: 'm1',            label: 'M1'            },
+      { key: 'initialAdvance',label: 'Initial Advance'},
+    ].filter(f => origContract[f.key]).forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'fc-gen-row';
+      row.innerHTML = `
+        <span class="fc-gen-key">${esc(f.label)}</span>
+        <span class="fc-gen-val">${esc(String(origContract[f.key]))}</span>`;
+      origTable.appendChild(row);
+    });
+    if (origContract.installments) {
+      const row = document.createElement('div');
+      row.className = 'fc-gen-row';
+      row.innerHTML = `
+        <span class="fc-gen-key">Installments</span>
+        <span class="fc-gen-val">${esc(origContract.installments.count)} × ${esc(origContract.installments.value)}</span>`;
+      origTable.appendChild(row);
+    }
+    card.appendChild(origTable);
+  }
+
+  // ── Running Budget breakdown table ────────────────────────────────────
   const budgetRows = [
     { key: 'dev',   label: 'Development' },
     { key: 'svc',   label: 'Service'     },
@@ -2395,16 +2446,13 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   if (budgetRows.length) {
     const sec = document.createElement('div');
     sec.className = 'fc-gen-section';
-    sec.textContent = 'Budget';
+    sec.textContent = 'Running Budget';
     card.appendChild(sec);
 
     const tbl = document.createElement('div');
     tbl.className = 'fc-bud-table';
-
-    // Show Min column only if any row has a non-zero min
     const showMin = budgetRows.some(({ key }) => budget[key]?.min > 0);
-    const cols4 = showMin ? '1fr 60px 72px 72px 72px' : '1fr 72px 72px 72px';
-
+    const cols4 = showMin ? '1fr 55px 65px 65px 65px' : '1fr 65px 65px 65px';
     const hdr = document.createElement('div');
     hdr.className = 'fc-bud-hdr';
     hdr.style.gridTemplateColumns = cols4;
@@ -2412,7 +2460,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
     tbl.appendChild(hdr);
 
     budgetRows.forEach(({ key, label }) => {
-      const b   = budget[key];
+      const b = budget[key];
       const pct = b.budget > 0 ? b.spend / b.budget : 0;
       const hiCls = pct >= 1 ? 'neg' : pct >= 0.8 ? 'hi' : '';
       const row = document.createElement('div');
