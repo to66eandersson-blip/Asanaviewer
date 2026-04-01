@@ -58,6 +58,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .field input::placeholder { color: var(--text3); }
 .field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
 .field-hint a { color: var(--text2); text-decoration: none; border-bottom: 0.5px solid var(--border3); }
+.btn-file-pick {
+  display: inline-block; cursor: pointer;
+  background: var(--surface2); border: 0.5px solid var(--border2);
+  border-radius: var(--r); color: var(--text2);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+  padding: 6px 12px; transition: all 0.12s; flex-shrink: 0;
+}
+.btn-file-pick:hover { border-color: var(--border3); color: var(--text); background: var(--surface3); }
 .btn-main { width: 100%; background: var(--accent); color: #0d0e10; border: none; border-radius: var(--r); padding: 0.75rem; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 0.25rem; transition: opacity 0.15s; }
 .btn-main:hover { opacity: 0.87; }
 #setup-error { font-family: var(--mono); font-size: 11px; color: var(--danger); margin-top: 0.75rem; display: none; line-height: 1.5; }
@@ -90,8 +98,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   padding: 1px 5px; flex-shrink: 0;
 }
 .tb-game-title {
-  font-size: 22px; font-weight: 300; color: var(--text);
-  letter-spacing: -0.02em; flex-shrink: 0;
+  font-size: 32px; font-weight: 300; color: var(--text);
+  letter-spacing: -0.03em; flex-shrink: 0;
   padding-left: 4px; line-height: 1;
 }
 .tb-project { font-size: 13px; color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -120,17 +128,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* Timeline */
 .tl-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-#budget-bar { border-bottom: 0.5px solid var(--border); flex-shrink: 0; background: var(--surface); }
-.bbar-inner { display: flex; align-items: center; gap: 0; padding: 0; overflow-x: auto; scrollbar-width: none; }
-.bbar-inner::-webkit-scrollbar { display: none; }
-.bbar-card { display: flex; align-items: center; gap: 14px; padding: 10px 20px; border-right: 0.5px solid var(--border); flex: 1; min-width: 180px; }
-.bbar-card:last-child { border-right: none; }
-.bbar-donut { flex-shrink: 0; }
-.bbar-info { display: flex; flex-direction: column; gap: 1px; }
-.bbar-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
-.bbar-spent { font-size: 13px; font-weight: 400; color: var(--text); letter-spacing: -0.01em; }
-.bbar-budget { font-family: var(--mono); font-size: 9px; color: var(--text3); }
-.bbar-pct { font-family: var(--mono); font-size: 9px; }
+
 #tl-inner { display: flex; flex-direction: column; } /* width set by JS */
 .tl-scroll { flex: 1; overflow: auto; position: relative; }
 .tl-head { display: flex; position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 0.5px solid var(--border2); }
@@ -469,9 +467,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 .gb-goal-name {
   font-size: 10.5px; color: var(--text2);
-  line-height: 1.35; overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .gb-empty {
@@ -738,7 +735,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen active">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v2.7</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v2.8</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -751,6 +748,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <label>Asana Board URL <span style="font-family:var(--sans);font-size:10px;color:var(--text3);font-weight:300;letter-spacing:0">(optional)</span></label>
         <input type="text" id="inp-url" placeholder="https://app.asana.com/1/…/project/PROJECT_ID/… (leave blank to use dropdown)" />
         <div class="field-hint">Leave blank to connect with the token only and pick a game from the dropdown. Or paste a board URL to load it directly.</div>
+      </div>
+      <div class="field">
+        <label>Forecast File <span style="font-family:var(--sans);font-size:10px;color:var(--text3);font-weight:300;letter-spacing:0">(optional)</span></label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <label class="btn-file-pick" for="inp-forecast-gateway">Choose file…</label>
+          <input type="file" id="inp-forecast-gateway" accept=".xlsx,.xls" style="display:none" onchange="gatewayForecastPicked(this)" />
+          <span id="inp-forecast-name" style="font-family:var(--mono);font-size:10px;color:var(--text3);">No file selected</span>
+        </div>
+        <div class="field-hint">Load your forecast Excel file now. You can also load it later from the Forecast tab.</div>
       </div>
       <button class="btn-main" onclick="connect()">Connect →</button>
       <div id="setup-error"></div>
@@ -772,7 +778,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v2.7</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v2.8</span></div>
     <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
@@ -812,7 +818,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <div class="tab-panel active" id="panel-timeline">
 
   <!-- Budget strip -->
-  <div id="budget-bar" style="display:none"><div class="bbar-inner" id="bbar-inner"></div></div>
+
 
   <div class="tl-area">
     <div class="tl-scroll">
@@ -1043,6 +1049,22 @@ function cancelLoad(){
   setLoad(null);
   PAT=''; currentPid='';
 }
+
+// Forecast file picked on gateway — store ArrayBuffer for after connect
+let _pendingForecastBuffer = null;
+let _pendingForecastName   = null;
+function gatewayForecastPicked(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const nameEl = document.getElementById('inp-forecast-name');
+  if (nameEl) nameEl.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _pendingForecastBuffer = e.target.result;
+    _pendingForecastName   = file.name;
+  };
+  reader.readAsArrayBuffer(file);
+}
 function showErr(msg){const el=$('setup-error');el.textContent=msg;el.style.display='block';}
 function extractPid(url){const m=url.match(/\/project\/(\d+)/)||url.match(/[?&]project[=\/](\d+)/)||url.match(/\/(\d{10,})/);return m?m[1]:null;}
 function initials(name){return(name||'?').split(' ').filter(Boolean).slice(0,2).map(p=>p[0].toUpperCase()).join('');}
@@ -1185,11 +1207,31 @@ async function connect(){
   // If no URL given, go straight to app and let user pick from dropdown
   if(!url){
     try{
-      setLoad('Connecting…');
-      // Validate the token with a lightweight API call
+      setLoad('Connecting…','Validating token…',5);
       await api('/users/me?opt_fields=name');
       loadPortfolio();
       show('screen-app');
+      if (_pendingForecastBuffer) {
+        const nameEl = document.getElementById('excel-file-name');
+        if (nameEl) nameEl.textContent = _pendingForecastName || '';
+        parseExcelBuffer(_pendingForecastBuffer);
+        _pendingForecastBuffer = null;
+      }
+      // Auto-load a random board so the viewer is never empty
+      const validBoards = portfolioProducts.filter(p => p.boardGid);
+      if (validBoards.length) {
+        const pick = validBoards[Math.floor(Math.random() * validBoards.length)];
+        setLoad('Loading ' + pick.name + '…','Fetching tasks…',10);
+        try {
+          currentPid = pick.boardGid;
+          const projResp = await api(`/projects/${pick.boardGid}?opt_fields=name`);
+          const tasks = await fetchAllTasks(pick.boardGid, (sub,pct)=>setLoad('Loading '+pick.name+'…',sub,pct));
+          setLoad('Building view…','Almost done…',98);
+          buildApp(projResp.data, tasks);
+        } catch(loadErr) {
+          console.warn('Auto-load failed:', loadErr.message);
+        }
+      }
     }catch(e){
       PAT='';
       showErr('Connection failed: '+e.message+(e.message.includes('401')?' — check your token.':''));
@@ -1208,6 +1250,12 @@ async function connect(){
     buildApp(projResp.data,tasks);
     show('screen-app');
     loadPortfolio();
+    if (_pendingForecastBuffer) {
+      const nameEl = document.getElementById('excel-file-name');
+      if (nameEl) nameEl.textContent = _pendingForecastName || '';
+      parseExcelBuffer(_pendingForecastBuffer);
+      _pendingForecastBuffer = null;
+    }
   }catch(e){
     PAT='';currentPid='';
     showErr('Connection failed: '+e.message+(e.message.includes('401')?' — check your token.':(e.message.includes('403')?' — no access to this project.':'')));
@@ -1230,40 +1278,9 @@ async function switchBoard(){
 function goSetup(){PAT='';currentPid='';$('inp-pat').value='';$('inp-url').value='';show('screen-setup');}
 
 /* ─── Budget bar ─── */
-const CF_BUDGET_TYPE   = '1211766305628326';
-const CF_BUDGET_TOTAL  = '1211766344234259';
-const CF_BUDGET_SPEND  = '1211766348602670';
 
-const BUDGET_TYPE_GID = {
-  '1211766305628329': 'Development',
-  '1211766305628330': 'Service',
-  '1211766305628331': 'Marketing',
-};
 
-function extractBudgets(tasks){
-  /* Find tasks that have a budget type set — these are the Budget Tracker rows */
-  const rows = tasks.filter(t=>{
-    const f=getCF(t,CF_BUDGET_TYPE);
-    return f&&f.enum_value;
-  });
 
-  const map={Development:{budget:0,spend:0},Service:{budget:0,spend:0},Marketing:{budget:0,spend:0}};
-  rows.forEach(t=>{
-    const typeField=getCF(t,CF_BUDGET_TYPE);
-    const type=BUDGET_TYPE_GID[typeField.enum_value.gid];
-    if(!type)return;
-    const b=getCF(t,CF_BUDGET_TOTAL)?.number_value||0;
-    const s=getCF(t,CF_BUDGET_SPEND)?.number_value||0;
-    map[type].budget+=b;
-    map[type].spend+=s;
-  });
-
-  const total={
-    budget:map.Development.budget+map.Service.budget+map.Marketing.budget,
-    spend:map.Development.spend+map.Service.spend+map.Marketing.spend,
-  };
-  return{total,dev:map.Development,svc:map.Service,mkt:map.Marketing};
-}
 
 function fmtK(n){
   if(n>=1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'')+'M';
@@ -1298,34 +1315,7 @@ function donutSvg(pct, color, size=52, stroke=6){
   </svg>`;
 }
 
-function buildBudgetBar(tasks){
-  const bar=$('budget-bar');
-  const inner=$('bbar-inner');
-  const bdata=extractBudgets(tasks);
 
-  if(!bdata.total.budget){bar.style.display='none';return;}
-  bar.style.display='block';
-
-  const cards=[
-    {label:'Total',      color:'var(--accent)',  data:bdata.total},
-    {label:'Development',color:'#50c8f0',        data:bdata.dev},
-    {label:'Marketing',  color:'#c850f0',        data:bdata.mkt},
-    {label:'Service',    color:'#f09650',        data:bdata.svc},
-  ];
-
-  inner.innerHTML=cards.map(c=>{
-    const sp=Math.round(c.data.spend||0), bu=Math.round(c.data.budget||0);
-    const pct=bu>0?Math.round(sp/bu*100):0;
-    return `<div class="bbar-card">
-      ${donutSvg(pct,c.color)}
-      <div class="bbar-info">
-        <span class="bbar-label">${c.label}</span>
-        <span class="bbar-spent">${fmtK(sp)}</span>
-        <span class="bbar-budget">of ${fmtK(bu)}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
 
 /* ─── Build app ─── */
 function buildApp(proj,tasks){
@@ -1392,7 +1382,7 @@ function buildApp(proj,tasks){
   sections=ordered;
   allDomains=[...new Set(parsed.map(e=>e.domain).filter(Boolean))].sort();
   activeSections=new Set(['ALL']);activeDomains=new Set(['ALL']);
-  buildBudgetBar(tasks);buildFilters();render();
+  buildFilters();render();
   /* Refresh goals board if it's currently visible, else reset placeholder */
   if (activeTab === 'goals') renderGoalsBoard();
   else $('gb-content').innerHTML = '<div style="padding:3rem 1.25rem;font-size:12px;color:var(--text3);font-family:var(--mono);">Switch to this tab to see the Goals Board.</div>';
