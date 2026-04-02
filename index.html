@@ -744,7 +744,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen active">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v3.1</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v3.2</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -787,7 +787,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v3.1</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v3.2</span></div>
     <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
@@ -1290,6 +1290,30 @@ function fmtK(n){
   if(n>=1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'')+'M';
   if(n>=1000)    return (n/1000).toFixed(0)+'k';
   return n.toString();
+}
+
+/* Format a raw financial number with thousands separator.
+   Smart decimals: integers show none, small decimals (≤2dp) show as-is,
+   long floats (Excel precision garbage) get rounded to 2dp max.          */
+function fmtNum(raw) {
+  if (raw === '' || raw === null || raw === undefined) return '—';
+  const s = String(raw).trim();
+  if (!s || s === '0') return '—';
+
+  const n = parseFloat(s);
+  // Pass through strings with % or non-numeric chars
+  if (/[%a-zA-Z]/.test(s)) return s;
+  if (isNaN(n)) return s;
+
+  // Detect if it looks like a multiplier/ratio (small number, e.g. 2.986, 0.3)
+  if (Math.abs(n) < 100 && s.includes('.')) {
+    // Round to 2 decimal places max, strip trailing zeros
+    return parseFloat(n.toFixed(2)).toString();
+  }
+
+  // Large number: round to integer, add thousands separator
+  const rounded = Math.round(n);
+  return rounded.toLocaleString('en-US');
 }
 
 function donutSvg(pct, color, size=52, stroke=6){
@@ -2679,7 +2703,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
         row.innerHTML = `
           <span class="fc-gen-key">${esc(deal.label)}</span>
           <div style="display:flex;gap:12px;flex-wrap:wrap">
-            ${deal.value ? `<span class="fc-gen-val bright">${esc(deal.value)}</span>` : ''}
+            ${deal.value ? `<span class="fc-gen-val num">${fmtNum(deal.value)}</span>` : ''}
             ${deal.date  ? `<span class="fc-gen-val" style="color:var(--text3)">${esc(deal.date)}</span>` : ''}
             ${deal.m1    ? `<span class="fc-gen-val" style="color:var(--text3)">M1: ${esc(deal.m1)}</span>` : ''}
           </div>
@@ -2701,7 +2725,8 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
       ].filter(f => sc[f.key]).forEach(f => {
         const row = document.createElement('div'); row.className = 'fc-gen-row';
         const valCls = f.num ? 'fc-gen-val num' : 'fc-gen-val bright';
-        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="${valCls}">${esc(sc[f.key])}</span>`;
+        const scDisp = f.num ? fmtNum(sc[f.key]) : esc(sc[f.key]);
+        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="${valCls}">${scDisp}</span>`;
         finCard.appendChild(row);
       });
     }
@@ -2721,7 +2746,8 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
       ].filter(f => um[f.key]).forEach(f => {
         const row = document.createElement('div'); row.className = 'fc-gen-row';
         const valCls = f.num ? 'fc-gen-val num' : 'fc-gen-val bright';
-        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="${valCls}">${esc(um[f.key])}</span>`;
+        const umDisp = f.num ? fmtNum(um[f.key]) : esc(um[f.key]);
+        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="${valCls}">${umDisp}</span>`;
         finCard.appendChild(row);
       });
     }
@@ -2737,7 +2763,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
         { key: 'taxes',         label: 'Taxes'          },
       ].filter(f => st[f.key]).forEach(f => {
         const row = document.createElement('div'); row.className = 'fc-gen-row';
-        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="fc-gen-val bright">${esc(st[f.key])}</span>`;
+        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="fc-gen-val num">${fmtNum(st[f.key])}</span>`;
         finCard.appendChild(row);
       });
     }
