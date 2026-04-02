@@ -617,9 +617,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── Three-column body ── */
 .fc-columns { display: flex; gap: 1.25rem; align-items: stretch; flex: 1; min-height: 0; overflow: hidden; }
-.fc-col-changelog { flex: 0.85; min-width: 0; overflow-y: auto; max-height: calc(100vh - 280px); }
-.fc-col-general   { flex: 1.4; min-width: 270px; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); }
-.fc-col-financial { flex: 1.2; min-width: 260px; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); }
+.fc-col-changelog { flex: 1; min-width: 0; overflow-y: auto; max-height: calc(100vh - 280px); }
+.fc-col-general   { flex: 1; min-width: 0; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); }
+.fc-col-financial { flex: 1; min-width: 0; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); }
 /* Cards scroll independently within their column */
 .fc-col-general .fc-general-card,
 .fc-col-financial .fc-general-card { flex: 1; overflow-y: auto; min-height: 0; }
@@ -749,7 +749,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen active">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v3.3</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v3.4</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -792,7 +792,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- ── APP ── -->
 <div id="screen-app" class="screen">
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v3.3</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v3.4</span></div>
     <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tab-nav">
       <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
@@ -1330,7 +1330,8 @@ function donutSvg(pct, color, size=52, stroke=6){
   const c = size/2;
   const trackColor = 'rgba(255,255,255,0.06)';
   const fillColor  = over ? 'var(--rag-r)' : amber ? 'var(--rag-a)' : color;
-  const label = displayPct > 999 ? '>999%' : displayPct + '%';
+  // Show "<1%" for very small but non-zero values rather than "0%"
+  const label = displayPct > 999 ? '>999%' : (displayPct === 0 && pct > 0) ? '<1%' : displayPct + '%';
   const fontSize = label.length > 4 ? 8 : displayPct >= 100 ? 9 : 10;
 
   // When over 100%: completely filled ring (dasharray = full circ, no gap, no round caps)
@@ -2487,7 +2488,9 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
       const spendR  = Math.round(c.data.spend   || 0);
       const budgetR = Math.round(c.data.budget  || 0);
       const remR    = Math.round(c.data.remaining || 0);
-      const pct     = budgetR > 0 ? Math.round(spendR / budgetR * 100) : 0;
+      // Keep float precision for the arc geometry — only round the display label
+      const pctFloat = budgetR > 0 ? (spendR / budgetR * 100) : 0;
+      const pct      = pctFloat; // passed to donutSvg as float; label rounds inside
       const card = document.createElement('div');
       card.className = 'fc-budget-card';
       // Remaining: only show if non-zero, handle negatives
