@@ -1,4 +1,6 @@
-<html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product Board Timeline</title>
@@ -310,7 +312,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .load-cancel:hover { color: var(--text2); border-color: var(--border3); }
 
 /* ── TAB NAV ── */
-.tab-nav { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
+.tab-row { display: flex; align-items: center; padding: 0 1.25rem; height: 36px; border-bottom: 0.5px solid var(--border); background: var(--surface); flex-shrink: 0; }
+.tab-nav { display: flex; align-items: center; gap: 2px; }
 .tab-btn {
   background: transparent; border: 0.5px solid transparent;
   border-radius: var(--r); color: var(--text3);
@@ -589,6 +592,126 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 
 
+/* ── Flow of Fury ── */
+#fof-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+#fof-pipeline { flex: 1.4; overflow: hidden; border-bottom: 1px solid var(--border2); display: flex; flex-direction: column; }
+.fof-pipeline-inner { display: flex; gap: 0; height: 100%; overflow-x: auto; overflow-y: hidden; padding: 0; }
+#fof-staff { flex: 1; overflow: auto; }
+.fof-staff-inner { padding: 1.25rem 1.5rem; display: flex; gap: 1.5rem; }
+
+/* Phase column */
+.fof-phase-col {
+  display: flex; flex-direction: column;
+  flex: 1; min-width: 160px;
+  border-right: 0.5px solid var(--border);
+  overflow: hidden;
+}
+.fof-phase-col:last-child { border-right: none; }
+.fof-phase-hdr {
+  padding: 10px 12px 8px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text3);
+  border-bottom: 0.5px solid var(--border2);
+  background: var(--surface2);
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.fof-phase-hdr-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.fof-phase-count { margin-left: auto; opacity: 0.5; }
+.fof-phase-body { overflow-y: auto; flex: 1; padding: 8px 6px; display: flex; flex-direction: column; gap: 6px; }
+
+/* Game card in pipeline */
+.fof-card {
+  background: var(--surface2); border: 0.5px solid var(--border2);
+  border-radius: var(--r); padding: 10px 10px 8px;
+  cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.fof-card:hover { border-color: var(--border3); background: var(--surface3); }
+.fof-card-title {
+  font-size: 12px; font-weight: 400; color: var(--text);
+  line-height: 1.3; margin-bottom: 6px;
+}
+.fof-card-pm { font-family: var(--mono); font-size: 9px; color: var(--text3); margin-bottom: 6px; }
+.fof-card-gtm {
+  display: inline-block; font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.06em; padding: 2px 6px; border-radius: 3px;
+  background: rgba(255,255,255,0.06); color: var(--text3);
+  margin-bottom: 6px;
+}
+.fof-card-goals { display: flex; flex-direction: column; gap: 3px; }
+.fof-goal-row { display: flex; align-items: flex-start; gap: 5px; }
+.fof-goal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 2px;
+  border: 1.5px solid; }
+.fof-goal-name { font-size: 9.5px; color: var(--text3); line-height: 1.4; }
+
+/* Staff load tables */
+.fof-staff-table { flex: 1; min-width: 200px; }
+.fof-staff-title { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 10px;
+  padding-bottom: 6px; border-bottom: 0.5px solid var(--border2); }
+.fof-staff-row { display: flex; align-items: center; gap: 10px;
+  padding: 6px 0; border-bottom: 0.5px solid var(--border); }
+.fof-staff-row:last-child { border-bottom: none; }
+.fof-staff-name { font-size: 11.5px; color: var(--text2); flex: 1; }
+.fof-staff-count {
+  font-family: var(--mono); font-size: 11px; color: var(--text);
+  font-weight: 500; min-width: 20px; text-align: right;
+}
+.fof-staff-bar-wrap { width: 80px; height: 4px; background: var(--border2); border-radius: 2px; flex-shrink: 0; }
+.fof-staff-bar { height: 4px; border-radius: 2px; background: var(--accent); transition: width 0.3s; }
+
+/* ── Roadmap ── */
+#roadmap-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.roadmap-toolbar { display: flex; align-items: center; gap: 16px; padding: 8px 1.5rem;
+  border-bottom: 0.5px solid var(--border2); background: var(--surface); flex-shrink: 0; }
+.roadmap-zoom-wrap { display: flex; align-items: center; gap: 6px; }
+#roadmap-z-val { font-family: var(--mono); font-size: 10px; color: var(--text2); min-width: 36px; text-align: center; }
+.roadmap-body { flex: 1; overflow: auto; }
+.roadmap-empty { padding: 3rem 1.5rem; font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+/* Roadmap grid */
+.roadmap-grid { display: flex; flex-direction: column; min-width: max-content; }
+.roadmap-month-row { display: flex; position: sticky; top: 0; z-index: 10;
+  background: var(--surface); border-bottom: 1px solid var(--border2); }
+.roadmap-row-label-hdr { width: 160px; flex-shrink: 0; border-right: 1px solid var(--border2); }
+.roadmap-month-hdr { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text3);
+  border-right: 0.5px solid var(--border); padding: 6px 8px; text-align: center;
+  white-space: nowrap; }
+.roadmap-month-hdr.now { color: var(--accent); background: rgba(184,240,80,0.08); }
+
+/* Roadmap sections */
+.roadmap-section-hdr {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: var(--surface2);
+  border-bottom: 0.5px solid var(--border2);
+  border-top: 1px solid var(--border2); position: sticky; left: 0;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text3);
+}
+.roadmap-game-row { display: flex; border-bottom: 0.5px solid var(--border); min-height: 36px; }
+.roadmap-game-label { width: 160px; flex-shrink: 0; border-right: 1px solid var(--border2);
+  padding: 8px 12px; font-size: 11px; color: var(--text2);
+  display: flex; align-items: center; position: sticky; left: 0;
+  background: var(--bg); z-index: 5; }
+.roadmap-game-track { display: flex; position: relative; }
+.roadmap-cell { flex-shrink: 0; border-right: 0.5px solid var(--border); position: relative; }
+.roadmap-cell.now { background: rgba(184,240,80,0.04); }
+
+/* Release event pill */
+.roadmap-event {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  border-radius: 3px; padding: 2px 7px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em;
+  white-space: nowrap; cursor: pointer; z-index: 2;
+  border: 0.5px solid transparent;
+}
+.roadmap-event.launch  { background: rgba(184,240,80,0.2);  color: var(--accent);     border-color: rgba(184,240,80,0.3); }
+.roadmap-event.porting { background: rgba(80,200,240,0.15); color: #50c8f0;            border-color: rgba(80,200,240,0.25); }
+.roadmap-event.major   { background: rgba(192,80,240,0.15); color: #c050f0;            border-color: rgba(192,80,240,0.25); }
+.roadmap-event.update  { background: rgba(240,150,80,0.15); color: #f09650;            border-color: rgba(240,150,80,0.25); }
+.roadmap-event:hover   { filter: brightness(1.3); }
+
 /* ── Budget tracker ── */
 .fc-budget-tracker { display: flex; flex-direction: column; gap: 0; }
 .fc-budget-tracker-hdr {
@@ -751,34 +874,34 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <body>
 
 <!-- ── SETUP ── -->
-<div id="screen-setup" class="screen">
+<div id="screen-setup" class="screen active">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.1</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.2</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
       <div class="field">
         <label>Personal Access Token</label>
-        <input type="password" id="inp-pat" placeholder="1/XXXXXXXXX:XXXXXXXX…" autocomplete="off">
+        <input type="password" id="inp-pat" placeholder="1/XXXXXXXXX:XXXXXXXX…" autocomplete="off" />
         <div class="field-hint">See the instructions below to generate this.</div>
       </div>
       <div class="field">
         <label>Asana Board URL <span style="font-family:var(--sans);font-size:10px;color:var(--text3);font-weight:300;letter-spacing:0">(optional)</span></label>
-        <input type="text" id="inp-url" placeholder="https://app.asana.com/1/…/project/PROJECT_ID/… (leave blank to use dropdown)">
+        <input type="text" id="inp-url" placeholder="https://app.asana.com/1/…/project/PROJECT_ID/… (leave blank to use dropdown)" />
         <div class="field-hint">Leave blank to connect with the token only and pick a game from the dropdown. Or paste a board URL to load it directly.</div>
       </div>
       <div class="field">
         <label>Forecast File <span style="font-family:var(--sans);font-size:10px;color:var(--text3);font-weight:300;letter-spacing:0">(optional)</span></label>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <label class="btn-file-pick" for="inp-forecast-gateway">Choose file…</label>
-          <input type="file" id="inp-forecast-gateway" accept=".xlsx,.xls" style="display:none" onchange="gatewayForecastPicked(this)">
-          <span id="inp-forecast-name" style="font-family:var(--mono);font-size:10px;color:var(--text3);">Copy of Game Input Forecast Template v0.2 MPM version.xlsx</span>
+          <input type="file" id="inp-forecast-gateway" accept=".xlsx,.xls" style="display:none" onchange="gatewayForecastPicked(this)" />
+          <span id="inp-forecast-name" style="font-family:var(--mono);font-size:10px;color:var(--text3);">No file selected</span>
         </div>
         <div class="field-hint">Load your forecast Excel file now. You can also load it later from the Forecast tab.</div>
       </div>
       <button class="btn-main" onclick="connect()">Connect →</button>
-      <div id="setup-error" style="display: none;"></div>
+      <div id="setup-error"></div>
     </div>
     <div class="instructions-card">
       <h2>How to get your Personal Access Token</h2>
@@ -795,24 +918,22 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 </div>
 
 <!-- ── APP ── -->
-<div id="screen-app" class="screen active">
+<div id="screen-app" class="screen">
+  <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.1</span></div>
-    <span class="tb-game-title" id="tb-game-title">ROUTINE</span>
-    <div class="tab-nav">
-      <button class="tab-btn" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
-      <button class="tab-btn" id="tab-btn-goals" onclick="switchTab('goals')">Goals Board</button>
-      <button class="tab-btn active" id="tab-btn-excel" onclick="switchTab('excel')">Forecast</button>
-    </div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.2</span></div>
+    <span class="tb-game-title" id="tb-game-title"></span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
       <span class="picker-label">Board</span>
-      <select id="board-select" onchange="onBoardPickerChange(this.value)"><option value="">— select a game —</option><optgroup label="Deana Banić-Križaj"><option value="1211912056412903" data-code="KNBU">Kulo Niku Bowl Up!</option><option value="1212149353345742" data-code="MCF">My Cannibal Family</option><option value="1212148535011307" data-code="ROUTINE">ROUTINE</option></optgroup><optgroup label="Kate Billingham"><option value="1211911867621234" data-code="CB2">Cassette Beasts 2002</option><option value="1211911867619071" data-code="MC">Monsters Are Coming</option></optgroup><optgroup label="Niclas Lagerlöf"><option value="1213508049767992" data-code="APP">Appulse</option><option value="1212151115389244" data-code="K3">Kingdom 3</option><option value="1212081395447699" data-code="KTC">Kingdom Two Crowns</option><option value="1211911723653147" data-code="LMS">Last Man Sitting</option><option value="1211966243305065" data-code="RIV">Rivage</option></optgroup><optgroup label="Simas Budrys"><option value="1211875734575549" data-code="BP">Blue Prince</option><option value="1211967053427418" data-code="DDD">Deep Dish Dungeon</option><option value="1212013201863467" data-code="DK">Dome Keeper</option><option value="1212013205439519" data-code="EE">Esoteric Ebb</option><option value="1213537831150285" data-code="LL">Llamalandia</option></optgroup><optgroup label="Viktor Stadler"><option value="1211899818368463" data-code="RR2">Regions of Ruin: Runegate</option><option value="1211968270657884" data-code="SBM">Seance of Blake Manor</option><option value="1211962398846254" data-code="ST">Star Trucker</option><option value="1211990738288419" data-code="SC">Sulphur Coast</option><option value="1213448651913558" data-code="TCA">Terracotta</option></optgroup></select>
-      <span id="picker-status">20 boards</span>
+      <select id="board-select" onchange="onBoardPickerChange(this.value)">
+        <option value="">— loading portfolio… —</option>
+      </select>
+      <span id="picker-status"></span>
       <span class="tb-project" id="proj-title" style="display:none">—</span>
     </div>
     <div class="url-bar">
-      <input type="text" id="switch-inp" placeholder="Paste a board URL to override…" onkeydown="if(event.key==='Enter')switchBoard()">
+      <input type="text" id="switch-inp" placeholder="Paste a board URL to override…" onkeydown="if(event.key==='Enter')switchBoard()" />
       <button class="tb-btn" onclick="switchBoard()">Load</button>
     </div>
     <div class="zoom-wrap">
@@ -821,31 +942,41 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <button class="z-btn" onclick="zoom(1)">+</button>
     </div>
     <button class="tb-btn" id="labels-btn" onclick="toggleLabels()">Labels off</button>
-    <button class="tb-btn on" id="done-btn" onclick="toggleDone()">Show done</button>
+    <button class="tb-btn" id="done-btn" onclick="toggleDone()">Hide done</button>
     <button class="tb-btn" onclick="goSetup()">⏎ Switch account</button>
     <button class="tb-btn tb-btn-gh" id="gh-push-btn" onclick="ghPush()" title="Push to GitHub">↑ GitHub</button>
   </div>
+  <!-- Row 2: tab nav -->
+  <div class="tab-row">
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
+      <button class="tab-btn" id="tab-btn-goals" onclick="switchTab('goals')">Goals Board</button>
+      <button class="tab-btn" id="tab-btn-fof" onclick="switchTab('fof')">Flow of Fury</button>
+      <button class="tab-btn" id="tab-btn-roadmap" onclick="switchTab('roadmap')">Roadmap</button>
+      <button class="tab-btn" id="tab-btn-excel" onclick="switchTab('excel')">Forecast</button>
+    </div>
+  </div>
 
   <div class="filterbars">
-    <div class="filterbar" id="filterbar-section"><span class="f-label">Section</span><button class="chip on" data-key="ALL" data-group="section"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>All</button><button class="chip" data-key="Flow of Fury" data-group="section"><span class="chip-dot" style="background: rgb(184, 240, 80);"></span>Flow of Fury</button><button class="chip" data-key="PRODUCT GOAL (Launch+12M)" data-group="section"><span class="chip-dot" style="background: rgb(80, 200, 240);"></span>Product Goals</button><button class="chip" data-key="Monthly goals" data-group="section"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Monthly Goals</button><button class="chip" data-key="PUBLISHING" data-group="section"><span class="chip-dot" style="background: rgb(240, 150, 80);"></span>Publishing</button><button class="chip" data-key="MARKETING" data-group="section"><span class="chip-dot" style="background: rgb(200, 80, 240);"></span>Marketing</button></div>
-    <div class="filterbar" id="filterbar-domain"><span class="f-label">Domain</span><button class="chip on" data-key="ALL" data-group="domain"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>All</button><button class="chip" data-key="Commercial Viability" data-group="domain"><span class="chip-dot" style="background: rgb(109, 217, 122);"></span>Commercial Viability</button><button class="chip" data-key="Player Experience" data-group="domain"><span class="chip-dot" style="background: rgb(221, 112, 192);"></span>Player Experience</button><button class="chip" data-key="Product Quality" data-group="domain"><span class="chip-dot" style="background: rgb(232, 159, 80);"></span>Product Quality</button><button class="chip" data-key="Project Health" data-group="domain"><span class="chip-dot" style="background: rgb(96, 206, 206);"></span>Project Health</button></div>
-    <div class="filterbar" id="filterbar-phase"><span class="f-label">Phase</span><button class="chip on" data-key="ALL" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>All</button><button class="chip on" data-key="Kick-Off" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Kick-Off</button><button class="chip on" data-key="Announcement Ready" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Announcement Ready</button><button class="chip on" data-key="Release Ready" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Release Ready</button><button class="chip on" data-key="Post Release" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Post Release</button><button class="chip on" data-key="Unknown" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Unknown</button></div>
+    <div class="filterbar" id="filterbar-section"><span class="f-label">Section</span></div>
+    <div class="filterbar" id="filterbar-domain"><span class="f-label">Domain</span></div>
+    <div class="filterbar" id="filterbar-phase"><span class="f-label">Phase</span></div>
   </div>
 
   <!-- ── TAB 1: TIMELINE ── -->
-  <div class="tab-panel" id="panel-timeline">
+  <div class="tab-panel active" id="panel-timeline">
 
   <!-- Budget strip -->
 
 
   <div class="tl-area">
     <div class="tl-scroll">
-      <div id="tl-inner" style="width: 1610px;"><div id="tl-ruler" style="left: 492px;"></div>
+      <div id="tl-inner"><div id="tl-ruler"></div>
       <div class="tl-head">
         <div class="tl-col-head">Task / Milestone</div>
-        <div class="tl-months" id="tl-months"><div class="m-lbl" style="flex: 1 1 0%;">Sep 25</div><div class="m-lbl" style="flex: 1 1 0%;">Oct 25</div><div class="m-lbl" style="flex: 1 1 0%;">Nov 25</div><div class="m-lbl" style="flex: 1 1 0%;">Dec 25</div><div class="m-lbl" style="flex: 1 1 0%;">Jan 26</div><div class="m-lbl" style="flex: 1 1 0%;">Feb 26</div><div class="m-lbl" style="flex: 1 1 0%;">Mar 26</div><div class="m-lbl now" style="flex: 1 1 0%;">Apr 26</div><div class="m-lbl" style="flex: 1 1 0%;">May 26</div><div class="m-lbl" style="flex: 1 1 0%;">Jun 26</div><div class="m-lbl" style="flex: 1 1 0%;">Jul 26</div><div class="m-lbl" style="flex: 1 1 0%;">Aug 26</div><div class="m-lbl" style="flex: 1 1 0%;">Sep 26</div><div class="m-lbl" style="flex: 1 1 0%;">Oct 26</div><div class="m-lbl" style="flex: 1 1 0%;">Nov 26</div><div class="m-lbl" style="flex: 1 1 0%;">Dec 26</div><div class="m-lbl" style="flex: 1 1 0%;">Jan 27</div></div>
+        <div class="tl-months" id="tl-months"></div>
       </div>
-      <div id="tl-body" class="show-labels"><div class="sec-head"><div class="sec-name" style="color:#50c8f0">Product Goals<span class="sec-count">4</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl" title="PRODUCT QUALITY: ROUTINE has found its' place with sci-fi atmospheric horror crowd and is regularly recommended as top 7 titles in that space.">PRODUCT QUALITY: ROUTINE has found its' place with sci-fi atmospheric horror crowd and is regularly recommended as top 7 titles in that space.</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1212148535011309" style="left: calc(88.619% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green" style="background: rgba(80, 200, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(80, 200, 240);"></div></div></div><div class="ev-label" title="PRODUCT QUALITY: ROUTINE has found its' place with sci-fi atmospheric horror crowd and is regularly recommended as top 7 titles in that space." style="color: rgb(80, 200, 240);">ROUTINE has found its' place with sci-fi atmospheric horror crowd and is regula…</div></div></div></div><div class="t-row dated"><div class="t-lbl" title="PROJECT HEALTH: Post Launch is managed successfully by delivering patches with predictable cadence while maintaining stability">PROJECT HEALTH: Post Launch is managed successfully by delivering patches with predictable cadence while maintaining stability</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1212149349627980" style="left: calc(88.619% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green" style="background: rgba(80, 200, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(80, 200, 240);"></div></div></div><div class="ev-label" title="PROJECT HEALTH: Post Launch is managed successfully by delivering patches with predictable cadence while maintaining stability" style="color: rgb(80, 200, 240);">Post Launch is managed successfully by delivering patches with predictable cade…</div></div></div></div><div class="t-row dated"><div class="t-lbl" title="PLAYER EXPERIENCE: Routine resonates with players">PLAYER EXPERIENCE: Routine resonates with players</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1212149349627982" style="left: calc(88.619% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green" style="background: rgba(80, 200, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(80, 200, 240);"></div></div></div><div class="ev-label" title="PLAYER EXPERIENCE: Routine resonates with players" style="color: rgb(80, 200, 240);">Routine resonates with players</div></div></div></div><div class="t-row dated"><div class="t-lbl" title="COMMERCIAL VIABILITY: Forecast of $2.1M Steam revenue Y1 achieved with 160k Units sold">COMMERCIAL VIABILITY: Forecast of $2.1M Steam revenue Y1 achieved with 160k Units sold</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1212149349627984" style="left: calc(88.619% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green" style="background: rgba(80, 200, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(80, 200, 240);"></div></div></div><div class="ev-label" title="COMMERCIAL VIABILITY: Forecast of $2.1M Steam revenue Y1 achieved with 160k Units sold" style="color: rgb(80, 200, 240);">Forecast of $2.1M Steam revenue Y1 achieved with 160k Units sold</div></div></div></div><div class="sec-head"><div class="sec-name" style="color:#888580">Monthly Goals<span class="sec-count">5</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl monthly" title="Builds remain stable ">Builds remain stable </div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1213190184661148" style="left: calc(40.7464% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green monthly-outer"><div class="ev-task-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="ev-label" title="Builds remain stable " style="color: rgb(107, 105, 102);">Builds remain stable </div></div></div></div><div class="t-row dated"><div class="t-lbl monthly" title="Discounting Strategy Adjusted to Player Behavior">Discounting Strategy Adjusted to Player Behavior</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1213198261516776" style="left: calc(40.7464% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green monthly-outer"><div class="ev-task-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="ev-label" title="Discounting Strategy Adjusted to Player Behavior" style="color: rgb(107, 105, 102);">Discounting Strategy Adjusted to Player Behavior</div></div></div></div><div class="t-row dated"><div class="t-lbl monthly" title="Actions focused Post Mortem helps in achieving company goals for 2026">Actions focused Post Mortem helps in achieving company goals for 2026</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1213198264649257" style="left: calc(40.7464% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-red monthly-outer"><div class="ev-task-inner" style="background: rgb(204, 32, 32);"></div></div></div><div class="ev-label" title="Actions focused Post Mortem helps in achieving company goals for 2026" style="color: rgb(107, 105, 102);">Actions focused Post Mortem helps in achieving company goals for 2026</div></div></div></div><div class="t-row dated"><div class="t-lbl monthly" title="Implement new Steam bundle strategy">Implement new Steam bundle strategy</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1213493161069827" style="left: calc(40.7464% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-amber monthly-outer"><div class="ev-task-inner" style="background: rgb(204, 136, 0);"></div></div></div><div class="ev-label" title="Implement new Steam bundle strategy" style="color: rgb(107, 105, 102);">Implement new Steam bundle strategy</div></div></div></div><div class="t-row dated"><div class="t-lbl monthly" title="Align on PS5 port with devs and porting studio ">Align on PS5 port with devs and porting studio </div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1213530002362204" style="left: calc(40.7464% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green monthly-outer"><div class="ev-task-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="ev-label" title="Align on PS5 port with devs and porting studio " style="color: rgb(107, 105, 102);">Align on PS5 port with devs and porting studio </div></div></div></div><div class="sec-head"><div class="sec-name" style="color:#f09650">Publishing<span class="sec-count">3</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl" title="Microsoft Limited Support">Microsoft Limited Support</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1211978127215481" style="left: calc(23.7594% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-none" style="background: rgba(240, 150, 80, 0.18);"><div class="ev-task-inner" style="background: rgb(240, 150, 80);"></div></div></div><div class="ev-label" title="Microsoft Limited Support" style="color: rgb(240, 150, 80);">Microsoft Limited Support</div></div></div></div><div class="t-row dated"><div class="t-lbl ms" title="Patch R.1.9.00">Patch R.1.9.00</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1211978127215454" style="left: calc(28.7783% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-ms-outer rag-none" style="background: rgba(240, 150, 80, 0.18); box-shadow: rgba(240, 150, 80, 0.25) 0px 0px 0px 2px;"><div class="ev-ms-inner" style="background: rgb(240, 150, 80);"></div></div></div><div class="ev-label" title="Patch R.1.9.00" style="color: rgb(240, 150, 80);">Patch R.1.9.00</div></div></div></div><div class="t-row dated"><div class="t-lbl ms" title="Patch R.2.2.0.0">Patch R.2.2.0.0</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1211978127215464" style="left: calc(30.1295% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-ms-outer rag-none" style="background: rgba(240, 150, 80, 0.18); box-shadow: rgba(240, 150, 80, 0.25) 0px 0px 0px 2px;"><div class="ev-ms-inner" style="background: rgb(240, 150, 80);"></div></div></div><div class="ev-label" title="Patch R.2.2.0.0" style="color: rgb(240, 150, 80);">Patch R.2.2.0.0</div></div></div></div><div class="sec-head"><div class="sec-name" style="color:#c850f0">Marketing<span class="sec-count">1</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl ms" title="LAUNCH">LAUNCH</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.79104%;"></div><div class="g-line" style="left: 11.7832%;"></div><div class="g-line" style="left: 17.5742%;"></div><div class="g-line" style="left: 23.5583%;"></div><div class="g-line" style="left: 29.5423%;"></div><div class="g-line" style="left: 34.9473%;"></div><div class="g-line" style="left: 40.9233%;"></div><div class="g-line" style="left: 46.7144%;"></div><div class="g-line" style="left: 52.6985%;"></div><div class="g-line" style="left: 58.4895%;"></div><div class="g-line" style="left: 64.4736%;"></div><div class="g-line" style="left: 70.4577%;"></div><div class="g-line" style="left: 76.2487%;"></div><div class="g-line" style="left: 82.2408%;"></div><div class="g-line" style="left: 88.0319%;"></div><div class="g-line" style="left: 94.0159%;"></div><div class="today-ln" style="left: 42.0816%;"></div><div class="ev" data-gid="1212149353356694" style="left: calc(18.1613% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-ms-outer rag-none" style="background: rgba(200, 80, 240, 0.18); box-shadow: rgba(200, 80, 240, 0.25) 0px 0px 0px 2px;"><div class="ev-ms-inner" style="background: rgb(200, 80, 240);"></div></div></div><div class="ev-label" title="LAUNCH" style="color: rgb(200, 80, 240);">LAUNCH</div></div></div></div></div>
+      <div id="tl-body"></div>
       </div>
     </div>
     <div class="legend">
@@ -867,12 +998,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div id="goals-board">
       <!-- left+months scrollable area -->
       <div id="gb-scroll">
-        <div id="gb-content"><div class="gb-outer"><div class="gb-col-headers" style="min-height: 29px;"><div class="gb-row-spacer"></div><div class="gb-month-hdr">Jan 26</div><div class="gb-month-hdr">Feb 26</div><div class="gb-month-hdr quarter-end"><span class="gb-quarter-label">Q1</span>Mar 26</div><div class="gb-month-hdr now">Apr 26</div><div class="gb-month-hdr">May 26</div><div class="gb-month-hdr quarter-end"><span class="gb-quarter-label">Q2</span>Jun 26</div><div class="gb-month-hdr">Jul 26</div><div class="gb-month-hdr">Aug 26</div><div class="gb-month-hdr quarter-end"><span class="gb-quarter-label">Q3</span>Sep 26</div><div class="gb-month-hdr">Oct 26</div></div><div class="gb-domain-row" style="min-height: 99px;"><div class="gb-row-label"><div class="gb-row-accent" style="background: rgb(232, 159, 80);"></div><div class="gb-row-name" style="color: rgb(232, 159, 80);">Product Quality</div><div class="gb-row-owner">PM</div><div class="gb-row-q">Are we connecting with the right players?</div></div><div class="gb-cell"><div class="gb-goal-row" data-gid="1212795303768598"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Post-launch Updates Plans Remain True to the game's identity">Post-launch Updates Plans Remain True to the game's identity</div></div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-goal-row" data-gid="1213198264649257"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(255, 61, 61, 0.15); box-shadow: 0 0 0 2.5px var(--rag-r),0 0 8px rgba(255,61,61,0.3);"><div class="gb-dot-inner" style="background: rgb(204, 32, 32);"></div></div></div><div class="gb-goal-name" title="Actions focused Post Mortem helps in achieving company goals for 2026">Actions focused Post Mortem helps in achieving company goals for 2026</div></div></div><div class="gb-cell now"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div></div><div class="gb-domain-row" style="min-height: 123px;"><div class="gb-row-label"><div class="gb-row-accent" style="background: rgb(96, 206, 206);"></div><div class="gb-row-name" style="color: rgb(96, 206, 206);">Project Health</div><div class="gb-row-owner">PP</div><div class="gb-row-q">Are we on track and executing effectively?</div></div><div class="gb-cell"><div class="gb-goal-row" data-gid="1212737865138525"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Taper off post launch bug fix patches to 1 per month">Taper off post launch bug fix patches to 1 per month</div></div><div class="gb-goal-row" data-gid="1212778082695983"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Define and begin work to reduce crash rate on Xbox Consoles">Define and begin work to reduce crash rate on Xbox Consoles</div></div></div><div class="gb-cell"><div class="gb-goal-row" data-gid="1213190184661148"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Builds remain stable ">Builds remain stable </div></div></div><div class="gb-cell quarter-end"><div class="gb-goal-row" data-gid="1213530002362204"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Align on PS5 port with devs and porting studio ">Align on PS5 port with devs and porting studio </div></div></div><div class="gb-cell now"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div></div><div class="gb-domain-row" style="min-height: 99px;"><div class="gb-row-label"><div class="gb-row-accent" style="background: rgb(221, 112, 192);"></div><div class="gb-row-name" style="color: rgb(221, 112, 192);">Player Experience</div><div class="gb-row-owner">Dev + PP</div><div class="gb-row-q">Is the player experience living up to its promise?</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell now"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div></div><div class="gb-domain-row" style="min-height: 192px;"><div class="gb-row-label"><div class="gb-row-accent" style="background: rgb(109, 217, 122);"></div><div class="gb-row-name" style="color: rgb(109, 217, 122);">Commercial Viability</div><div class="gb-row-owner">BM + PM</div><div class="gb-row-q">Are we on track for a successful launch?</div></div><div class="gb-cell"><div class="gb-goal-row" data-gid="1212794299931150"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Update Ongoing Promotional Activity Plan">Update Ongoing Promotional Activity Plan</div></div></div><div class="gb-cell"><div class="gb-goal-row" data-gid="1213205316854910"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(255, 170, 0, 0.15); box-shadow: 0 0 0 2.5px var(--rag-a),0 0 8px rgba(255,170,0,0.3);"><div class="gb-dot-inner" style="background: rgb(204, 136, 0);"></div></div></div><div class="gb-goal-name" title="Kick Off BTS Steam Blog Series">Kick Off BTS Steam Blog Series</div></div><div class="gb-goal-row" data-gid="1213212267527482"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Kick off work on OST and Retro Manual Steam releases">Kick off work on OST and Retro Manual Steam releases</div></div><div class="gb-goal-row" data-gid="1212795303768584"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Y1 Product Strategy Updated to reflect public reception (CARRY OVER FROM DECEMBER)">Y1 Product Strategy Updated to reflect public reception (CARRY OVER FROM DECEMBER)</div></div></div><div class="gb-cell quarter-end"><div class="gb-goal-row" data-gid="1213198261516776"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-dot-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Discounting Strategy Adjusted to Player Behavior">Discounting Strategy Adjusted to Player Behavior</div></div><div class="gb-goal-row" data-gid="1213493161069827"><div class="gb-dot-wrap"><div class="gb-dot-outer" style="background: rgba(255, 170, 0, 0.15); box-shadow: 0 0 0 2.5px var(--rag-a),0 0 8px rgba(255,170,0,0.3);"><div class="gb-dot-inner" style="background: rgb(204, 136, 0);"></div></div></div><div class="gb-goal-name" title="Implement new Steam bundle strategy">Implement new Steam bundle strategy</div></div></div><div class="gb-cell now"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div><div class="gb-cell quarter-end"><div class="gb-empty">–</div></div><div class="gb-cell"><div class="gb-empty">–</div></div></div></div></div>
+        <div id="gb-content" style="padding:3rem 1.25rem; font-size:12px; color:var(--text3); font-family:var(--mono);">Load a board first to see the Goals Board.</div>
       </div>
       <!-- fixed right product-goals panel -->
       <div id="gb-pg-panel">
-        <div class="gb-pg-panel-hdr" style="min-height: 29px;">↗ Product Goals</div>
-        <div id="gb-pg-cells"><div class="gb-pg-cell" style="min-height: 99px;"><div class="gb-goal-row" data-gid="1212148535011309"><div class="gb-dot-wrap"><div class="gb-pg-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-pg-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="ROUTINE has found its' place with sci-fi atmospheric horror crowd and is regularly recommended as top 7 titles in that space.">ROUTINE has found its' place with sci-fi atmospheric horror crowd and is regularly recommended as top 7 titles in that space.</div></div></div><div class="gb-pg-cell" style="min-height: 123px;"><div class="gb-goal-row" data-gid="1212149349627980"><div class="gb-dot-wrap"><div class="gb-pg-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-pg-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Post Launch is managed successfully by delivering patches with predictable cadence while maintaining stability">Post Launch is managed successfully by delivering patches with predictable cadence while maintaining stability</div></div></div><div class="gb-pg-cell" style="min-height: 99px;"><div class="gb-goal-row" data-gid="1212149349627982"><div class="gb-dot-wrap"><div class="gb-pg-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-pg-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Routine resonates with players">Routine resonates with players</div></div></div><div class="gb-pg-cell" style="min-height: 192px;"><div class="gb-goal-row" data-gid="1212149349627984"><div class="gb-dot-wrap"><div class="gb-pg-outer" style="background: rgba(34, 221, 110, 0.15); box-shadow: 0 0 0 2.5px var(--rag-g),0 0 8px rgba(34,221,110,0.3);"><div class="gb-pg-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="gb-goal-name" title="Forecast of $2.1M Steam revenue Y1 achieved with 160k Units sold">Forecast of $2.1M Steam revenue Y1 achieved with 160k Units sold</div></div></div></div>
+        <div class="gb-pg-panel-hdr">↗ Product Goals</div>
+        <div id="gb-pg-cells"><!-- filled by renderGoalsBoard --></div>
       </div>
     </div>
     <div class="gb-legend">
@@ -885,249 +1016,136 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     </div>
   </div><!-- /panel-goals -->
 
-  <!-- ── TAB 3: FORECAST ── -->
-  <div class="tab-panel active" id="panel-excel">
+  <!-- ── TAB 3: FLOW OF FURY ── -->
+  <div class="tab-panel" id="panel-fof">
+    <div id="fof-view">
+      <!-- Upper half: pipeline -->
+      <div id="fof-pipeline">
+        <div class="fof-pipeline-inner" id="fof-pipeline-inner">
+          <!-- filled by renderFoF() -->
+        </div>
+      </div>
+      <!-- Lower half: staff load -->
+      <div id="fof-staff">
+        <div class="fof-staff-inner" id="fof-staff-inner">
+          <!-- filled by renderFoFStaff() -->
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-fof -->
+
+  <!-- ── TAB 4: ROADMAP ── -->
+  <div class="tab-panel" id="panel-roadmap">
+    <div id="roadmap-view">
+      <!-- toolbar -->
+      <div class="roadmap-toolbar" id="roadmap-toolbar">
+        <div class="roadmap-zoom-wrap">
+          <span class="f-label">Zoom</span>
+          <button class="z-btn" onclick="roadmapZoom(-1)">−</button>
+          <span id="roadmap-z-val">Month</span>
+          <button class="z-btn" onclick="roadmapZoom(1)">+</button>
+        </div>
+        <div id="roadmap-load-status" style="font-family:var(--mono);font-size:10px;color:var(--text3);"></div>
+      </div>
+      <div class="roadmap-body" id="roadmap-body">
+        <div class="roadmap-empty" id="roadmap-empty">Connect a board first to load roadmap data.</div>
+        <div id="roadmap-inner" style="display:none;"></div>
+      </div>
+    </div>
+  </div><!-- /panel-roadmap -->
+
+  <!-- ── TAB 5: FORECAST ── -->
+  <div class="tab-panel" id="panel-excel">
     <div class="excel-toolbar">
       <div class="excel-local-note">
         🔒 <strong style="color:var(--text2);font-weight:400">Local only</strong> — file is read entirely in your browser. Nothing is uploaded or sent anywhere.
       </div>
       <button class="excel-btn accent" onclick="document.getElementById('excel-file-inp').click()">Open forecast file…</button>
-      <input type="file" id="excel-file-inp" accept=".xlsx,.xls,.xlsm" onchange="loadExcelFile(this)">
-      <span id="excel-file-name" style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:2px">Copy of Game Input Forecast Template v0.2 MPM version.xlsx</span>
+      <input type="file" id="excel-file-inp" accept=".xlsx,.xls,.xlsm" onchange="loadExcelFile(this)" />
+      <span id="excel-file-name" style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:2px"></span>
 
     </div>
-    <div id="sheet-picker-wrap" class="">
+    <div id="sheet-picker-wrap">
       <span>No auto-match — pick sheet:</span>
-      <select id="sheet-picker-sel" onchange="onManualSheetPick(this.value)"><option value="">— select a sheet tab —</option><option value="How-to">How-to</option><option value="Summary">Summary</option><option value="MC">MC</option><option value="CB2">CB2</option><option value="SNU">SNU</option><option value="ST">ST</option><option value="SBM">SBM</option><option value="SC">SC</option><option value="RR2">RR2</option><option value="TCA">TCA</option><option value="FITS">FITS</option><option value="FVF">FVF</option><option value="MSI">MSI</option><option value="BAL">BAL</option><option value="LLA">LLA</option><option value="BP">BP</option><option value="DK">DK</option><option value="EE">EE</option><option value="DDD">DDD</option><option value="ROU">ROU</option><option value="MCF">MCF</option><option value="KNBU">KNBU</option><option value="APP">APP</option><option value="KNL">KNL</option><option value="K80">K80</option><option value="KTC COO">KTC COO</option><option value="KTC NL">KTC NL</option><option value="KTC">KTC</option><option value="K3">K3</option><option value="LMS">LMS</option><option value="RIV">RIV</option><option value="Back Cat Overview">Back Cat Overview</option><option value="Back Cat Churn">Back Cat Churn</option><option value="Dont mess around here ty &gt;&gt;">Dont mess around here ty &gt;&gt;</option><option value="Input_Rev">Input_Rev</option><option value="Input_Costs">Input_Costs</option><option value="Input_Algo">Input_Algo</option><option value="Output_PBI_costs">Output_PBI_costs</option><option value="Output_PBI">Output_PBI</option><option value="CF">CF</option><option value="BU26">BU26</option><option value="BU25">BU25</option><option value="FC1_25">FC1_25</option><option value="FC2_25">FC2_25</option><option value="FC3_25">FC3_25</option><option value="FC3_25_PBI">FC3_25_PBI</option><option value="To-do">To-do</option></select>
+      <select id="sheet-picker-sel" onchange="onManualSheetPick(this.value)">
+        <option value="">— select a sheet tab —</option>
+      </select>
     </div>
     <div id="excel-scroll">
-      <div class="excel-empty" id="excel-empty" style="display: none;">
-      <div>No matching tab found for <strong style="color:var(--text2)">(no board loaded)</strong></div>
-      <div style="font-size:11px;line-height:1.7;color:var(--text3)">
-        Available sheets: How-to, Summary, MC, CB2, SNU, ST, SBM, SC, RR2, TCA, FITS, FVF, MSI, BAL, LLA, BP, DK, EE, DDD, ROU, MCF, KNBU, APP, KNL, K80, KTC COO, KTC NL, KTC, K3, LMS, RIV, Back Cat Overview, Back Cat Churn, Dont mess around here ty &gt;&gt;, Input_Rev, Input_Costs, Input_Algo, Output_PBI_costs, Output_PBI, CF, BU26, BU25, FC1_25, FC2_25, FC3_25, FC3_25_PBI, To-do
-      </div></div>
-      <div id="fc-view" style="display: flex;"><div class="fc-budget-tracker"><div class="fc-budget-tracker-hdr">Budget Tracker</div><div class="fc-budget-strip"><div class="fc-budget-card">
-        <svg width="56" height="56" viewBox="0 0 56 56" class="bbar-donut">
-    <circle cx="28" cy="28" r="25" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"></circle>
-    <circle cx="28" cy="28" r="25" fill="none" stroke="var(--rag-r)" stroke-width="6" stroke-dasharray="157.07963267948966 0"></circle>
-    <text x="28" y="28" text-anchor="middle" dominant-baseline="central" fill="var(--rag-r)" font-family="var(--mono)" font-size="9" font-weight="500">
-      100%
-    </text>
-  </svg>
-        <div class="fc-budget-info">
-          <span class="fc-budget-label">Total</span>
-          <span class="fc-budget-spent">1.7M</span>
-          <span class="fc-budget-of">of 1.7M</span>
-          <div class="fc-budget-sub"><span class="fc-budget-sub-item">Rem <span>-7k</span></span></div>
-        </div></div><div class="fc-budget-card">
-        <svg width="56" height="56" viewBox="0 0 56 56" class="bbar-donut">
-    <circle cx="28" cy="28" r="25" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"></circle>
-    <circle cx="28" cy="28" r="25" fill="none" stroke="var(--rag-r)" stroke-width="6" stroke-dasharray="157.07963267948966 0"></circle>
-    <text x="28" y="28" text-anchor="middle" dominant-baseline="central" fill="var(--rag-r)" font-family="var(--mono)" font-size="9" font-weight="500">
-      105%
-    </text>
-  </svg>
-        <div class="fc-budget-info">
-          <span class="fc-budget-label">Development</span>
-          <span class="fc-budget-spent">712k</span>
-          <span class="fc-budget-of">of 679k</span>
-          <div class="fc-budget-sub"><span class="fc-budget-sub-item">Rem <span>-33k</span></span></div>
-        </div></div><div class="fc-budget-card">
-        <svg width="56" height="56" viewBox="0 0 56 56" class="bbar-donut">
-    <circle cx="28" cy="28" r="25" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"></circle>
-    <circle cx="28" cy="28" r="25" fill="none" stroke="var(--rag-r)" stroke-width="6" stroke-dasharray="157.07963267948966 0"></circle>
-    <text x="28" y="28" text-anchor="middle" dominant-baseline="central" fill="var(--rag-r)" font-family="var(--mono)" font-size="9" font-weight="500">
-      125%
-    </text>
-  </svg>
-        <div class="fc-budget-info">
-          <span class="fc-budget-label">Marketing</span>
-          <span class="fc-budget-spent">181k</span>
-          <span class="fc-budget-of">of 145k</span>
-          <div class="fc-budget-sub"><span class="fc-budget-sub-item">Rem <span>-36k</span></span></div>
-        </div></div><div class="fc-budget-card">
-        <svg width="56" height="56" viewBox="0 0 56 56" class="bbar-donut">
-    <circle cx="28" cy="28" r="25" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"></circle>
-    <circle cx="28" cy="28" r="25" fill="none" stroke="var(--rag-a)" stroke-width="6" stroke-dasharray="145.53303455811894 157.07963267948966" stroke-linecap="round" transform="rotate(-90 28 28)"></circle>
-    <text x="28" y="28" text-anchor="middle" dominant-baseline="central" fill="var(--rag-a)" font-family="var(--mono)" font-size="10" font-weight="500">
-      93%
-    </text>
-  </svg>
-        <div class="fc-budget-info">
-          <span class="fc-budget-label">Service</span>
-          <span class="fc-budget-spent">784k</span>
-          <span class="fc-budget-of">of 846k</span>
-          <div class="fc-budget-sub"><span class="fc-budget-sub-item">Rem <span>62k</span></span></div>
-        </div></div></div></div><div class="fc-columns"><div class="fc-col-changelog"><div class="fc-section-title">Changelog</div><div style="display: grid; grid-template-columns: 78px 1fr; gap: 14px; padding: 0px 0px 6px; border-bottom: 1px solid var(--border2); margin-bottom: 2px; max-width: 680px;"><span style="font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3)">Date</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3)">Description</span></div><div class="fc-changelog"><div class="fc-cl-entry tier-1">
-        <span class="fc-cl-date">2026-03-27</span>
-        <span class="fc-cl-desc">Updated Steam revenue for March 2026 from $125-&gt; $150k</span></div><div class="fc-cl-entry tier-1">
-        <span class="fc-cl-date">2026-03-19</span>
-        <span class="fc-cl-desc">No changes</span></div><div class="fc-cl-entry tier-1">
-        <span class="fc-cl-date">2026-02-20</span>
-        <span class="fc-cl-desc">Updated April cost to $12k on Xbox - Sales input on expected uplift from RF publisher spotlight sale.</span></div><div class="fc-cl-entry tier-2">
-        <span class="fc-cl-date">2026-02-18</span>
-        <span class="fc-cl-desc">STEAM Negative delta NEW FC to BU 2026 of -$196k result of adjusted commercial roadmap. Mitigateable with a Weekend Deal, awards recognition and better WL conversion. 20% discount in March to inform our efforts.</span></div><div class="fc-cl-entry tier-2">
-        <span class="fc-cl-date">2026-02-18</span>
-        <span class="fc-cl-desc">Xbox negative delta  NEW FC to BU2026 of -$65k is temporary. Requires Sales input on custom and major Xbox Sales impact. The gap unlikely to be fully closed. Initial assessment was too optimistic. Gamepass bonus money to help offset some costs</span></div><div class="fc-cl-entry tier-2">
-        <span class="fc-cl-date">2026-02-17</span>
-        <span class="fc-cl-desc">Updated service spend costs allocation feb-may</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2026-02-17</span>
-        <span class="fc-cl-desc">Updated forecast - set manual revenue as default</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2026-02-17</span>
-        <span class="fc-cl-desc">Updated marketing spend costs allocation feb-june</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-11-10</span>
-        <span class="fc-cl-desc">Increased units sold Steam y1 from 110k to 160k.</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-11-10</span>
-        <span class="fc-cl-desc">Increased Steam to Xbox conversion % from 4 to 6</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-11-10</span>
-        <span class="fc-cl-desc">Changed Xbox platform share to 5% to reflect a new rev share split to $1M direct sales, 2026 direct sales increase from $44k to $118k</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-11-10</span>
-        <span class="fc-cl-desc">Note: total budget increase will be to $1.866M (from $1.67M)</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-10-24</span>
-        <span class="fc-cl-desc">Updated marketing spend planned costs for Oct, Nov, Dec 25</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-10-20</span>
-        <span class="fc-cl-desc">Additional budget for marketing only -&gt; +$80k</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-10-20</span>
-        <span class="fc-cl-desc">Corrected Date under Fixed Deal #1 from Dec 20th to Dec 4th</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-10-20</span>
-        <span class="fc-cl-desc">Corrected service spend and marketing spend planned costs for Oct, Nov, Dec 2025</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-09-18</span>
-        <span class="fc-cl-desc">Corrected Xbox release date from Dec 20th to Dec 4th 2025</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-09-18</span>
-        <span class="fc-cl-desc">Updated planned service and marketing spend (from March 2025 onwards) - missing additional extension costs and marketing budget increase (additional $100k - 220k)</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-08-26</span>
-        <span class="fc-cl-desc">Updated planned service and marketing spend but missing additional extension costs and marketing budget increase (additional $100k - $220k)</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-06-24</span>
-        <span class="fc-cl-desc">Updated planned service and marketing spend</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-05-04</span>
-        <span class="fc-cl-desc">Added contracted budget and revenues to reach FC1 /FK</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">2025-04-11</span>
-        <span class="fc-cl-desc">Updated price point from $19.99 to $24.99</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">20/11/2025</span>
-        <span class="fc-cl-desc">Updated service, marketing and principal planned spend to reflect requested additional budget https://app.asana.com/1/1123805143377851/project/1202352036025679/task/1211543863192427?focus=true</span></div><div class="fc-cl-entry tier-3">
-        <span class="fc-cl-date">20/11/2025</span>
-        <span class="fc-cl-desc">Removed Amendment C amounts until the amendment is signed</span></div></div></div><div class="fc-col-general"><div class="fc-section-title">Details</div><div class="fc-general-card"><div><div class="fc-gen-row">
-      <span class="fc-gen-key">Title (Finance)</span>
-      <span class="fc-gen-val bright">Routine</span></div><div class="fc-gen-row">
-      <span class="fc-gen-key">Title (IndieBI)</span>
-      <span class="fc-gen-val bright">Routine</span></div><div class="fc-gen-row">
-      <span class="fc-gen-key">Release (Steam)</span>
-      <span class="fc-gen-val bright">2025-12-04</span></div><div class="fc-gen-row">
-      <span class="fc-gen-key">Release M1</span>
-      <span class="fc-gen-val bright">2025-12-01</span></div><div class="fc-gen-row">
-      <span class="fc-gen-key">Release M12</span>
-      <span class="fc-gen-val bright">2026-11-01</span></div><div class="fc-gen-row">
-      <span class="fc-gen-key">Revenue Model</span>
-      <span class="fc-gen-val bright">Unit Modelled Revenues</span></div><div class="fc-gen-row">
-      <span class="fc-gen-key">Principal Markup</span>
-      <span class="fc-gen-val bright">0.15</span></div><div class="fc-gen-row">
-      <span class="fc-gen-key">Sustain M13+</span>
-      <span class="fc-gen-val bright">0.8</span></div></div><div class="fc-gen-section">Original Contract</div><div><div class="fc-bud-hdr" style="grid-template-columns:1fr 70px 70px">
-      <span></span><span>Min</span><span>Max</span>
-    </div><div class="fc-bud-row" style="grid-template-columns: 1fr 70px 70px;">
-        <span class="fc-bud-label">Principal</span>
-        <span class="fc-bud-num">—</span>
-        <span class="fc-bud-num">274k</span></div><div class="fc-bud-row" style="grid-template-columns: 1fr 70px 70px;">
-        <span class="fc-bud-label">Service</span>
-        <span class="fc-bud-num">—</span>
-        <span class="fc-bud-num">250k</span></div><div class="fc-bud-row" style="grid-template-columns: 1fr 70px 70px;">
-        <span class="fc-bud-label">Marketing</span>
-        <span class="fc-bud-num">2k</span>
-        <span class="fc-bud-num">2k</span></div><div class="fc-gen-row">
-        <span class="fc-gen-key">Effective</span>
-        <span class="fc-gen-val">2020-07-01</span></div><div class="fc-gen-row">
-        <span class="fc-gen-key">Initial Advance</span>
-        <span class="fc-gen-val">30800</span></div><div class="fc-gen-row">
-        <span class="fc-gen-key">Installments</span>
-        <span class="fc-gen-val">24 × 10125</span></div></div><div class="fc-gen-section">Running Budget</div><div class="fc-bud-table"><div class="fc-bud-hdr" style="grid-template-columns: 1fr 55px 65px 65px 65px;"><span></span><span>Min</span><span>Max</span><span>Spent</span><span>Rem.</span></div><div class="fc-bud-row" style="grid-template-columns: 1fr 55px 65px 65px 65px;">
-        <span class="fc-bud-label">Development</span>
-        <span class="fc-bud-num">679k</span>
-        <span class="fc-bud-num">679k</span>
-        <span class="fc-bud-num neg">712k</span>
-        <span class="fc-bud-num">-33k</span></div><div class="fc-bud-row" style="grid-template-columns: 1fr 55px 65px 65px 65px;">
-        <span class="fc-bud-label">Service</span>
-        <span class="fc-bud-num">—</span>
-        <span class="fc-bud-num">846k</span>
-        <span class="fc-bud-num hi">784k</span>
-        <span class="fc-bud-num">62k</span></div><div class="fc-bud-row" style="grid-template-columns: 1fr 55px 65px 65px 65px;">
-        <span class="fc-bud-label">Marketing</span>
-        <span class="fc-bud-num">145k</span>
-        <span class="fc-bud-num">145k</span>
-        <span class="fc-bud-num neg">181k</span>
-        <span class="fc-bud-num">-36k</span></div><div class="fc-bud-row total" style="grid-template-columns: 1fr 55px 65px 65px 65px;">
-        <span class="fc-bud-label">Total</span>
-        <span class="fc-bud-num">824k</span>
-        <span class="fc-bud-num">1.7M</span>
-        <span class="fc-bud-num neg">1.7M</span>
-        <span class="fc-bud-num">-7k</span></div></div></div></div><div class="fc-col-financial"><div class="fc-section-title">Financial Model</div><div class="fc-general-card"><div class="fc-gen-section">Fixed Deals</div><div class="fc-gen-row" style="flex-direction: column; gap: 2px; align-items: flex-start;">
-          <span class="fc-gen-key">Fixed Deal #1</span>
-          <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <span class="fc-gen-val num">1,600,000</span>
-            <span class="fc-gen-val" style="color:var(--text3)">2025-12-04</span>
-            <span class="fc-gen-val" style="color:var(--text3)">M1: 2025-12-01</span>
-          </div>
-          <span style="font-size:10px;color:var(--text3);line-height:1.4">Game Pass deal</span></div><div class="fc-gen-section">Signing Case</div><div class="fc-gen-row"><span class="fc-gen-key">Investment</span><span class="fc-gen-val num">—</span></div><div class="fc-gen-section">Unit Model: Base Game</div><div class="fc-gen-row key-metric"><span class="fc-gen-key">Y1 Units (Total)</span><span class="fc-gen-val num">169,600</span></div><div class="fc-gen-row"><span class="fc-gen-key">Y1 Revenue (Steam)</span><span class="fc-gen-val num">2,159,136</span></div><div class="fc-gen-row key-metric"><span class="fc-gen-key">Y1 Revenue (Total)</span><span class="fc-gen-val num">2,342,663</span></div><div class="fc-gen-row"><span class="fc-gen-key">Y1 Costs</span><span class="fc-gen-val num">1,669,804</span></div><div class="fc-gen-row key-metric"><span class="fc-gen-key">Y1 MM</span><span class="fc-gen-val num">1.4</span></div><div class="fc-gen-section">Steam</div><div class="fc-gen-row"><span class="fc-gen-key">Platform Share</span><span class="fc-gen-val num">0.3</span></div><div class="fc-gen-row"><span class="fc-gen-key">Taxes</span><span class="fc-gen-val num">0.1</span></div></div></div></div></div>
+      <div class="excel-empty" id="excel-empty">
+        <div>No forecast loaded.</div>
+        <div style="font-size:11px; line-height:1.7; color:var(--text3)">
+          Click <strong style="color:var(--text2)">Open forecast file…</strong> to pick your Excel file.<br>
+          The file is read locally — it never leaves your browser.
+        </div>
+      </div>
+      <div id="fc-view" style="display:none"></div>
     </div>
   </div><!-- /panel-excel -->
 
 </div><!-- /screen-app -->
 
 <!-- ── TOOLTIP ── -->
-<div id="tt" class="" style="left: 355px; top: 198px;">
+<div id="tt">
   <div class="tt-header">
-    <div class="tt-rag-bar rag-green" id="tt-rag-bar"></div>
+    <div class="tt-rag-bar" id="tt-rag-bar"></div>
     <div class="tt-header-inner">
-      <div class="tt-rag-label rag-green" id="tt-rag-label" style="">🟢 On track</div>
-      <div class="tt-name" id="tt-name">Post-launch Updates Plans Remain True to the game's identity</div>
+      <div class="tt-rag-label" id="tt-rag-label"></div>
+      <div class="tt-name" id="tt-name"></div>
       <div class="tt-meta">
-        <div class="tt-badges" id="tt-badges"><span class="tt-badge badge-task">● Task</span><span class="tt-badge badge-task">Monthly Goal</span><span class="tt-badge badge-quality">Product Quality</span></div>
+        <div class="tt-badges" id="tt-badges"></div>
       </div>
     </div>
     <div class="tt-pin-close" onclick="unpinTT()" title="Close">✕</div>
   </div>
-  <div class="tt-body" id="tt-body"><span style="font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: rgb(232, 159, 80);">Monthly Goal</span><div style="display: flex; align-items: baseline; gap: 8px; margin-top: 3px;"><span style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;min-width:28px">Due</span><span style="font-size:11px;color:var(--text2)">Jan 30, 2026</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3)">67 days overdue</span></div></div>
-  <div class="tt-notes" id="tt-notes" style="display: block;">
-    <div class="tt-notes-content" id="tt-notes-content"><p>Result/Goal Statement: Post-launch plans updates remain true to the game's identity. </p><p>Evidence: Recent Review Score </p><p>Measures (KPIs): Recent Review Scores remain Very Positive and do not negatively impact overall scores.</p><p>Outcome: accomplished, but only due to a small patch release in January.</p></div>
+  <div class="tt-body" id="tt-body"></div>
+  <div class="tt-notes" id="tt-notes" style="display:none">
+    <div class="tt-notes-content" id="tt-notes-content"></div>
   </div>
   <div class="tt-footer">
-    <div class="tt-followers" id="tt-followers"><div class="tt-avatar" title="Deana Banić-Križaj">DB</div><span style="font-family: var(--mono); font-size: 9px; color: var(--text3); margin-left: 4px;">1 follower</span></div>
-    <a class="tt-open-link" id="tt-open-link" target="_blank" href="https://app.asana.com/1/1123805143377851/project/1211782261893247/task/1212795303768598">Open in Asana ↗</a>
+    <div class="tt-followers" id="tt-followers"></div>
+    <a class="tt-open-link" id="tt-open-link" target="_blank">Open in Asana ↗</a>
   </div>
 </div>
 
 <!-- ── GITHUB MODAL ── -->
-<div id="gh-modal" style="display: flex; position: fixed; inset: 0px; background: rgba(0, 0, 0, 0.6); z-index: 2000; align-items: center; justify-content: center;">
+<div id="gh-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
   <div style="background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--r-lg);padding:24px;width:420px;max-width:90vw;display:flex;flex-direction:column;gap:14px;">
     <div style="font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3)">Push to GitHub</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <label style="font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)">Personal Access Token</label>
-      <input type="password" id="gh-pat-inp" placeholder="github_pat_…" autocomplete="off" style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;">
+      <input type="password" id="gh-pat-inp" placeholder="github_pat_…" autocomplete="off"
+        style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;" />
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <label style="font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)">Repository (owner/repo)</label>
-      <input type="text" id="gh-repo-inp" value="to66eandersson-blip/Asanaviewer" style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;">
+      <input type="text" id="gh-repo-inp" value="to66eandersson-blip/Asanaviewer"
+        style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;" />
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <label style="font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)">File path in repo</label>
-      <input type="text" id="gh-path-inp" value="index.html" style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;">
+      <input type="text" id="gh-path-inp" value="index.html"
+        style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;" />
     </div>
-    <div id="gh-status" style="font-family: var(--mono); font-size: 10px; color: var(--text3); min-height: 16px;">Encoding file…</div>
+    <div id="gh-status" style="font-family:var(--mono);font-size:10px;color:var(--text3);min-height:16px;"></div>
     <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button onclick="document.getElementById('gh-modal').style.display='none'" style="background:transparent;border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text2);font-family:var(--mono);font-size:10px;padding:7px 14px;cursor:pointer;">Cancel</button>
-      <button id="gh-confirm-btn" onclick="ghConfirmPush()" style="background: var(--accent-dim); border: 0.5px solid var(--accent-border); border-radius: var(--r); color: var(--accent); font-family: var(--mono); font-size: 10px; padding: 7px 14px; cursor: pointer; font-weight: 500; pointer-events: none;">Pushing…</button>
+      <button onclick="document.getElementById('gh-modal').style.display='none'"
+        style="background:transparent;border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text2);font-family:var(--mono);font-size:10px;padding:7px 14px;cursor:pointer;">Cancel</button>
+      <button id="gh-confirm-btn" onclick="ghConfirmPush()"
+        style="background:var(--accent-dim);border:0.5px solid var(--accent-border);border-radius:var(--r);color:var(--accent);font-family:var(--mono);font-size:10px;padding:7px 14px;cursor:pointer;font-weight:500;">Push ↑</button>
     </div>
   </div>
 </div>
 
 <!-- ── LOADING ── -->
-<div id="loading" class="">
+<div id="loading">
   <div class="load-card">
     <div class="load-top">
       <div class="spinner"></div>
-      <span class="load-txt" id="load-txt">Building view…</span>
+      <span class="load-txt" id="load-txt">Loading…</span>
     </div>
-    <div class="load-sub" id="load-sub">Almost done…</div>
-    <div class="load-bar-wrap"><div class="load-bar-fill" id="load-bar" style="width: 0%;"></div></div>
+    <div class="load-sub" id="load-sub"></div>
+    <div class="load-bar-wrap"><div class="load-bar-fill" id="load-bar"></div></div>
     <button class="load-cancel" onclick="cancelLoad()">Cancel</button>
   </div>
 </div>
@@ -1637,6 +1655,10 @@ function donutSvg(pct, color, size=52, stroke=6){
 
 /* ─── Build app ─── */
 function buildApp(proj,tasks){
+  // track current board code for FoF goal lookup
+  const mapEntry = Object.entries(PRODUCT_BOARD_MAP).find(([gid]) => gid === currentPid);
+  currentBoardCode = mapEntry?.[1]?.code || '';
+  roadmapLoaded = false; // reset so next roadmap view re-fetches
   // Update game title in topbar — use authoritative title from map
   const titleEl = document.getElementById('tb-game-title');
   if (titleEl) {
@@ -1989,6 +2011,232 @@ function addRow(parent,icon,label,value,color,compact){
   parent.appendChild(row);
 }
 
+
+/* ─── Roadmap ─── */
+
+// Publishing board GIDs per game code — maps PRODUCT_BOARD_MAP code → publishing board
+const PUBLISHING_BOARDS = {
+  'BP':     '1212243656271158',
+  'DDD':    '1209099082358485',
+  'DK':     '1212149434154592',
+  'EE':     '1212243656271154',
+  'KTC':    null, // using product board
+  'LMS':    '1209985869593103',
+  'MC':     '1208397509777465',
+  'ROUTINE':'1212151106501028',
+  'RR2':    '1208722602190765',
+  'SBM':    '1212207151281828',
+  'APP':    '1213373648610963',
+  'CB2':    '1212213911061195',
+  'SC':     '1211990738288419',
+  'TCA':    '1213828903607186',
+  'KNBU':   '1212148583903997',
+  'ST':     '1201233570089777',
+  'K3':     '1213838574063742',
+};
+
+const ROADMAP_SECTIONS = [
+  { key: 'launch',  label: 'Launches',       color: '#b8f050' },
+  { key: 'porting', label: 'Porting',         color: '#50c8f0' },
+  { key: 'major',   label: 'Major Updates',   color: '#c050f0' },
+  { key: 'update',  label: 'Updates',         color: '#f09650' },
+];
+
+// Release type detection from task name + section name
+function detectReleaseType(name, sectionName) {
+  const n = (name||'').toLowerCase();
+  const s = (sectionName||'').toLowerCase();
+  if (s.includes('porting') || n.includes('switch') || n.includes('playstation') ||
+      n.includes(' ps') || n.includes('xbox') || n.includes('mac appstore') ||
+      n.includes('ios') || n.includes('android') || n.includes('port')) return 'porting';
+  if (n.includes('major update') || n.includes('big update') || n.includes('expansion')) return 'major';
+  if (n === 'release' || n.includes('game release') || n.includes('launch') ||
+      n.includes('simship') || (n.includes('release') && !n.includes('pre-release') &&
+      !n.includes('press release') && !n.includes('release date') && !n.includes('demo'))) return 'launch';
+  if (n.includes('patch') || n.includes('update') || n.includes('hotfix') || n.includes('dlc')) return 'update';
+  return null; // not a release event
+}
+
+let roadmapEvents = [];
+let roadmapLoaded = false;
+let roadmapZoomIdx = 0;
+const ROADMAP_ZOOMS = [
+  { label: 'Month', widthPx: 120 },
+  { label: 'Quarter', widthPx: 240 },
+  { label: 'Wide', widthPx: 400 },
+];
+
+function roadmapZoom(d) {
+  roadmapZoomIdx = Math.max(0, Math.min(ROADMAP_ZOOMS.length-1, roadmapZoomIdx+d));
+  const z = ROADMAP_ZOOMS[roadmapZoomIdx];
+  document.getElementById('roadmap-z-val').textContent = z.label;
+  if (roadmapLoaded) drawRoadmapGrid();
+}
+
+async function renderRoadmap() {
+  const statusEl = document.getElementById('roadmap-load-status');
+  const emptyEl  = document.getElementById('roadmap-empty');
+  const innerEl  = document.getElementById('roadmap-inner');
+  if (!statusEl || !emptyEl || !innerEl) return;
+
+  if (!PAT) { emptyEl.textContent = 'Connect a board first.'; emptyEl.style.display=''; innerEl.style.display='none'; return; }
+
+  if (roadmapLoaded) { drawRoadmapGrid(); return; }
+
+  emptyEl.style.display = '';
+  emptyEl.textContent = 'Loading release events from publishing boards…';
+  innerEl.style.display = 'none';
+  statusEl.textContent = '';
+
+  roadmapEvents = [];
+  const boards = Object.entries(PUBLISHING_BOARDS).filter(([,gid]) => gid);
+  let loaded = 0;
+
+  for (const [code, boardGid] of boards) {
+    try {
+      statusEl.textContent = `Loading ${code}… (${loaded+1}/${boards.length})`;
+      const resp = await api(`/projects/${boardGid}/tasks?opt_fields=name,due_on,resource_subtype,memberships.section.name&limit=100`);
+      const tasks = resp.data || [];
+      const mapEntry = Object.values(PRODUCT_BOARD_MAP).find(e => e.code === code);
+      tasks.forEach(t => {
+        if (!t.due_on) return;
+        // Only milestones or tasks whose name looks like a release
+        const sectionName = t.memberships?.[0]?.section?.name || '';
+        const type = detectReleaseType(t.name, sectionName);
+        if (!type) return;
+        roadmapEvents.push({
+          code,
+          game: mapEntry?.title || code,
+          name: t.name,
+          date: t.due_on,
+          type,
+          gid: t.gid,
+        });
+      });
+      loaded++;
+    } catch(e) {
+      console.warn(`Roadmap: failed to load ${code}:`, e.message);
+      loaded++;
+    }
+  }
+
+  roadmapLoaded = true;
+  statusEl.textContent = `${roadmapEvents.length} events loaded`;
+  emptyEl.style.display = 'none';
+  innerEl.style.display = '';
+  drawRoadmapGrid();
+}
+
+function drawRoadmapGrid() {
+  const innerEl = document.getElementById('roadmap-inner');
+  if (!innerEl) return;
+  innerEl.innerHTML = '';
+
+  const zoom = ROADMAP_ZOOMS[roadmapZoomIdx];
+  const cellW = zoom.widthPx;
+
+  // Determine month range
+  const allDates = roadmapEvents.filter(e=>e.date).map(e=>new Date(e.date));
+  const minDate = allDates.length ? new Date(Math.min(...allDates)) : new Date();
+  const maxDate = allDates.length ? new Date(Math.max(...allDates)) : new Date(Date.now()+86400000*365);
+  // Expand to full months, add padding
+  const startMo = new Date(minDate.getFullYear(), Math.max(0, minDate.getMonth()-1), 1);
+  const endMo   = new Date(maxDate.getFullYear(), maxDate.getMonth()+2, 1);
+
+  const months = [];
+  let cur = new Date(startMo);
+  while (cur < endMo) {
+    months.push(new Date(cur));
+    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'roadmap-grid';
+
+  // Month header row
+  const mhdr = document.createElement('div');
+  mhdr.className = 'roadmap-month-row';
+  const lhdr = document.createElement('div');
+  lhdr.className = 'roadmap-row-label-hdr';
+  mhdr.appendChild(lhdr);
+  months.forEach(m => {
+    const isNow = m.getMonth()===TODAY.getMonth() && m.getFullYear()===TODAY.getFullYear();
+    const el = document.createElement('div');
+    el.className = 'roadmap-month-hdr' + (isNow?' now':'');
+    el.style.width = cellW+'px';
+    el.textContent = m.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+    mhdr.appendChild(el);
+  });
+  grid.appendChild(mhdr);
+
+  // Group events by section type, then by game
+  ROADMAP_SECTIONS.forEach(sec => {
+    const secEvents = roadmapEvents.filter(e => e.type === sec.key);
+    if (!secEvents.length) return;
+
+    // Section header
+    const shdr = document.createElement('div');
+    shdr.className = 'roadmap-section-hdr';
+    shdr.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:${sec.color};flex-shrink:0"></div>${esc(sec.label)} <span style="opacity:0.4;margin-left:4px">${secEvents.length}</span>`;
+    grid.appendChild(shdr);
+
+    // Group by game
+    const byGame = {};
+    secEvents.forEach(e => {
+      if (!byGame[e.game]) byGame[e.game] = [];
+      byGame[e.game].push(e);
+    });
+
+    Object.entries(byGame).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([game, evts]) => {
+      const row = document.createElement('div');
+      row.className = 'roadmap-game-row';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'roadmap-game-label';
+      lbl.textContent = game;
+      row.appendChild(lbl);
+
+      const track = document.createElement('div');
+      track.className = 'roadmap-game-track';
+      track.style.position = 'relative';
+      track.style.width = (months.length * cellW) + 'px';
+      track.style.height = '36px';
+
+      // Month cell backgrounds
+      months.forEach((m, idx) => {
+        const isNow = m.getMonth()===TODAY.getMonth() && m.getFullYear()===TODAY.getFullYear();
+        const cell = document.createElement('div');
+        cell.className = 'roadmap-cell' + (isNow?' now':'');
+        cell.style.cssText = `position:absolute;left:${idx*cellW}px;top:0;width:${cellW}px;height:100%;`;
+        track.appendChild(cell);
+      });
+
+      // Event pills
+      evts.forEach(evt => {
+        const d = new Date(evt.date);
+        // position: fraction of month
+        const moIdx = months.findIndex(m => m.getFullYear()===d.getFullYear() && m.getMonth()===d.getMonth());
+        if (moIdx < 0) return;
+        const dayFrac = (d.getDate()-1) / 30;
+        const leftPx = moIdx * cellW + dayFrac * cellW;
+
+        const pill = document.createElement('div');
+        pill.className = `roadmap-event ${evt.type}`;
+        pill.style.left = leftPx + 'px';
+        pill.title = `${evt.name} — ${evt.date}`;
+        pill.textContent = evt.name.length > 18 ? evt.name.slice(0,16)+'…' : evt.name;
+        track.appendChild(pill);
+      });
+
+      row.appendChild(track);
+      grid.appendChild(row);
+    });
+  });
+
+  innerEl.appendChild(grid);
+}
+
+
 /* ─── Zoom ─── */
 function zoom(d){zoomIdx=Math.max(0,Math.min(ZOOMS.length-1,zoomIdx+d));render();}
 
@@ -2022,7 +2270,11 @@ function switchTab(tab) {
   // Phase filter bar only visible on Goals Board tab
   const phaseBar = document.getElementById('filterbar-phase');
   if (phaseBar) phaseBar.classList.toggle('visible', tab === 'goals');
+  const zoomWrap = document.querySelector('.zoom-wrap');
+  if (zoomWrap) zoomWrap.style.display = tab === 'timeline' ? '' : 'none';
   if (tab === 'goals' && allEvents.length) renderGoalsBoard();
+  if (tab === 'fof') renderFoF();
+  if (tab === 'roadmap') renderRoadmap();
   if (tab === 'excel') renderForecastForCurrentBoard();
   unpinTT();
 }
@@ -2198,6 +2450,206 @@ function renderGoalsBoard() {
     });
   }));
 }
+
+
+/* ─── Flow of Fury ─── */
+
+const FOF_PHASES = [
+  { key: 'Scouting',          color: '#6b6966' },
+  { key: 'Pre-Signing',       color: '#8b7355' },
+  { key: 'Kick-Off',          color: '#50c8f0' },
+  { key: 'Announcement Ready',color: '#c850f0' },
+  { key: 'Release Ready',     color: '#f09650' },
+  { key: 'Release',           color: '#b8f050' },
+  { key: 'Post Release',      color: '#50f0a0' },
+  { key: 'Back Catalogue',    color: '#888580' },
+];
+
+function renderFoF() {
+  const pipeline = document.getElementById('fof-pipeline-inner');
+  const staffEl  = document.getElementById('fof-staff-inner');
+  if (!pipeline || !staffEl) return;
+
+  // ── Build phase → products map from PRODUCT_BOARD_MAP ──
+  const phaseMap = {};
+  FOF_PHASES.forEach(p => phaseMap[p.key] = []);
+
+  // Collect current-month goals per board GID from allEvents
+  const NOW_KEY = (() => {
+    const d = new Date();
+    return `(${d.getFullYear()}) ${d.toLocaleString('en-US',{month:'short'})}`;
+  })();
+
+  const goalsByBoard = {};
+  allEvents.forEach(evt => {
+    if (!evt.isMonthly) return;
+    const monthVal = evt.monthKey; // e.g. "2026_Apr"
+    const [yr, mo] = (monthVal||'').split('_');
+    const nowD = new Date();
+    if (parseInt(yr) === nowD.getFullYear() &&
+        mo === nowD.toLocaleString('en-US',{month:'short'})) {
+      // find board for this event via section
+      const sec = sections.find(s => s.events.some(e => e.gid === evt.gid));
+      const boardCode = sec?.boardCode || currentBoardCode;
+      if (!goalsByBoard[boardCode]) goalsByBoard[boardCode] = [];
+      goalsByBoard[boardCode].push(evt);
+    }
+  });
+
+  // Build product list per phase
+  Object.entries(PRODUCT_BOARD_MAP).forEach(([gid, e]) => {
+    if (!e.code || e.code === 'MY') return;
+    const phase = e.phase || 'Unknown';
+    if (!phaseMap[phase]) phaseMap[phase] = [];
+    phaseMap[phase].push({ gid, ...e,
+      goals: goalsByBoard[e.code] || [],
+      pm: e.pm || '',
+      gtm: e.gtm || '',
+    });
+  });
+
+  // ── Render pipeline columns ──
+  pipeline.innerHTML = '';
+  FOF_PHASES.forEach(ph => {
+    const products = phaseMap[ph.key] || [];
+
+    const col = document.createElement('div');
+    col.className = 'fof-phase-col';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'fof-phase-hdr';
+    hdr.innerHTML = `<div class="fof-phase-hdr-dot" style="background:${ph.color}"></div>
+      <span>${esc(ph.key)}</span>
+      <span class="fof-phase-count">${products.length}</span>`;
+    col.appendChild(hdr);
+
+    const body = document.createElement('div');
+    body.className = 'fof-phase-body';
+
+    if (!products.length) {
+      const em = document.createElement('div');
+      em.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text3);opacity:0.4;padding:4px 4px;';
+      em.textContent = '—';
+      body.appendChild(em);
+    } else {
+      products.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'fof-card';
+        card.onclick = () => {
+          const opt = document.querySelector(`#board-select option[data-code="${p.code}"]`);
+          if (opt) { document.getElementById('board-select').value = opt.value; onBoardPickerChange(opt.value); }
+          switchTab('timeline');
+        };
+
+        // GTM badge
+        const gtmBadge = p.gtm ? `<div class="fof-card-gtm">${esc(p.gtm)}</div>` : '';
+
+        // Goals
+        let goalsHtml = '';
+        const currentGoals = allEvents.filter(evt => {
+          if (!evt.isMonthly) return false;
+          const d = new Date();
+          const [yr, mo] = (evt.monthKey||'').split('_');
+          return parseInt(yr)===d.getFullYear() && mo===d.toLocaleString('en-US',{month:'short'});
+        });
+        // filter to this board
+        const boardProduct = portfolioProducts.find(pp => pp.code === p.code);
+        // Use goals from the currently loaded board only if it matches
+        const boardGoals = currentBoardCode === p.code ? currentGoals : [];
+
+        if (boardGoals.length) {
+          goalsHtml = '<div class="fof-card-goals">' + boardGoals.slice(0,3).map(evt => {
+            const rag = evt.rag;
+            const dotColor = rag ? (rag.ring==='rag-green'?'var(--rag-g)':rag.ring==='rag-amber'?'var(--rag-a)':'var(--rag-r)') : 'var(--border2)';
+            const dotBorder = dotColor;
+            return `<div class="fof-goal-row">
+              <div class="fof-goal-dot" style="border-color:${dotBorder};background:${rag?dotColor+'33':'transparent'}"></div>
+              <div class="fof-goal-name">${esc(stripDomainPrefix(evt.name))}</div>
+            </div>`;
+          }).join('') + '</div>';
+        }
+
+        card.innerHTML = `
+          <div class="fof-card-title">${esc(p.title || p.code)}</div>
+          <div class="fof-card-pm">${esc(p.pm)}</div>
+          ${gtmBadge}
+          ${goalsHtml}`;
+        body.appendChild(card);
+      });
+    }
+
+    col.appendChild(body);
+    pipeline.appendChild(col);
+  });
+
+  renderFoFStaff(staffEl);
+}
+
+function renderFoFStaff(container) {
+  container.innerHTML = '';
+
+  // Count board assignments per person per role
+  const pmCount = {}, bmCount = {}, ppCount = {};
+
+  Object.entries(PRODUCT_BOARD_MAP).forEach(([gid, e]) => {
+    if (!e.code || e.code === 'MY') return;
+    // Only count active phases (not Back Catalogue or Scouting)
+    const phase = e.phase || '';
+    const inactive = ['Back Catalogue','Scouting'].includes(phase);
+
+    if (e.pm  && !inactive) pmCount[e.pm]  = (pmCount[e.pm]  || 0) + 1;
+    if (e.bm  && !inactive) bmCount[e.bm]  = (bmCount[e.bm]  || 0) + 1;
+    if (e.pp  && !inactive) ppCount[e.pp]  = (ppCount[e.pp]  || 0) + 1;
+  });
+
+  // Also pull from portfolioProducts for BM/PP which aren't in PRODUCT_BOARD_MAP yet
+  // Use the live Asana data we have in portfolioProducts
+  const pmFromPortfolio = {}, bmFromPortfolio = {}, ppFromPortfolio = {};
+  portfolioProducts.forEach(p => {
+    const inactive = ['Back Catalogue','Scouting'].includes(p.phase);
+    if (p.pm && !inactive) pmFromPortfolio[p.pm] = (pmFromPortfolio[p.pm]||0) + 1;
+  });
+
+  function makeTable(title, counts, color) {
+    const tbl = document.createElement('div');
+    tbl.className = 'fof-staff-table';
+    const ttl = document.createElement('div');
+    ttl.className = 'fof-staff-title';
+    ttl.textContent = title;
+    tbl.appendChild(ttl);
+
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const maxCount = sorted[0]?.[1] || 1;
+    if (!sorted.length) {
+      tbl.innerHTML += '<div style="font-family:var(--mono);font-size:10px;color:var(--text3)">No data</div>';
+      return tbl;
+    }
+    sorted.forEach(([name, count]) => {
+      const row = document.createElement('div');
+      row.className = 'fof-staff-row';
+      const barW = Math.round((count / maxCount) * 80);
+      row.innerHTML = `
+        <span class="fof-staff-name">${esc(name.split(' ')[0])}</span>
+        <div class="fof-staff-bar-wrap"><div class="fof-staff-bar" style="width:${barW}px;background:${color}"></div></div>
+        <span class="fof-staff-count">${count}</span>`;
+      tbl.appendChild(row);
+    });
+    return tbl;
+  }
+
+  container.appendChild(makeTable('Product Managers', pmFromPortfolio, 'var(--accent)'));
+  // BM and PP data not in map yet — show placeholder
+  const bmPlaceholder = makeTable('Brand Managers', {}, '#c850f0');
+  const ppPlaceholder = makeTable('Publishing Producers', {}, '#50c8f0');
+  bmPlaceholder.querySelector('.fof-staff-title').insertAdjacentHTML('afterend',
+    '<div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px;">BM/PP data not yet in map — add bm/pp fields to PRODUCT_BOARD_MAP</div>');
+  container.appendChild(bmPlaceholder);
+  container.appendChild(ppPlaceholder);
+}
+
+/* current board code for FoF goal lookup */
+let currentBoardCode = '';
+
 
 function gbMakeGoalRow(evt, isProduct) {
   const rag = evt.rag;
@@ -3081,6 +3533,5 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
 }
 
 </script>
-
-
-</body></html>
+</body>
+</html>
