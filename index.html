@@ -68,11 +68,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .btn-main:hover { opacity: 0.87; }
 #setup-error { font-family: var(--mono); font-size: 11px; color: var(--danger); margin-top: 0.75rem; display: none; line-height: 1.5; }
 .instructions-card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--r-xl); padding: 2rem 2.5rem; }
-.instructions-card h2 { font-size: 13px; font-weight: 400; color: var(--text2); margin-bottom: 1.25rem; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.instructions-card h2 { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 1.25rem; font-family: var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
 .steps { display: flex; flex-direction: column; }
 .step { display: flex; gap: 1rem; padding: 0.85rem 0; border-bottom: 0.5px solid var(--border); }
 .step:last-child { border-bottom: none; }
-.step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface3); border: 0.5px solid var(--border2); font-family: var(--mono); font-size: 10px; color: var(--text3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface3); border: 0.5px solid var(--border3); font-family: var(--mono); font-size: 10px; color: var(--text2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
 .step-body strong { font-size: 13px; font-weight: 400; color: var(--text); display: block; margin-bottom: 2px; }
 .step-body span { font-size: 12px; color: var(--text2); line-height: 1.55; }
 .step-body a { color: var(--accent); text-decoration: none; }
@@ -112,6 +112,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tb-btn-gh:hover { background: rgba(184,240,80,0.15); }
 .tb-btn-gh.pushing { opacity: 0.6; pointer-events: none; }
 .tb-btn.on { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+.tb-btn--dim { background: transparent; border: none; border-radius: var(--r); color: var(--text3); font-family: var(--mono); font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; padding: 5px 9px; cursor: pointer; white-space: nowrap; transition: all 0.12s; }
+.tb-btn--dim:hover { color: var(--text2); background: var(--surface2); }
+.tb-btn--dim.on { color: var(--accent); }
+.tb-btn--icon { background: transparent; border: none; border-radius: var(--r); color: var(--text3); font-size: 13px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color 0.12s; flex-shrink: 0; }
+.tb-btn--icon:hover { color: var(--text2); }
 .zoom-wrap { display: flex; align-items: center; gap: 3px; }
 .z-btn { background: transparent; border: 0.5px solid var(--border2); border-radius: var(--r); color: var(--text2); font-size: 15px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.12s; }
 .z-btn:hover { background: var(--surface2); color: var(--text); }
@@ -124,7 +129,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .f-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--text3); text-transform: uppercase; white-space: nowrap; margin-right: 4px; min-width: 54px; }
 .chip { display: flex; align-items: center; gap: 5px; background: transparent; border: 0.5px solid var(--border2); border-radius: 20px; padding: 3px 10px; font-family: var(--mono); font-size: 9px; color: var(--text2); cursor: pointer; white-space: nowrap; transition: all 0.12s; }
 .chip:hover { background: var(--surface2); color: var(--text); }
-.chip.on { background: var(--surface2); color: var(--text); border-color: var(--border3); }
+.chip.on { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
 .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
 /* Timeline */
@@ -181,14 +186,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .ev.pinned .ev-ms-outer, .ev.pinned .ev-task-outer { outline: 2px solid white; outline-offset: 2px; }
 
 /* RAG rings */
-.rag-green { background: rgba(34,221,110,0.18); box-shadow: 0 0 0 2.5px var(--rag-g), 0 0 8px rgba(34,221,110,0.35); }
-.rag-amber { background: rgba(255,170,0,0.18);  box-shadow: 0 0 0 2.5px var(--rag-a), 0 0 8px rgba(255,170,0,0.35); }
-.rag-red   { background: rgba(255,61,61,0.18);  box-shadow: 0 0 0 2.5px var(--rag-r), 0 0 8px rgba(255,61,61,0.35); }
+.rag-green { background: rgba(34,221,110,0.18); box-shadow: 0 0 0 2.5px var(--rag-g); }
+.rag-amber { background: rgba(255,170,0,0.18);  box-shadow: 0 0 0 2.5px var(--rag-a); }
+.rag-red   { background: rgba(255,61,61,0.18);  box-shadow: 0 0 0 2.5px var(--rag-r); }
 .rag-none  { background: transparent; }
 .monthly-outer { background: rgba(90,87,84,0.15) !important; box-shadow: none !important; }
-.monthly-outer.rag-green { background: rgba(34,221,110,0.15) !important; box-shadow: 0 0 0 2.5px var(--rag-g), 0 0 8px rgba(34,221,110,0.3) !important; }
-.monthly-outer.rag-amber { background: rgba(255,170,0,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-a), 0 0 8px rgba(255,170,0,0.3)  !important; }
-.monthly-outer.rag-red   { background: rgba(255,61,61,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-r), 0 0 8px rgba(255,61,61,0.3)  !important; }
+.monthly-outer.rag-green { background: rgba(34,221,110,0.15) !important; box-shadow: 0 0 0 2.5px var(--rag-g) !important; }
+.monthly-outer.rag-amber { background: rgba(255,170,0,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-a) !important; }
+.monthly-outer.rag-red   { background: rgba(255,61,61,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-r) !important; }
 
 /* ── INLINE LABEL — right of dot ── */
 .ev-label {
@@ -284,16 +289,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tt-no-followers { font-family: var(--mono); font-size: 9px; color: var(--text3); }
 
 /* Legend */
-.legend { display: flex; align-items: center; gap: 14px; padding: 6px 1.25rem; border-top: 0.5px solid var(--border); flex-shrink: 0; flex-wrap: wrap; }
-.leg-i { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.04em; }
-.leg-ms { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); background: var(--text2); }
-.leg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text2); }
-.leg-ms-grey { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); background: #5a5754; }
-.leg-ring-g { width: 9px; height: 9px; border-radius: 50%; background: rgba(34,221,110,0.15); box-shadow: 0 0 0 2.5px var(--rag-g); }
-.leg-ring-a { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,170,0,0.15);  box-shadow: 0 0 0 2.5px var(--rag-a); }
-.leg-ring-r { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,61,61,0.15);  box-shadow: 0 0 0 2.5px var(--rag-r); }
-.leg-line { width: 14px; height: 1px; background: var(--today-color); opacity: 0.7; }
-.leg-note { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--text3); }
+/* Legend CSS removed */
 
 .no-data { padding: 3rem 1.25rem; font-size: 12px; color: var(--text3); font-family: var(--mono); }
 #loading { display: none; position: fixed; inset: 0; background: rgba(13,14,16,0.88); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 0; }
@@ -921,7 +917,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.4</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.3</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -939,9 +935,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <span class="z-val" id="z-val">1×</span>
       <button class="z-btn" onclick="zoom(1)">+</button>
     </div>
-    <button class="tb-btn" id="labels-btn" onclick="toggleLabels()">Labels off</button>
-    <button class="tb-btn on" id="done-btn" onclick="toggleDone()">Show done</button>
-    <button class="tb-btn" onclick="goSetup()">⏎ Switch account</button>
+    <button class="tb-btn--dim" id="labels-btn" onclick="toggleLabels()">Labels off</button>
+    <button class="tb-btn--dim on" id="done-btn" onclick="toggleDone()">Show done</button>
+    <button class="tb-btn--icon" onclick="goSetup()" title="Switch account">↩</button>
     <button class="tb-btn tb-btn-gh" id="gh-push-btn" onclick="ghPush()" title="Push to GitHub">↑ GitHub</button>
   </div>
   <!-- Row 2: tab nav -->
@@ -1683,9 +1679,12 @@ async function ghConfirmPush() {
       throw new Error(`GitHub API error: ${getResp.status} ${getResp.statusText}`);
     }
 
-    // Step 2: get the current HTML source
+    // Step 2: fetch the original source file (not the live DOM, which bloats with rendered data)
+    status.textContent = 'Fetching source file…';
+    const srcResp = await fetch(window.location.href, { cache: 'no-store' });
+    if (!srcResp.ok) throw new Error(`Could not fetch source file: ${srcResp.status}`);
+    const htmlSource = await srcResp.text();
     status.textContent = 'Encoding file…';
-    const htmlSource = document.documentElement.outerHTML;
     const encoded = btoa(unescape(encodeURIComponent(htmlSource)));
 
     // Step 3: push
@@ -1711,27 +1710,25 @@ async function ghConfirmPush() {
     const commitUrl = result.commit?.html_url || '';
     const commitSha = result.commit?.sha || '';
 
-    // Step 4: verify — fetch the file back and confirm content matches
+    // Step 4: verify
     status.style.color = 'var(--text3)';
     status.textContent = 'Verifying…';
-    await new Promise(r => setTimeout(r, 1200)); // brief wait for GitHub to settle
+    await new Promise(r => setTimeout(r, 1200));
 
     let verified = false;
     try {
       const verifyResp = await fetch(apiBase, { headers });
       if (verifyResp.ok) {
         const verifyData = await verifyResp.json();
-        // The returned SHA is the blob SHA of the file content — compare with what we pushed
-        verified = verifyData.sha && verifyData.sha !== sha; // SHA changed = new content landed
+        verified = verifyData.sha && verifyData.sha !== sha;
       }
-    } catch(_) { /* verification fetch failed — non-fatal */ }
+    } catch(_) { /* non-fatal */ }
 
     if (verified) {
       status.style.color = 'var(--rag-g)';
-      status.innerHTML = `✓ Verified &amp; pushed! <a href="${commitUrl}" target="_blank" style="color:var(--accent);text-decoration:underline">View commit ↗</a>`;
+      status.innerHTML = `✓ Verified & pushed! <a href="${commitUrl}" target="_blank" style="color:var(--accent);text-decoration:underline">View commit ↗</a>`;
       btn.textContent = '✓ Done';
     } else {
-      // Could not confirm — show warning but still link to commit
       status.style.color = 'var(--rag-a)';
       status.innerHTML = `⚠ Pushed but could not verify. <a href="${commitUrl}" target="_blank" style="color:var(--accent);text-decoration:underline">Check commit ↗</a>`;
       btn.textContent = 'Done?';
