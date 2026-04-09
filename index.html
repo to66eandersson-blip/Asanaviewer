@@ -68,11 +68,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .btn-main:hover { opacity: 0.87; }
 #setup-error { font-family: var(--mono); font-size: 11px; color: var(--danger); margin-top: 0.75rem; display: none; line-height: 1.5; }
 .instructions-card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--r-xl); padding: 2rem 2.5rem; }
-.instructions-card h2 { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 1.25rem; font-family: var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.instructions-card h2 { font-size: 13px; font-weight: 400; color: var(--text2); margin-bottom: 1.25rem; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
 .steps { display: flex; flex-direction: column; }
 .step { display: flex; gap: 1rem; padding: 0.85rem 0; border-bottom: 0.5px solid var(--border); }
 .step:last-child { border-bottom: none; }
-.step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface3); border: 0.5px solid var(--border3); font-family: var(--mono); font-size: 10px; color: var(--text2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface3); border: 0.5px solid var(--border2); font-family: var(--mono); font-size: 10px; color: var(--text3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
 .step-body strong { font-size: 13px; font-weight: 400; color: var(--text); display: block; margin-bottom: 2px; }
 .step-body span { font-size: 12px; color: var(--text2); line-height: 1.55; }
 .step-body a { color: var(--accent); text-decoration: none; }
@@ -112,11 +112,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tb-btn-gh:hover { background: rgba(184,240,80,0.15); }
 .tb-btn-gh.pushing { opacity: 0.6; pointer-events: none; }
 .tb-btn.on { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
-.tb-btn--dim { background: transparent; border: none; border-radius: var(--r); color: var(--text3); font-family: var(--mono); font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; padding: 5px 9px; cursor: pointer; white-space: nowrap; transition: all 0.12s; }
-.tb-btn--dim:hover { color: var(--text2); background: var(--surface2); }
-.tb-btn--dim.on { color: var(--accent); }
-.tb-btn--icon { background: transparent; border: none; border-radius: var(--r); color: var(--text3); font-size: 13px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color 0.12s; flex-shrink: 0; }
-.tb-btn--icon:hover { color: var(--text2); }
 .zoom-wrap { display: flex; align-items: center; gap: 3px; }
 .z-btn { background: transparent; border: 0.5px solid var(--border2); border-radius: var(--r); color: var(--text2); font-size: 15px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.12s; }
 .z-btn:hover { background: var(--surface2); color: var(--text); }
@@ -129,7 +124,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .f-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--text3); text-transform: uppercase; white-space: nowrap; margin-right: 4px; min-width: 54px; }
 .chip { display: flex; align-items: center; gap: 5px; background: transparent; border: 0.5px solid var(--border2); border-radius: 20px; padding: 3px 10px; font-family: var(--mono); font-size: 9px; color: var(--text2); cursor: pointer; white-space: nowrap; transition: all 0.12s; }
 .chip:hover { background: var(--surface2); color: var(--text); }
-.chip.on { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+.chip.on { background: var(--surface2); color: var(--text); border-color: var(--border3); }
 .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
 /* Timeline */
@@ -186,14 +181,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .ev.pinned .ev-ms-outer, .ev.pinned .ev-task-outer { outline: 2px solid white; outline-offset: 2px; }
 
 /* RAG rings */
-.rag-green { background: rgba(34,221,110,0.18); box-shadow: 0 0 0 2.5px var(--rag-g); }
-.rag-amber { background: rgba(255,170,0,0.18);  box-shadow: 0 0 0 2.5px var(--rag-a); }
-.rag-red   { background: rgba(255,61,61,0.18);  box-shadow: 0 0 0 2.5px var(--rag-r); }
+.rag-green { background: rgba(34,221,110,0.18); box-shadow: 0 0 0 2.5px var(--rag-g), 0 0 8px rgba(34,221,110,0.35); }
+.rag-amber { background: rgba(255,170,0,0.18);  box-shadow: 0 0 0 2.5px var(--rag-a), 0 0 8px rgba(255,170,0,0.35); }
+.rag-red   { background: rgba(255,61,61,0.18);  box-shadow: 0 0 0 2.5px var(--rag-r), 0 0 8px rgba(255,61,61,0.35); }
 .rag-none  { background: transparent; }
 .monthly-outer { background: rgba(90,87,84,0.15) !important; box-shadow: none !important; }
-.monthly-outer.rag-green { background: rgba(34,221,110,0.15) !important; box-shadow: 0 0 0 2.5px var(--rag-g) !important; }
-.monthly-outer.rag-amber { background: rgba(255,170,0,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-a) !important; }
-.monthly-outer.rag-red   { background: rgba(255,61,61,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-r) !important; }
+.monthly-outer.rag-green { background: rgba(34,221,110,0.15) !important; box-shadow: 0 0 0 2.5px var(--rag-g), 0 0 8px rgba(34,221,110,0.3) !important; }
+.monthly-outer.rag-amber { background: rgba(255,170,0,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-a), 0 0 8px rgba(255,170,0,0.3)  !important; }
+.monthly-outer.rag-red   { background: rgba(255,61,61,0.15)  !important; box-shadow: 0 0 0 2.5px var(--rag-r), 0 0 8px rgba(255,61,61,0.3)  !important; }
 
 /* ── INLINE LABEL — right of dot ── */
 .ev-label {
@@ -288,7 +283,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tt-open-link:hover { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
 .tt-no-followers { font-family: var(--mono); font-size: 9px; color: var(--text3); }
 
-/* Legend CSS removed */
+/* Legend */
+.legend { display: flex; align-items: center; gap: 14px; padding: 6px 1.25rem; border-top: 0.5px solid var(--border); flex-shrink: 0; flex-wrap: wrap; }
+.leg-i { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.04em; }
+.leg-ms { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); background: var(--text2); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text2); }
+.leg-ms-grey { width: 9px; height: 9px; border-radius: 1px; transform: rotate(45deg); background: #5a5754; }
+.leg-ring-g { width: 9px; height: 9px; border-radius: 50%; background: rgba(34,221,110,0.15); box-shadow: 0 0 0 2.5px var(--rag-g); }
+.leg-ring-a { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,170,0,0.15);  box-shadow: 0 0 0 2.5px var(--rag-a); }
+.leg-ring-r { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,61,61,0.15);  box-shadow: 0 0 0 2.5px var(--rag-r); }
+.leg-line { width: 14px; height: 1px; background: var(--today-color); opacity: 0.7; }
+.leg-note { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--text3); }
 
 .no-data { padding: 3rem 1.25rem; font-size: 12px; color: var(--text3); font-family: var(--mono); }
 #loading { display: none; position: fixed; inset: 0; background: rgba(13,14,16,0.88); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 0; }
@@ -604,14 +609,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .fof-phase-col:last-child { border-right: none; }
 .fof-phase-hdr {
   padding: 10px 12px 8px;
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--text3);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text2);
   border-bottom: 0.5px solid var(--border2);
   background: var(--surface2);
   display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  font-weight: 500;
 }
-.fof-phase-hdr-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.fof-phase-count { margin-left: auto; opacity: 0.5; }
+.fof-phase-hdr-dot { display: none; }
+.fof-phase-count { margin-left: auto; opacity: 0.4; font-weight: 400; font-size: 10px; }
 .fof-phase-body { overflow-y: auto; flex: 1; padding: 8px 6px; display: flex; flex-direction: column; gap: 6px; }
 
 /* Game card in pipeline */
@@ -693,19 +699,23 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .roadmap-cell { flex-shrink: 0; border-right: 0.5px solid var(--border); position: relative; }
 .roadmap-cell.now { background: rgba(184,240,80,0.04); }
 
-/* Release event pill */
-.roadmap-event {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  border-radius: 3px; padding: 2px 7px;
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em;
-  white-space: nowrap; cursor: pointer; z-index: 2;
-  border: 0.5px solid transparent;
+/* Roadmap dots */
+.roadmap-dot-wrap { pointer-events: all; }
+.roadmap-dot-wrap:hover .roadmap-dot { transform: scale(1.35); }
+.roadmap-dot-wrap:hover .roadmap-dot-label { color: var(--text); }
+.roadmap-dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  flex-shrink: 0; transition: transform 0.12s;
 }
-.roadmap-event.launch  { background: rgba(184,240,80,0.2);  color: var(--accent);     border-color: rgba(184,240,80,0.3); }
-.roadmap-event.porting { background: rgba(80,200,240,0.15); color: #50c8f0;            border-color: rgba(80,200,240,0.25); }
-.roadmap-event.major   { background: rgba(192,80,240,0.15); color: #c050f0;            border-color: rgba(192,80,240,0.25); }
-.roadmap-event.update  { background: rgba(240,150,80,0.15); color: #f09650;            border-color: rgba(240,150,80,0.25); }
-.roadmap-event:hover   { filter: brightness(1.3); }
+.roadmap-dot.launch  { background: rgba(184,240,80,0.18);  box-shadow: 0 0 0 2.5px var(--accent); }
+.roadmap-dot.porting { background: rgba(80,200,240,0.18);  box-shadow: 0 0 0 2.5px #50c8f0; }
+.roadmap-dot.major   { background: rgba(192,80,240,0.18);  box-shadow: 0 0 0 2.5px #c050f0; }
+.roadmap-dot.update  { background: rgba(240,150,80,0.18);  box-shadow: 0 0 0 2.5px #f09650; }
+.roadmap-dot-label {
+  font-family: var(--mono); font-size: 8.5px; color: var(--text2);
+  white-space: nowrap; letter-spacing: 0.02em;
+  pointer-events: none;
+}
 
 /* ── Budget tracker ── */
 .fc-budget-tracker { display: flex; flex-direction: column; gap: 0; }
@@ -872,13 +882,13 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.7</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.8</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
       <div class="field">
         <label>Personal Access Token</label>
-        <input type="text" id="inp-pat" placeholder="1/XXXXXXXXX:XXXXXXXX…" autocomplete="off">
+        <input type="password" id="inp-pat" placeholder="1/XXXXXXXXX:XXXXXXXX…" autocomplete="off">
         <div class="field-hint">See the instructions below to generate this.</div>
       </div>
       <div class="field">
@@ -916,7 +926,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.7</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.8</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -934,9 +944,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <span class="z-val" id="z-val">1×</span>
       <button class="z-btn" onclick="zoom(1)">+</button>
     </div>
-    <button class="tb-btn--dim" id="labels-btn" onclick="toggleLabels()">Labels off</button>
-    <button class="tb-btn--dim on" id="done-btn" onclick="toggleDone()">Show done</button>
-    <button class="tb-btn--icon" onclick="goSetup()" title="Switch account">↩</button>
+    <button class="tb-btn" id="labels-btn" onclick="toggleLabels()">Labels off</button>
+    <button class="tb-btn on" id="done-btn" onclick="toggleDone()">Show done</button>
+    <button class="tb-btn" onclick="goSetup()">⏎ Switch account</button>
     <button class="tb-btn tb-btn-gh" id="gh-push-btn" onclick="ghPush()" title="Push to GitHub">↑ GitHub</button>
   </div>
   <!-- Row 2: tab nav -->
@@ -976,7 +986,16 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <div id="tl-body" class="show-labels"><div class="sec-head"><div class="sec-name" style="color:#50c8f0">Product Goals<span class="sec-count">4</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl" title="PRODUCT QUALITY: Kuloniku Sits Strongly with Wholesome Audience and is known for its' satisfying tactile cooking gameplay">PRODUCT QUALITY: Kuloniku Sits Strongly with Wholesome Audience and is known for its' satisfying tactile cooking gameplay</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1211912056412905" style="left: calc(92.9413% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green" style="background: rgba(80, 200, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(80, 200, 240);"></div></div></div><div class="ev-label" title="PRODUCT QUALITY: Kuloniku Sits Strongly with Wholesome Audience and is known for its' satisfying tactile cooking gameplay" style="color: rgb(80, 200, 240);">Kuloniku Sits Strongly with Wholesome Audience and is known for its' satisfying…</div></div></div></div><div class="t-row dated"><div class="t-lbl" title="PROJECT HEALTH: Post-launch operations run smoothly with reliably timed patch releases that maintain stability ">PROJECT HEALTH: Post-launch operations run smoothly with reliably timed patch releases that maintain stability </div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1211912056412907" style="left: calc(92.9413% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green" style="background: rgba(80, 200, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(80, 200, 240);"></div></div></div><div class="ev-label" title="PROJECT HEALTH: Post-launch operations run smoothly with reliably timed patch releases that maintain stability " style="color: rgb(80, 200, 240);">Post-launch operations run smoothly with reliably timed patch releases that mai…</div></div></div></div><div class="t-row dated"><div class="t-lbl" title="PLAYER EXPERIENCE: KuloNiku is well-received by players">PLAYER EXPERIENCE: KuloNiku is well-received by players</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1211912059466731" style="left: calc(92.9413% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green" style="background: rgba(80, 200, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(80, 200, 240);"></div></div></div><div class="ev-label" title="PLAYER EXPERIENCE: KuloNiku is well-received by players" style="color: rgb(80, 200, 240);">KuloNiku is well-received by players</div></div></div></div><div class="t-row dated"><div class="t-lbl" title="COMMERCIAL VIABILITY:  Reach $600k net revenue on Steam by end of Y1">COMMERCIAL VIABILITY:  Reach $600k net revenue on Steam by end of Y1</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1211912059466733" style="left: calc(92.9413% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-amber" style="background: rgba(80, 200, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(80, 200, 240);"></div></div></div><div class="ev-label" title="COMMERCIAL VIABILITY:  Reach $600k net revenue on Steam by end of Y1" style="color: rgb(80, 200, 240);">Reach $600k net revenue on Steam by end of Y1</div></div></div></div><div class="sec-head"><div class="sec-name" style="color:#888580">Monthly Goals<span class="sec-count">6</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl monthly" title="We are prepared for launch across all internal marketing arms">We are prepared for launch across all internal marketing arms</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1212795555682083" style="left: calc(39.6519% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green monthly-outer"><div class="ev-task-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="ev-label" title="We are prepared for launch across all internal marketing arms" style="color: rgb(107, 105, 102);">We are prepared for launch across all internal marketing arms</div></div></div></div><div class="t-row dated"><div class="t-lbl monthly" title="New social plan has clear ownership over activities and resonates with the community">New social plan has clear ownership over activities and resonates with the community</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1213483628423901" style="left: calc(39.8163% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green monthly-outer"><div class="ev-task-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="ev-label" title="New social plan has clear ownership over activities and resonates with the community" style="color: rgb(107, 105, 102);">New social plan has clear ownership over activities and resonates with the comm…</div></div></div></div><div class="t-row dated"><div class="t-lbl monthly" title="A new paid marketing strategy has yielded a 40% improvement on daily wishlist additions">A new paid marketing strategy has yielded a 40% improvement on daily wishlist additions</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1213200663695439" style="left: calc(39.8163% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-amber monthly-outer"><div class="ev-task-inner" style="background: rgb(204, 136, 0);"></div></div></div><div class="ev-label" title="A new paid marketing strategy has yielded a 40% improvement on daily wishlist additions" style="color: rgb(107, 105, 102);">A new paid marketing strategy has yielded a 40% improvement on daily wishlist a…</div></div></div></div><div class="t-row dated"><div class="t-lbl monthly" title="Release candidate (Day 1 patch) build delivery">Release candidate (Day 1 patch) build delivery</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1213506185980234" style="left: calc(39.8163% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green monthly-outer"><div class="ev-task-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="ev-label" title="Release candidate (Day 1 patch) build delivery" style="color: rgb(107, 105, 102);">Release candidate (Day 1 patch) build delivery</div></div></div></div><div class="t-row dated"><div class="t-lbl monthly" title="Release Scenarios are created and aligned with the PT ensuring a stable and successful release ">Release Scenarios are created and aligned with the PT ensuring a stable and successful release </div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1213539885438546" style="left: calc(39.8163% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-green monthly-outer"><div class="ev-task-inner" style="background: rgb(22, 168, 80);"></div></div></div><div class="ev-label" title="Release Scenarios are created and aligned with the PT ensuring a stable and successful release " style="color: rgb(107, 105, 102);">Release Scenarios are created and aligned with the PT ensuring a stable and suc…</div></div></div></div><div class="t-row dated"><div class="t-lbl" title="KuloNiku's hype results in strong pre-launch wishlists">KuloNiku's hype results in strong pre-launch wishlists</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1213887260221629" style="left: calc(40.9677% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-amber" style="background: rgba(136, 133, 128, 0.18);"><div class="ev-task-inner" style="background: rgb(136, 133, 128);"></div></div></div><div class="ev-label" title="KuloNiku's hype results in strong pre-launch wishlists" style="color: rgb(136, 133, 128);">KuloNiku's hype results in strong pre-launch wishlists</div></div></div></div><div class="sec-head"><div class="sec-name" style="color:#f09650">Publishing<span class="sec-count">1</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl ms" title="Release">Release</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1212197015286045" style="left: calc(40.9677% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-ms-outer rag-none" style="background: rgba(240, 150, 80, 0.18); box-shadow: rgba(240, 150, 80, 0.25) 0px 0px 0px 2px;"><div class="ev-ms-inner" style="background: rgb(240, 150, 80);"></div></div></div><div class="ev-label" title="Release" style="color: rgb(240, 150, 80);">Release</div></div></div></div><div class="sec-head"><div class="sec-name" style="color:#c850f0">Marketing<span class="sec-count">2</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl" title="Beat #5 - Embargo Clears">Beat #5 - Embargo Clears</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1212212283145100" style="left: calc(40.9677% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-none" style="background: rgba(200, 80, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(200, 80, 240);"></div></div></div><div class="ev-label" title="Beat #5 - Embargo Clears" style="color: rgb(200, 80, 240);">Beat #5 - Embargo Clears</div></div></div></div><div class="t-row dated"><div class="t-lbl" title="Beat #6 - Launch">Beat #6 - Launch</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1212212283145102" style="left: calc(40.9677% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-none" style="background: rgba(200, 80, 240, 0.18);"><div class="ev-task-inner" style="background: rgb(200, 80, 240);"></div></div></div><div class="ev-label" title="Beat #6 - Launch" style="color: rgb(200, 80, 240);">Beat #6 - Launch</div></div></div></div><div class="sec-head"><div class="sec-name" style="color:#888580">Risks &amp; Opportunities Tracker<span class="sec-count">1</span></div><div class="sec-track" style="flex:1"></div></div><div class="t-row dated"><div class="t-lbl" title="Update Risks and Opportunities Tracker">Update Risks and Opportunities Tracker</div><div class="t-track"><div class="g-line" style="left: 0%;"></div><div class="g-line" style="left: 5.09868%;"></div><div class="g-line" style="left: 10.0329%;"></div><div class="g-line" style="left: 15.1384%;"></div><div class="g-line" style="left: 20.0726%;"></div><div class="g-line" style="left: 25.1713%;"></div><div class="g-line" style="left: 30.27%;"></div><div class="g-line" style="left: 34.8753%;"></div><div class="g-line" style="left: 39.9671%;"></div><div class="g-line" style="left: 44.9013%;"></div><div class="g-line" style="left: 50%;"></div><div class="g-line" style="left: 54.9342%;"></div><div class="g-line" style="left: 60.0329%;"></div><div class="g-line" style="left: 65.1316%;"></div><div class="g-line" style="left: 70.0658%;"></div><div class="g-line" style="left: 75.1713%;"></div><div class="g-line" style="left: 80.1055%;"></div><div class="g-line" style="left: 85.2042%;"></div><div class="g-line" style="left: 90.3029%;"></div><div class="g-line" style="left: 94.9082%;"></div><div class="today-ln" style="left: 41.1184%;"></div><div class="ev" data-gid="1212359559074179" style="left: calc(92.9413% - 6px); transform: translateY(-50%);"><div class="ev-shape"><div class="ev-task-outer rag-none" style="background: rgba(136, 133, 128, 0.18);"><div class="ev-task-inner" style="background: rgb(136, 133, 128);"></div></div></div><div class="ev-label" title="Update Risks and Opportunities Tracker" style="color: rgb(136, 133, 128);">Update Risks and Opportunities Tracker</div></div></div></div></div>
       </div>
     </div>
-
+    <div class="legend">
+      <div class="leg-i"><div class="leg-ms"></div>Milestone</div>
+      <div class="leg-i"><div class="leg-dot"></div>Task</div>
+      <div class="leg-i"><div class="leg-ms-grey"></div>Monthly goal</div>
+      <div class="leg-i"><div class="leg-ring-g"></div>On track</div>
+      <div class="leg-i"><div class="leg-ring-a"></div>At risk</div>
+      <div class="leg-i"><div class="leg-ring-r"></div>Off track</div>
+      <div class="leg-i"><div class="leg-line"></div>Today</div>
+      <span class="leg-note">Hover to preview · Click dot to pin · + / − to zoom</span>
+    </div>
   </div>
 
   </div><!-- /panel-timeline -->
@@ -1483,7 +1502,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div style="font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3)">Push to GitHub</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <label style="font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)">Personal Access Token</label>
-      <input type="text" id="gh-pat-inp" placeholder="github_pat_…" autocomplete="off" style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;">
+      <input type="password" id="gh-pat-inp" placeholder="github_pat_…" autocomplete="off" style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;">
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <label style="font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)">Repository (owner/repo)</label>
@@ -1515,26 +1534,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 </div>
 
 <script>
-/* ─── Page init — reset any frozen state from DOM snapshot ─── */
-(function() {
-  // Always start on setup screen — never inherit app screen from cached DOM
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const setup = document.getElementById('screen-setup');
-  if (setup) setup.classList.add('active');
-
-  // Reset GitHub modal — close it and restore button to idle state
-  const modal = document.getElementById('gh-modal');
-  if (modal) modal.style.display = 'none';
-  const confirmBtn = document.getElementById('gh-confirm-btn');
-  if (confirmBtn) { confirmBtn.textContent = 'Push ↑'; confirmBtn.style.pointerEvents = ''; }
-  const ghStatus = document.getElementById('gh-status');
-  if (ghStatus) { ghStatus.textContent = ''; ghStatus.style.color = 'var(--text3)'; }
-
-  // Reset loading overlay
-  const loading = document.getElementById('loading');
-  if (loading) loading.classList.remove('show');
-})();
-
 /* ─── Config ─── */
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const ZOOMS = [700, 1000, 1400, 2000, 2800];
@@ -1689,12 +1688,9 @@ async function ghConfirmPush() {
       throw new Error(`GitHub API error: ${getResp.status} ${getResp.statusText}`);
     }
 
-    // Step 2: fetch the original source file (avoids bloated live DOM)
-    status.textContent = 'Fetching source…';
-    const srcResp = await fetch(window.location.href, { cache: 'no-store' });
-    if (!srcResp.ok) throw new Error(`Could not fetch source: ${srcResp.status}`);
-    const htmlSource = await srcResp.text();
+    // Step 2: get the current HTML source
     status.textContent = 'Encoding file…';
+    const htmlSource = document.documentElement.outerHTML;
     const encoded = btoa(unescape(encodeURIComponent(htmlSource)));
 
     // Step 3: push
@@ -1718,36 +1714,14 @@ async function ghConfirmPush() {
 
     const result = await putResp.json();
     const commitUrl = result.commit?.html_url || '';
-
-    // Step 4: verify — fetch back and confirm SHA changed
-    status.style.color = 'var(--text3)';
-    status.textContent = 'Verifying…';
-    await new Promise(r => setTimeout(r, 1200));
-
-    let verified = false;
-    try {
-      const verifyResp = await fetch(apiBase, { headers });
-      if (verifyResp.ok) {
-        const verifyData = await verifyResp.json();
-        verified = verifyData.sha && verifyData.sha !== sha;
-      }
-    } catch(_) { /* non-fatal */ }
-
-    if (verified) {
-      status.style.color = 'var(--rag-g)';
-      status.innerHTML = `✓ Verified & pushed! <a href="${commitUrl}" target="_blank" style="color:var(--accent);text-decoration:underline">View commit ↗</a>`;
-      btn.textContent = '✓ Done';
-    } else {
-      status.style.color = 'var(--rag-a)';
-      status.innerHTML = `⚠ Pushed but could not verify. <a href="${commitUrl}" target="_blank" style="color:var(--accent);text-decoration:underline">Check commit ↗</a>`;
-      btn.textContent = 'Done?';
-    }
-
+    status.style.color = 'var(--rag-g)';
+    status.innerHTML = `✓ Pushed! <a href="${commitUrl}" target="_blank" style="color:var(--accent);text-decoration:underline">View commit ↗</a>`;
+    btn.textContent = '✓ Done';
     setTimeout(() => {
       document.getElementById('gh-modal').style.display = 'none';
       btn.textContent = 'Push ↑';
       btn.style.pointerEvents = '';
-    }, 4000);
+    }, 3000);
 
   } catch(e) {
     status.style.color = 'var(--rag-r)';
@@ -2479,7 +2453,28 @@ function roadmapZoom(d) {
   roadmapZoomIdx = Math.max(0, Math.min(ROADMAP_ZOOMS.length-1, roadmapZoomIdx+d));
   const z = ROADMAP_ZOOMS[roadmapZoomIdx];
   document.getElementById('roadmap-z-val').textContent = z.label;
-  if (roadmapLoaded) drawRoadmapGrid();
+  if (roadmapLoaded) {
+    drawRoadmapGrid();
+    // Re-center on today after zoom
+    requestAnimationFrame(() => {
+      const body = document.getElementById('roadmap-body');
+      const cellW = ROADMAP_ZOOMS[roadmapZoomIdx].widthPx;
+      if (!body || !roadmapEvents.length) return;
+      const allDates = roadmapEvents.filter(e=>e.date).map(e=>new Date(e.date));
+      const minDate = new Date(Math.min(...allDates));
+      const startMo = new Date(minDate.getFullYear(), Math.max(0, minDate.getMonth()-1), 1);
+      const maxDate = new Date(Math.max(...allDates));
+      const endMo = new Date(maxDate.getFullYear(), maxDate.getMonth()+2, 1);
+      const months = [];
+      let cur = new Date(startMo);
+      while (cur < endMo) { months.push(new Date(cur)); cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1); }
+      const todayMoIdx = months.findIndex(m => m.getMonth()===TODAY.getMonth() && m.getFullYear()===TODAY.getFullYear());
+      if (todayMoIdx >= 0) {
+        const todayX = todayMoIdx * cellW + (TODAY.getDate()/31)*cellW;
+        body.scrollLeft = Math.max(0, todayX - body.clientWidth / 2);
+      }
+    });
+  }
 }
 
 async function renderRoadmap() {
@@ -2604,13 +2599,13 @@ function drawRoadmapGrid() {
 
     // Section header
     const shdr = document.createElement('div');
-    shdr.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-bottom:0.5px solid var(--border2);border-top:1px solid var(--border2);position:sticky;left:0;font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);`;
+    shdr.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface2);border-bottom:0.5px solid var(--border2);border-top:1px solid var(--border2);position:sticky;left:0;z-index:10;font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);min-width:100%;box-sizing:border-box;`,
     shdr.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:${sec.color};flex-shrink:0"></div>${esc(sec.label)}<span style="opacity:0.4;margin-left:4px">${secEvents.length}</span>`;
     wrapper.appendChild(shdr);
 
     // Single track row for this section — events placed by date
     const row = document.createElement('div');
-    row.style.cssText = `position:relative;height:44px;border-bottom:0.5px solid var(--border);`;
+    row.style.cssText = `position:relative;height:26px;border-bottom:0.5px solid var(--border);`;
 
     // Month cell bands
     months.forEach((m,i) => {
@@ -2656,21 +2651,41 @@ function drawRoadmapGrid() {
       if (!eventRows[rowIdx]) eventRows[rowIdx] = [];
       eventRows[rowIdx].push([leftPx, leftPx + approxW]);
 
-      const pill = document.createElement('div');
-      pill.className = `roadmap-event ${evt.type}`;
-      pill.style.cssText += `left:${leftPx}px;top:${4 + rowIdx*18}px;transform:none;max-width:${approxW}px;overflow:hidden;text-overflow:ellipsis;`;
-      pill.title = `${evt.game} — ${evt.name} — ${evt.date}`;
-      pill.textContent = short;
-      row.appendChild(pill);
+      const dotWrap = document.createElement('div');
+      dotWrap.className = `roadmap-dot-wrap`;
+      dotWrap.style.cssText = `position:absolute;left:${leftPx}px;top:${4 + rowIdx*18}px;display:flex;align-items:center;gap:5px;cursor:default;`;
+      dotWrap.title = `${evt.game} — ${evt.name} — ${evt.date}`;
+
+      const dot = document.createElement('div');
+      dot.className = `roadmap-dot ${evt.type}`;
+      dotWrap.appendChild(dot);
+
+      const lbl = document.createElement('span');
+      lbl.className = 'roadmap-dot-label';
+      lbl.textContent = evt.game;
+      dotWrap.appendChild(lbl);
+
+      row.appendChild(dotWrap);
     });
 
     // Expand row height if multiple event rows needed
-    if (eventRows.length > 1) row.style.height = (8 + eventRows.length * 18 + 8) + 'px';
+    if (eventRows.length > 1) row.style.height = (4 + eventRows.length * 18 + 4) + 'px';
 
     wrapper.appendChild(row);
   });
 
   innerEl.appendChild(wrapper);
+
+  // Scroll to today
+  requestAnimationFrame(() => {
+    const body = document.getElementById('roadmap-body');
+    if (!body) return;
+    const todayMoIdx = months.findIndex(m => m.getMonth()===TODAY.getMonth() && m.getFullYear()===TODAY.getFullYear());
+    if (todayMoIdx >= 0) {
+      const todayX = todayMoIdx * cellW + (TODAY.getDate()/31)*cellW;
+      body.scrollLeft = Math.max(0, todayX - body.clientWidth / 2);
+    }
+  });
 }
 
 
@@ -2710,7 +2725,7 @@ function switchTab(tab) {
   const zoomWrap = document.querySelector('.zoom-wrap');
   if (zoomWrap) zoomWrap.style.display = tab === 'timeline' ? '' : 'none';
   if (tab === 'goals' && allEvents.length) renderGoalsBoard();
-  if (tab === 'fof') renderFoF();
+  if (tab === 'fof') { renderFoF(); }
   if (tab === 'roadmap') renderRoadmap();
   if (tab === 'excel') renderForecastForCurrentBoard();
   unpinTT();
@@ -2968,8 +2983,9 @@ async function renderFoF() {
   Object.entries(PRODUCT_BOARD_MAP).forEach(([gid, e]) => {
     if (!e.code || e.code === 'MY') return;
     const phase = e.phase || 'Unknown';
+    // Respect phase filter
+    if (!activePhaseFilter.has('ALL') && !activePhaseFilter.has(phase)) return;
     if (!phaseMap[phase]) phaseMap[phase] = [];
-    // Match goals by game title (portfolio overview uses title, not code)
     const title = e.title || e.code;
     const goals = goalsByGame[title] || goalsByGame[e.code] || [];
     phaseMap[phase].push({ gid, ...e, goals, pm: e.pm||'', gtm: e.gtm||'' });
@@ -3227,6 +3243,8 @@ function togglePhaseFilter(key) {
       c.dataset.key === 'ALL' ? activePhaseFilter.has('ALL') : activePhaseFilter.has(c.dataset.key));
   });
   buildBoardDropdown();
+  // Re-render FoF if visible
+  if (document.getElementById('panel-fof')?.classList.contains('active')) renderFoF();
 }
 
 function buildBoardDropdown() {
