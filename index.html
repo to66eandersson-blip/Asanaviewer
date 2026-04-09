@@ -872,13 +872,13 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.6</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.7</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
       <div class="field">
         <label>Personal Access Token</label>
-        <input type="password" id="inp-pat" placeholder="1/XXXXXXXXX:XXXXXXXX…" autocomplete="off">
+        <input type="text" id="inp-pat" placeholder="1/XXXXXXXXX:XXXXXXXX…" autocomplete="off">
         <div class="field-hint">See the instructions below to generate this.</div>
       </div>
       <div class="field">
@@ -916,7 +916,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.6</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.7</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -1483,7 +1483,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div style="font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3)">Push to GitHub</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <label style="font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)">Personal Access Token</label>
-      <input type="password" id="gh-pat-inp" placeholder="github_pat_…" autocomplete="off" style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;">
+      <input type="text" id="gh-pat-inp" placeholder="github_pat_…" autocomplete="off" style="background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;">
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <label style="font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3)">Repository (owner/repo)</label>
