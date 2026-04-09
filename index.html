@@ -905,7 +905,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.9</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.10</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -949,7 +949,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.9</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.10</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2899,21 +2899,39 @@ async function fetchFoFPhases() {
   if (_fofPhaseByGid) return _fofPhaseByGid;
   _fofPhaseByGid = {};
   try {
-    // Fetch portfolio items with custom fields
+    // Step 1: auto-discover the (FoF) Flow of Fury Phase field GID by name
+    // Fetch one portfolio item with full custom field metadata to find the GID
+    let phaseFieldGid = CF_FOF_PHASE; // fallback to hardcoded if discovery fails
+    try {
+      const schemaResp = await api(
+        `/portfolios/${PORTFOLIO_GID}/items?opt_fields=custom_fields.gid,custom_fields.name&limit=1`
+      );
+      const firstItem = (schemaResp.data || [])[0];
+      if (firstItem) {
+        const found = (firstItem.custom_fields || []).find(f =>
+          f.name && f.name.toLowerCase().includes('flow of fury phase')
+        );
+        if (found?.gid) {
+          phaseFieldGid = found.gid;
+          console.log('FoF Phase GID discovered:', phaseFieldGid);
+        }
+      }
+    } catch(e) {
+      console.warn('FoF phase GID discovery failed, using fallback:', e.message);
+    }
+
+    // Step 2: fetch all portfolio items using the discovered GID
     let offset = null;
     let pages = 0;
     while (pages < 5) {
-      const url = `/portfolios/${PORTFOLIO_GID}/items?opt_fields=resource_subtype,name,gid,custom_fields.gid,custom_fields.enum_value.name` +
+      const url = `/portfolios/${PORTFOLIO_GID}/items?opt_fields=gid,name,custom_fields.gid,custom_fields.name,custom_fields.enum_value.name` +
                   (offset ? `&offset=${offset}` : '');
       const resp = await api(url);
       const items = resp.data || [];
       items.forEach(item => {
-        if (item.resource_subtype !== 'default_task' && item.resource_subtype !== 'milestone') {
-          // It's a project
-          const phaseField = (item.custom_fields || []).find(f => f.gid === CF_FOF_PHASE);
-          if (phaseField?.enum_value?.name) {
-            _fofPhaseByGid[item.gid] = phaseField.enum_value.name;
-          }
+        const phaseField = (item.custom_fields || []).find(f => f.gid === phaseFieldGid);
+        if (phaseField?.enum_value?.name) {
+          _fofPhaseByGid[item.gid] = phaseField.enum_value.name;
         }
       });
       if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
