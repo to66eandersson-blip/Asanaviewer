@@ -905,7 +905,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.10</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.11</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -949,7 +949,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.10</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.11</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -1541,6 +1541,32 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 </div>
 
 <script>
+/* ─── Page init — reset frozen DOM state + auto-restore session ─── */
+(function() {
+  // Always start on setup screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const setup = document.getElementById('screen-setup');
+  if (setup) setup.classList.add('active');
+
+  // Reset loading overlay
+  const loading = document.getElementById('loading');
+  if (loading) loading.classList.remove('show');
+
+  // Auto-restore session if PAT was saved this browser session
+  const savedPat = sessionStorage.getItem('rf_pat');
+  const savedPid = sessionStorage.getItem('rf_pid');
+  if (savedPat) {
+    const patInput = document.getElementById('inp-pat');
+    if (patInput) patInput.value = savedPat;
+    if (savedPid) {
+      const urlInput = document.getElementById('inp-url');
+      if (urlInput) urlInput.value = savedPid;
+    }
+    // Auto-connect after DOM settles
+    setTimeout(() => { if (typeof connect === 'function') connect(); }, 120);
+  }
+})();
+
 /* ─── Config ─── */
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const ZOOMS = [700, 1000, 1400, 2000, 2800];
@@ -1811,6 +1837,7 @@ async function connect(){
     try{
       setLoad('Connecting…','Validating token…',5);
       await api('/users/me?opt_fields=name');
+      sessionStorage.setItem('rf_pat', pat);
       loadPortfolio();
       show('screen-app');
       if (_pendingForecastBuffer) {
@@ -1850,6 +1877,8 @@ async function connect(){
     const tasks=await fetchAllTasks(pid,(sub,pct)=>setLoad('Fetching tasks…',sub,pct));
     setLoad('Building view…','Almost done…',98);
     buildApp(projResp.data,tasks);
+    sessionStorage.setItem('rf_pat', pat);
+    sessionStorage.setItem('rf_pid', pid);
     show('screen-app');
     loadPortfolio();
     if (_pendingForecastBuffer) {
@@ -1877,7 +1906,7 @@ async function switchBoard(){
     $('switch-inp').value='';
   }catch(e){alert('Failed: '+e.message);}finally{setLoad(null);}
 }
-function goSetup(){PAT='';currentPid='';$('inp-pat').value='';$('inp-url').value='';show('screen-setup');}
+function goSetup(){PAT='';currentPid='';sessionStorage.removeItem('rf_pat');sessionStorage.removeItem('rf_pid');$('inp-pat').value='';$('inp-url').value='';show('screen-setup');}
 
 /* ─── Budget bar ─── */
 
@@ -3330,6 +3359,7 @@ function buildBoardDropdown() {
 }
 
 async function onBoardPickerChange(gid) {
+  if (gid) sessionStorage.setItem('rf_pid', gid);
   if (!gid || !PAT) return;
   // Find the product name for the title
   const product = portfolioProducts.find(p => p.boardGid === gid);
