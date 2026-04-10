@@ -905,7 +905,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.11</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.12</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -949,7 +949,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.11</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.12</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -968,14 +968,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <button class="z-btn" onclick="zoom(1)">+</button>
     </div>
     <button class="tb-btn" id="labels-btn" onclick="toggleLabels()">Labels off</button>
-    <button class="tb-btn on" id="done-btn" onclick="toggleDone()">Show done</button>
+    <button class="tb-btn--dim" id="done-btn" onclick="toggleDone()">Hide done</button>
     <button class="tb-btn" onclick="goSetup()">⏎ Switch account</button>
   </div>
   <!-- Row 2: tab nav -->
   <div class="tab-row">
     <div class="tab-nav">
-      <button class="tab-btn" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
-      <button class="tab-btn active" id="tab-btn-goals" onclick="switchTab('goals')">Goals Board</button>
+      <button class="tab-btn active" id="tab-btn-timeline" onclick="switchTab('timeline')">Timeline</button>
+      <button class="tab-btn" id="tab-btn-goals" onclick="switchTab('goals')">Goals Board</button>
       <button class="tab-btn" id="tab-btn-excel" onclick="switchTab('excel')">Forecast</button>
     </div>
     <div class="tab-nav-sep"></div>
@@ -993,7 +993,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   </div>
 
   <!-- ── TAB 1: TIMELINE ── -->
-  <div class="tab-panel" id="panel-timeline">
+  <div class="tab-panel active" id="panel-timeline">
 
   <!-- Budget strip -->
 
@@ -1023,7 +1023,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   </div><!-- /panel-timeline -->
 
   <!-- ── TAB 2: GOALS BOARD ── -->
-  <div class="tab-panel active" id="panel-goals">
+  <div class="tab-panel" id="panel-goals">
     <div id="goals-board">
       <!-- left+months scrollable area -->
       <div id="gb-scroll">
@@ -1558,12 +1558,26 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   if (savedPat) {
     const patInput = document.getElementById('inp-pat');
     if (patInput) patInput.value = savedPat;
-    if (savedPid) {
-      const urlInput = document.getElementById('inp-url');
-      if (urlInput) urlInput.value = savedPid;
-    }
+    // Don't pre-fill the URL field — connect() without a URL uses the dropdown
+    // and auto-loads a random board, which is the correct behaviour on restore.
+    // The saved PID is used after connect() via onBoardPickerChange().
     // Auto-connect after DOM settles
-    setTimeout(() => { if (typeof connect === 'function') connect(); }, 120);
+    setTimeout(async () => {
+      if (typeof connect !== 'function') return;
+      await connect();
+      // After connect, switch to the saved board if we have one
+      if (savedPid && typeof onBoardPickerChange === 'function') {
+        const sel = document.getElementById('board-select');
+        if (sel) {
+          // Find the option matching savedPid
+          const opt = [...sel.options].find(o => o.value === savedPid);
+          if (opt) {
+            sel.value = savedPid;
+            await onBoardPickerChange(savedPid);
+          }
+        }
+      }
+    }, 120);
   }
 })();
 
