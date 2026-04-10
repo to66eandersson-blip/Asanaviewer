@@ -545,8 +545,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 
 /* Phase filter bar (inside filterbars, shown only when Goals Board active) */
-#filterbar-phase { display: none; }
-#filterbar-phase.visible { display: flex; }
 
 /* ── EXCEL TAB ── */
 #panel-excel {
@@ -915,7 +913,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.19</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.20</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -959,7 +957,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.19</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.20</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -999,7 +997,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <div class="filterbars">
     <div class="filterbar" id="filterbar-section"><span class="f-label">Section</span><button class="chip on" data-key="ALL" data-group="section"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>All</button><button class="chip" data-key="Flow of Fury" data-group="section"><span class="chip-dot" style="background: rgb(184, 240, 80);"></span>Flow of Fury</button><button class="chip" data-key="PRODUCT GOAL (Launch+12M)" data-group="section"><span class="chip-dot" style="background: rgb(80, 200, 240);"></span>Product Goals</button><button class="chip" data-key="Monthly goals" data-group="section"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Monthly Goals</button><button class="chip" data-key="PUBLISHING" data-group="section"><span class="chip-dot" style="background: rgb(240, 150, 80);"></span>Publishing</button><button class="chip" data-key="MARKETING" data-group="section"><span class="chip-dot" style="background: rgb(200, 80, 240);"></span>Marketing</button><button class="chip" data-key="Risks &amp; Opportunities Tracker" data-group="section"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Risks &amp; Opportunities Tracker</button></div>
     <div class="filterbar" id="filterbar-domain"><span class="f-label">Domain</span><button class="chip on" data-key="ALL" data-group="domain"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>All</button><button class="chip" data-key="Commercial Viability" data-group="domain"><span class="chip-dot" style="background: rgb(109, 217, 122);"></span>Commercial Viability</button><button class="chip" data-key="Player Experience" data-group="domain"><span class="chip-dot" style="background: rgb(221, 112, 192);"></span>Player Experience</button><button class="chip" data-key="Product Quality" data-group="domain"><span class="chip-dot" style="background: rgb(232, 159, 80);"></span>Product Quality</button><button class="chip" data-key="Project Health" data-group="domain"><span class="chip-dot" style="background: rgb(96, 206, 206);"></span>Project Health</button></div>
-    <div class="filterbar visible" id="filterbar-phase"><span class="f-label">Phase</span><button class="chip on" data-key="ALL" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>All</button><button class="chip on" data-key="Kick-Off" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Kick-Off</button><button class="chip on" data-key="Announcement Ready" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Announcement Ready</button><button class="chip on" data-key="Release Ready" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Release Ready</button><button class="chip on" data-key="Post Release" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Post Release</button><button class="chip on" data-key="Unknown" data-group="phase"><span class="chip-dot" style="background: rgb(136, 133, 128);"></span>Unknown</button></div>
   </div>
 
   <!-- ── TAB 1: TIMELINE ── -->
@@ -2799,9 +2796,6 @@ function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'tab-btn-' + tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
-  // Phase filter bar only visible on Goals Board tab
-  const phaseBar = document.getElementById('filterbar-phase');
-  if (phaseBar) phaseBar.classList.toggle('visible', tab === 'fof');
   const zoomWrap = document.querySelector('.zoom-wrap');
   if (zoomWrap) zoomWrap.style.display = tab === 'timeline' ? '' : 'none';
   if (tab === 'goals' && allEvents.length) renderGoalsBoard();
@@ -3157,7 +3151,8 @@ async function onFofGoalModeChange(mode) {
         if (!goals.length) { if (goalsEl) goalsEl.remove(); return; }
         if (!goalsEl) { goalsEl = document.createElement('div'); goalsEl.className = 'fof-card-goals'; card.appendChild(goalsEl); }
         goalsEl.innerHTML = goals.map(g => {
-          const dot = g.rag ? `border-color:var(--rag-${g.rag.ring});background:var(--rag-${g.rag.ring})33` : 'border-color:var(--text3);background:transparent';
+          const ragColor = g.rag ? (g.rag.ring==='rag-green'?'var(--rag-g)':g.rag.ring==='rag-amber'?'var(--rag-a)':'var(--rag-r)') : null;
+          const dot = ragColor ? `border-color:${ragColor};background:${ragColor}33` : 'border-color:var(--border2);background:transparent';
           return `<div class="fof-goal-row"><div class="fof-goal-dot" style="${dot}"></div><div class="fof-goal-name">${esc(g.name)}</div></div>`;
         }).join('');
       });
@@ -3420,7 +3415,6 @@ function loadPortfolio() {
     )
     .sort((a, b) => (a.pm || 'zzz').localeCompare(b.pm || 'zzz') || (a.name || '').localeCompare(b.name || ''));
 
-  buildPhaseFilterBar();
   buildBoardDropdown();
 
   // Restore selection if a board was already loaded
@@ -3434,24 +3428,6 @@ function loadPortfolio() {
   if (status) status.textContent = `${portfolioProducts.length} boards`;
 }
 
-function buildPhaseFilterBar() {
-  // Collect phases actually present
-  const presentPhases = [...new Set(portfolioProducts.map(p => p.phase))];
-  const bar = document.getElementById('filterbar-phase');
-  bar.innerHTML = '<span class="f-label">Phase</span>';
-
-  // All chip
-  bar.appendChild(makeChipEl('All', '#888580', 'ALL', activePhaseFilter.has('ALL'), 'phase'));
-
-  ALL_PHASES.forEach(ph => {
-    if (!presentPhases.includes(ph)) return;
-    bar.appendChild(makeChipEl(ph, '#888580', ph, activePhaseFilter.has(ph), 'phase'));
-  });
-  // Unknown bucket
-  if (presentPhases.includes('Unknown')) {
-    bar.appendChild(makeChipEl('Unknown', '#888580', 'Unknown', activePhaseFilter.has('Unknown'), 'phase'));
-  }
-}
 
 function makeChipEl(label, color, key, active, group) {
   const c = document.createElement('button');
