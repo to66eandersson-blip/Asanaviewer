@@ -85,9 +85,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #screen-app { flex-direction: column; height: 100vh; overflow: hidden; }
 
 .topbar { display: flex; align-items: center; gap: 10px; padding: 0 1.25rem; height: 50px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; background: var(--surface); }
-.tb-logo { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
-.tb-gem { width: 8px; height: 8px; background: var(--accent); border-radius: 1px; transform: rotate(45deg); }
-.tb-wordmark { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; }
+.tb-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.tb-logo-img { height: 28px; width: auto; display: block; border-radius: 3px; }
 .tb-sep { width: 0.5px; height: 18px; background: var(--border2); flex-shrink: 0; }
 .tb-version {
   font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em;
@@ -607,8 +606,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .fof-phase-hdr {
   padding: 10px 12px 8px;
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--text2);
-  border-bottom: 0.5px solid var(--border2);
+  text-transform: uppercase;
+  border-bottom: 2px solid;
   background: var(--surface2);
   display: flex; align-items: center; gap: 6px; flex-shrink: 0;
   font-weight: 500;
@@ -905,7 +904,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.16</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.18</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -949,7 +948,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.16</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.18</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3140,8 +3139,9 @@ async function renderFoF() {
 
     const hdr = document.createElement('div');
     hdr.className = 'fof-phase-hdr';
-    hdr.innerHTML = `<div class="fof-phase-hdr-dot" style="background:${ph.color}"></div>
-      <span>${esc(ph.key)}</span>
+    hdr.style.color = ph.color;
+    hdr.style.borderBottomColor = ph.color + '60'; // 38% opacity accent line
+    hdr.innerHTML = `<span>${esc(ph.key)}</span>
       <span class="fof-phase-count">${products.length}</span>`;
     col.appendChild(hdr);
 
