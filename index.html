@@ -8,19 +8,19 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #1a1c20;
-  --surface: #21242a;
-  --surface2: #292d35;
-  --surface3: #313640;
+  --bg: #1a1720;
+  --surface: #211e2a;
+  --surface2: #2a2735;
+  --surface3: #332f40;
   --border: rgba(255,255,255,0.08);
   --border2: rgba(255,255,255,0.14);
   --border3: rgba(255,255,255,0.26);
   --text: #eceae2;
   --text2: #9c9890;
   --text3: #5e5c57;
-  --accent: #b8f050;
-  --accent-dim: rgba(184,240,80,0.12);
-  --accent-border: rgba(184,240,80,0.28);
+  --accent: #f5a230;
+  --accent-dim: rgba(245,162,48,0.12);
+  --accent-border: rgba(245,162,48,0.28);
   --danger: #f05050;
   --today-color: #f05050;
   --rag-g: #22dd6e;
@@ -905,7 +905,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.15</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.16</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -949,7 +949,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.15</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.16</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3076,14 +3076,14 @@ async function fetchFoFGoals() {
 }
 
 const FOF_PHASES = [
-  { key: 'Scouting',          color: '#6b6966' },
-  { key: 'Pre-Signing',       color: '#8b7355' },
-  { key: 'Kick-Off',          color: '#50c8f0' },
-  { key: 'Announcement Ready',color: '#c850f0' },
-  { key: 'Release Ready',     color: '#f09650' },
-  { key: 'Release',           color: '#b8f050' },
-  { key: 'Post Release',      color: '#50f0a0' },
-  { key: 'Back Catalogue',    color: '#888580' },
+  { key: 'Scouting',          color: '#f5a230' },
+  { key: 'Pre-Signing',       color: '#d4831a' },
+  { key: 'Kick-Off',          color: '#e8748a' },
+  { key: 'Announcement Ready',color: '#c45c6a' },
+  { key: 'Release Ready',     color: '#8b2035' },
+  { key: 'Release',           color: '#7b5ea7' },
+  { key: 'Post Release',      color: '#3d7ebf' },
+  { key: 'Back Catalogue',    color: '#4a6a80' },
 ];
 
 async function renderFoF() {
