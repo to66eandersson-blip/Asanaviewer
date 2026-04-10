@@ -905,7 +905,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.12</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.13</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -949,7 +949,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.12</span></div>
+    <div class="tb-logo"><div class="tb-gem"></div><span class="tb-wordmark">Product Board</span><span class="tb-version">v4.13</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -968,7 +968,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <button class="z-btn" onclick="zoom(1)">+</button>
     </div>
     <button class="tb-btn" id="labels-btn" onclick="toggleLabels()">Labels off</button>
-    <button class="tb-btn--dim" id="done-btn" onclick="toggleDone()">Hide done</button>
+    <button class="tb-btn" id="done-btn" onclick="toggleDone()">Hide done</button>
     <button class="tb-btn" onclick="goSetup()">⏎ Switch account</button>
   </div>
   <!-- Row 2: tab nav -->
@@ -1551,6 +1551,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   // Reset loading overlay
   const loading = document.getElementById('loading');
   if (loading) loading.classList.remove('show');
+
+  // Clear forecast file state — file picker can't be restored across reloads
+  const forecastName = document.getElementById('excel-file-name');
+  if (forecastName) forecastName.textContent = 'No file loaded';
+  const gatewayName = document.getElementById('inp-forecast-name');
+  if (gatewayName) gatewayName.textContent = 'No file selected';
 
   // Auto-restore session if PAT was saved this browser session
   const savedPat = sessionStorage.getItem('rf_pat');
@@ -2937,6 +2943,8 @@ const PORTFOLIO_GID = '1211541493171405';  // Raw Fury portfolio
 
 // Cache for live phase data fetched from portfolio
 let _fofPhaseByGid = null;
+let _fofPhaseNames = {};  // gid → item name, for signing targets without a board
+// Reset caches on new session
 
 async function fetchFoFPhases() {
   if (_fofPhaseByGid) return _fofPhaseByGid;
@@ -2975,6 +2983,7 @@ async function fetchFoFPhases() {
         const phaseField = (item.custom_fields || []).find(f => f.gid === phaseFieldGid);
         if (phaseField?.enum_value?.name) {
           _fofPhaseByGid[item.gid] = phaseField.enum_value.name;
+          _fofPhaseNames[item.gid] = item.name || '';
         }
       });
       if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
@@ -3057,20 +3066,35 @@ async function renderFoF() {
 
   // Fetch live phase data from portfolio API
   const livePhases = await fetchFoFPhases();
+  const livePhaseNames = _fofPhaseNames;
 
   // Build phase → products map using live data, falling back to hardcoded
   const phaseMap = {};
   FOF_PHASES.forEach(p => phaseMap[p.key] = []);
+
+  // Known product boards from PRODUCT_BOARD_MAP
+  const knownGids = new Set(Object.keys(PRODUCT_BOARD_MAP));
   Object.entries(PRODUCT_BOARD_MAP).forEach(([gid, e]) => {
     if (!e.code || e.code === 'MY') return;
-    // Use live phase from portfolio API, fall back to hardcoded value
     const phase = livePhases[gid] || e.phase || 'Unknown';
-    // Respect phase filter
     if (!activePhaseFilter.has('ALL') && !activePhaseFilter.has(phase)) return;
     if (!phaseMap[phase]) phaseMap[phase] = [];
     const title = e.title || e.code;
     const goals = goalsByGame[title] || goalsByGame[e.code] || [];
     phaseMap[phase].push({ gid, ...e, goals, pm: e.pm||'', gtm: e.gtm||'' });
+  });
+
+  // Signing targets: portfolio items NOT in PRODUCT_BOARD_MAP (no product board yet)
+  // These are fetched from the live portfolio phases response
+  Object.entries(livePhases).forEach(([gid, phase]) => {
+    if (knownGids.has(gid)) return; // already handled above
+    // Only include Scouting and Pre-Signing phases — these are signing targets
+    if (!['Scouting', 'Pre-Signing'].includes(phase)) return;
+    if (!activePhaseFilter.has('ALL') && !activePhaseFilter.has(phase)) return;
+    if (!phaseMap[phase]) phaseMap[phase] = [];
+    // Use the name from livePhaseNames if available (fetched alongside phase)
+    const title = livePhaseNames[gid] || gid;
+    phaseMap[phase].push({ gid, title, code: '', phase, goals: [], pm: '', gtm: '' });
   });
 
   // ── Render pipeline columns ──
