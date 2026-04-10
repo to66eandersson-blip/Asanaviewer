@@ -156,6 +156,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* Track — overflow visible so labels can extend right of viewport */
 .t-track { flex: 1; height: var(--row-h); position: relative; overflow: visible; }
+.t-track.compact { overflow: hidden; }  /* height set dynamically */
 #tl-ruler {
   position: absolute; top: 0; bottom: 0; width: 1px;
   background: rgba(255,255,255,0.2); pointer-events: none;
@@ -913,7 +914,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.20</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.21</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -957,7 +958,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.20</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.21</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2180,71 +2181,169 @@ function render(){
       trk.appendChild(pill);row.appendChild(lbl);row.appendChild(trk);body.appendChild(row);
     });
 
-    // Dated rows
-    dated.forEach(evt=>{
-      const row=document.createElement('div');row.className='t-row dated';
-      const lbl=document.createElement('div');
-      lbl.className=['t-lbl',evt.type==='milestone'?'ms':'',evt.done?'done':'',evt.isMonthly?'monthly':''].filter(Boolean).join(' ');
-      lbl.textContent=evt.name;lbl.title=evt.name;
+    // Determine if this section uses one-row-per-event (goals) or compact single-track
+    const isGoalSection = sec.isMonthly || dated.some(e => e.isProductGoal);
 
-      const trk=document.createElement('div');trk.className='t-track';
+    if (isGoalSection) {
+      // ── Goal sections: one dedicated row per event ──
+      dated.forEach(evt=>{
+        const row=document.createElement('div');row.className='t-row dated';
+        const lbl=document.createElement('div');
+        lbl.className=['t-lbl',evt.type==='milestone'?'ms':'',evt.done?'done':'',evt.isMonthly?'monthly':''].filter(Boolean).join(' ');
+        lbl.textContent=evt.name;lbl.title=evt.name;
+
+        const trk=document.createElement('div');trk.className='t-track';
+        mths.forEach(m=>{const gl=document.createElement('div');gl.className='g-line';gl.style.left=pct(m,start,end)+'%';trk.appendChild(gl);});
+        const tl=document.createElement('div');tl.className='today-ln';tl.style.left=todayP+'%';trk.appendChild(tl);
+
+        const evEl=document.createElement('div');
+        evEl.className='ev'+(evt.done?' faded':'');
+        const leftPct=pct(evt.date,start,end);
+        evEl.style.left=`calc(${leftPct}% - 6px)`;
+        evEl.style.transform='translateY(-50%)';
+        evEl.dataset.gid=evt.gid;
+
+        const shape=document.createElement('div');shape.className='ev-shape';
+        const ragCls=evt.rag?.ring||'rag-none';
+        const isMonthly=evt.isMonthly;
+
+        if(evt.type==='milestone'){
+          const outer=document.createElement('div');
+          outer.className=`ev-ms-outer ${ragCls}${isMonthly?' monthly-outer':''}`;
+          if(!isMonthly)outer.style.background=`rgba(${hexToRgb(sec.color)},0.18)`;
+          if(!isMonthly&&!evt.rag&&!evt.done)outer.style.boxShadow=`0 0 0 2px ${sec.color}40`;
+          const inner=document.createElement('div');inner.className='ev-ms-inner';
+          inner.style.background=evt.done?'#4a4845':(isMonthly?(evt.rag?ragInnerColor(evt.rag.ring):MONTHLY_GREY_INNER):sec.color);
+          outer.appendChild(inner);shape.appendChild(outer);
+        }else{
+          const outer=document.createElement('div');
+          outer.className=`ev-task-outer ${ragCls}${isMonthly?' monthly-outer':''}`;
+          if(!isMonthly)outer.style.background=`rgba(${hexToRgb(sec.color)},0.18)`;
+          const inner=document.createElement('div');inner.className='ev-task-inner';
+          inner.style.background=evt.done?'#4a4845':(isMonthly?(evt.rag?ragInnerColor(evt.rag.ring):MONTHLY_GREY_INNER):sec.color);
+          outer.appendChild(inner);shape.appendChild(outer);
+        }
+        evEl.appendChild(shape);
+
+        const labelEl=document.createElement('div');
+        labelEl.className='ev-label';
+        labelEl.style.color=isMonthly?'#6b6966':sec.color;
+        labelEl.textContent=truncLabel(stripDomainPrefix(evt.name));
+        labelEl.title=evt.name;
+        evEl.appendChild(labelEl);
+
+        evEl.addEventListener('mouseenter',e=>{if(!pinnedEvt)populateTT(evt,sec);});
+        evEl.addEventListener('mousemove',e=>{if(!pinnedEvt)moveTT(e);});
+        evEl.addEventListener('mouseleave',()=>{if(!pinnedEvt)hideTT();});
+        evEl.addEventListener('click',e=>{
+          e.stopPropagation();
+          if(pinnedEvt&&pinnedEvt.gid===evt.gid){unpinTT();return;}
+          populateTT(evt,sec);moveTT(e);pinTT(evt,evEl);
+        });
+
+        trk.appendChild(evEl);
+        row.appendChild(lbl);row.appendChild(trk);body.appendChild(row);
+      });
+
+    } else {
+      // ── Non-goal sections: single compact track, all events stacked by lane ──
+      // Assign each event a vertical lane to avoid label overlap
+      // Lane occupancy: track right-edge of each label in px equivalent (approx 7px per char + 20px for dot)
+      const LANE_H = 20; // px per lane
+      const DOT_W  = 20; // px reserved for the dot itself
+      const CHAR_W = 6;  // approx px per character for the mono label
+      const MAX_LABEL_CHARS = 28;
+      const trackWidthPx = 800; // approximate — used for occupancy calc
+
+      const lanes = []; // each entry = right-edge px of last item in that lane
+
+      const eventsWithLanes = dated.map(evt => {
+        const leftPx = (pct(evt.date, start, end) / 100) * trackWidthPx;
+        const labelChars = Math.min(stripDomainPrefix(evt.name).length, MAX_LABEL_CHARS);
+        const itemWidthPx = DOT_W + labelChars * CHAR_W;
+
+        // Find the first lane where this item fits
+        let lane = 0;
+        for (let i = 0; i < lanes.length; i++) {
+          if (leftPx >= lanes[i] + 4) { lane = i; break; }
+          if (i === lanes.length - 1) lane = lanes.length; // needs a new lane
+        }
+        lanes[lane] = leftPx + itemWidthPx;
+        return { evt, lane };
+      });
+
+      const numLanes = Math.max(1, lanes.length);
+      const trackHeight = Math.max(32, numLanes * LANE_H + 8);
+
+      // Single row with one tall compact track
+      const row = document.createElement('div');
+      row.className = 't-row dated';
+      row.style.height = trackHeight + 'px';
+      row.style.alignItems = 'flex-start';
+
+      // Empty label column (section label already in sec-head)
+      const lbl = document.createElement('div');
+      lbl.className = 't-lbl';
+      lbl.style.visibility = 'hidden';
+
+      const trk = document.createElement('div');
+      trk.className = 't-track compact';
+      trk.style.height = trackHeight + 'px';
       mths.forEach(m=>{const gl=document.createElement('div');gl.className='g-line';gl.style.left=pct(m,start,end)+'%';trk.appendChild(gl);});
       const tl=document.createElement('div');tl.className='today-ln';tl.style.left=todayP+'%';trk.appendChild(tl);
 
-      // Event element — flex row: [shape][label]
-      const evEl=document.createElement('div');
-      evEl.className='ev'+(evt.done?' faded':'');
-      // Position the left edge of the flex row so the shape centre = the date position
-      // shape is 12px wide, so offset left by 6px
-      const leftPct=pct(evt.date,start,end);
-      evEl.style.left=`calc(${leftPct}% - 6px)`;
-      evEl.style.transform='translateY(-50%)';
-      evEl.dataset.gid=evt.gid;
+      eventsWithLanes.forEach(({ evt, lane }) => {
+        const evEl = document.createElement('div');
+        evEl.className = 'ev' + (evt.done ? ' faded' : '');
+        const leftPct = pct(evt.date, start, end);
+        evEl.style.left = `calc(${leftPct}% - 6px)`;
+        // Instead of centering vertically, position by lane from top
+        evEl.style.top = (4 + lane * LANE_H) + 'px';
+        evEl.style.transform = 'none';
+        evEl.dataset.gid = evt.gid;
 
-      // Shape
-      const shape=document.createElement('div');shape.className='ev-shape';
-      const ragCls=evt.rag?.ring||'rag-none';
-      const isMonthly=evt.isMonthly;
+        const shape = document.createElement('div'); shape.className = 'ev-shape';
+        const ragCls = evt.rag?.ring || 'rag-none';
 
-      if(evt.type==='milestone'){
-        const outer=document.createElement('div');
-        outer.className=`ev-ms-outer ${ragCls}${isMonthly?' monthly-outer':''}`;
-        if(!isMonthly)outer.style.background=`rgba(${hexToRgb(sec.color)},0.18)`;
-        if(!isMonthly&&!evt.rag&&!evt.done)outer.style.boxShadow=`0 0 0 2px ${sec.color}40`;
-        const inner=document.createElement('div');inner.className='ev-ms-inner';
-        inner.style.background=evt.done?'#4a4845':(isMonthly?(evt.rag?ragInnerColor(evt.rag.ring):MONTHLY_GREY_INNER):sec.color);
-        outer.appendChild(inner);shape.appendChild(outer);
-      }else{
-        const outer=document.createElement('div');
-        outer.className=`ev-task-outer ${ragCls}${isMonthly?' monthly-outer':''}`;
-        if(!isMonthly)outer.style.background=`rgba(${hexToRgb(sec.color)},0.18)`;
-        const inner=document.createElement('div');inner.className='ev-task-inner';
-        inner.style.background=evt.done?'#4a4845':(isMonthly?(evt.rag?ragInnerColor(evt.rag.ring):MONTHLY_GREY_INNER):sec.color);
-        outer.appendChild(inner);shape.appendChild(outer);
-      }
-      evEl.appendChild(shape);
+        if (evt.type === 'milestone') {
+          const outer = document.createElement('div');
+          outer.className = `ev-ms-outer ${ragCls}`;
+          outer.style.background = `rgba(${hexToRgb(sec.color)},0.18)`;
+          if (!evt.rag && !evt.done) outer.style.boxShadow = `0 0 0 2px ${sec.color}40`;
+          const inner = document.createElement('div'); inner.className = 'ev-ms-inner';
+          inner.style.background = evt.done ? '#4a4845' : sec.color;
+          outer.appendChild(inner); shape.appendChild(outer);
+        } else {
+          const outer = document.createElement('div');
+          outer.className = `ev-task-outer ${ragCls}`;
+          outer.style.background = `rgba(${hexToRgb(sec.color)},0.18)`;
+          const inner = document.createElement('div'); inner.className = 'ev-task-inner';
+          inner.style.background = evt.done ? '#4a4845' : sec.color;
+          outer.appendChild(inner); shape.appendChild(outer);
+        }
+        evEl.appendChild(shape);
 
-      // Inline label — immediately right of shape
-      const labelEl=document.createElement('div');
-      labelEl.className='ev-label';
-      labelEl.style.color=isMonthly?'#6b6966':sec.color;
-      labelEl.textContent=truncLabel(stripDomainPrefix(evt.name));
-      labelEl.title=evt.name;
-      evEl.appendChild(labelEl);
+        const labelEl = document.createElement('div');
+        labelEl.className = 'ev-label';
+        labelEl.style.color = sec.color;
+        labelEl.textContent = truncLabel(stripDomainPrefix(evt.name));
+        labelEl.title = evt.name;
+        evEl.appendChild(labelEl);
 
-      // Events
-      evEl.addEventListener('mouseenter',e=>{if(!pinnedEvt)populateTT(evt,sec);});
-      evEl.addEventListener('mousemove',e=>{if(!pinnedEvt)moveTT(e);});
-      evEl.addEventListener('mouseleave',()=>{if(!pinnedEvt)hideTT();});
-      evEl.addEventListener('click',e=>{
-        e.stopPropagation();
-        if(pinnedEvt&&pinnedEvt.gid===evt.gid){unpinTT();return;}
-        populateTT(evt,sec);moveTT(e);pinTT(evt,evEl);
+        evEl.addEventListener('mouseenter', e => { if (!pinnedEvt) populateTT(evt, sec); });
+        evEl.addEventListener('mousemove',  e => { if (!pinnedEvt) moveTT(e); });
+        evEl.addEventListener('mouseleave', ()  => { if (!pinnedEvt) hideTT(); });
+        evEl.addEventListener('click', e => {
+          e.stopPropagation();
+          if (pinnedEvt && pinnedEvt.gid === evt.gid) { unpinTT(); return; }
+          populateTT(evt, sec); moveTT(e); pinTT(evt, evEl);
+        });
+
+        trk.appendChild(evEl);
       });
 
-      trk.appendChild(evEl);
-      row.appendChild(lbl);row.appendChild(trk);body.appendChild(row);
-    });
+      row.appendChild(lbl); row.appendChild(trk); body.appendChild(row);
+    }
   });
 
   if(!anyVisible)body.innerHTML='<div class="no-data">No tasks match the current filters.</div>';
