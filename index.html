@@ -614,6 +614,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 .fof-phase-hdr-dot { display: none; }
 .fof-phase-count { margin-left: auto; opacity: 0.4; font-weight: 400; font-size: 10px; }
+#fof-goal-select {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em;
+  color: var(--text2); background: var(--surface2);
+  border: 0.5px solid var(--border2); border-radius: var(--r);
+  padding: 3px 22px 3px 8px; cursor: pointer; outline: none;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235e5c57'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 7px center;
+}
+#fof-goal-select:hover { border-color: var(--border3); color: var(--text); }
+#fof-goal-select option { background: var(--surface2); color: var(--text2); }
 .fof-phase-body { overflow-y: auto; flex: 1; padding: 8px 6px; display: flex; flex-direction: column; gap: 6px; }
 
 /* Game card in pipeline */
@@ -904,7 +915,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.18</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.19</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -948,7 +959,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.18</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.19</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -1049,6 +1060,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div id="fof-view">
       <!-- Upper half: pipeline -->
       <div id="fof-pipeline">
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:0.5px solid var(--border);flex-shrink:0;">
+          <span style="font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Goals</span>
+          <select id="fof-goal-select" onchange="onFofGoalModeChange(this.value)">
+            <option value="product">Product Goals</option>
+          </select>
+        </div>
         <div class="fof-pipeline-inner" id="fof-pipeline-inner"><div class="fof-phase-col"><div class="fof-phase-hdr"><div class="fof-phase-hdr-dot" style="background:#6b6966"></div>
       <span>Scouting</span>
       <span class="fof-phase-count">0</span></div><div class="fof-phase-body"><div style="font-family: var(--mono); font-size: 9px; color: var(--text3); opacity: 0.4; padding: 4px;">—</div></div></div><div class="fof-phase-col"><div class="fof-phase-hdr"><div class="fof-phase-hdr-dot" style="background:#8b7355"></div>
@@ -3029,21 +3046,24 @@ async function fetchFoFPhases() {
 }
 
 // FoF portfolio goals cache — fetched once per session
-let _fofGoalsByGame = null;  // { gameName: [{ name, rag, domain }] }
+let _fofGoalsByGame = null;
+let _fofGoalStore    = null;  // { gameName: [{ name, rag, domain }] }
 // Reset phase cache when connecting a new session
 let _fofGoalsLoading = false;
 
+// fofGoalMode: 'product' | 'YYYY-MMM' (month key)
+let fofGoalMode = 'product';
+// Raw goal store: { product: { productGoals: [{name,rag}], monthly: { 'YYYY-MMM': [{name,rag}] } } }
+let _fofGoalStore = null;
+
 async function fetchFoFGoals() {
-  if (_fofGoalsByGame) return _fofGoalsByGame;
+  if (_fofGoalStore) return _buildGoalsByGame(_fofGoalStore, fofGoalMode);
   if (_fofGoalsLoading) return {};
   _fofGoalsLoading = true;
-  const result = {};
+  const store = {}; // { product: { productGoals: [], monthly: { key: [] } } }
+  const MONTH_CF = '1211670301793184';
   try {
-    const nowD  = new Date();
-    const moLabel = `(${nowD.getFullYear()}) ${nowD.toLocaleString('en-US',{month:'short'})}`;
-    // Fetch all tasks from portfolio overview, filter to current month + Monthly Goal
-    let offset = null;
-    let pages  = 0;
+    let offset = null, pages = 0;
     const fields = 'name,custom_fields.gid,custom_fields.display_value,custom_fields.enum_value';
     while (pages < 15) {
       const url = `/projects/${PORTFOLIO_OVERVIEW_GID}/tasks?opt_fields=${fields}&limit=100` +
@@ -3052,26 +3072,101 @@ async function fetchFoFGoals() {
       const tasks = resp.data || [];
       tasks.forEach(t => {
         const getCF = (gid) => (t.custom_fields||[]).find(f=>f.gid===gid);
-        const goalType  = getCF(CF_GOAL_TYPE)?.display_value || '';
-        const month     = getCF('1211670301793184')?.display_value || '';
-        const product   = getCF(CF_PRODUCT)?.display_value || '';
-        const ragRaw    = getCF(CF_RAG)?.enum_value?.gid;
-        const rag       = ragRaw ? (RAG_MAP[ragRaw] || null) : null;
-        // Only current month's monthly goals
-        if (!product) return;
-        if (month !== moLabel) return;
-        if (goalType && !goalType.toLowerCase().includes('monthly')) return;
-        if (!t.name?.trim()) return;
-        if (!result[product]) result[product] = [];
-        result[product].push({ name: t.name, rag });
+        const goalType = getCF(CF_GOAL_TYPE)?.display_value || '';
+        const month    = getCF(MONTH_CF)?.display_value || '';
+        const product  = getCF(CF_PRODUCT)?.display_value || '';
+        const ragRaw   = getCF(CF_RAG)?.enum_value?.gid;
+        const rag      = ragRaw ? (RAG_MAP[ragRaw] || null) : null;
+        if (!product || !t.name?.trim()) return;
+        if (!store[product]) store[product] = { productGoals: [], monthly: {} };
+        const isProduct = goalType.toLowerCase().includes('product');
+        const isMonthly = goalType.toLowerCase().includes('monthly');
+        if (isProduct) {
+          store[product].productGoals.push({ name: t.name, rag });
+        } else if (isMonthly && month) {
+          if (!store[product].monthly[month]) store[product].monthly[month] = [];
+          store[product].monthly[month].push({ name: t.name, rag });
+        }
       });
       if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
       else break;
     }
   } catch(e) { console.warn('FoF goals fetch failed:', e.message); }
-  _fofGoalsByGame = result;
+  _fofGoalStore = store;
   _fofGoalsLoading = false;
+  _populateFofGoalSelect(store);
+  return _buildGoalsByGame(store, fofGoalMode);
+}
+
+function _buildGoalsByGame(store, mode) {
+  const result = {};
+  Object.entries(store).forEach(([product, data]) => {
+    if (mode === 'product') {
+      if (data.productGoals.length) result[product] = data.productGoals;
+    } else {
+      const goals = data.monthly[mode] || [];
+      if (goals.length) result[product] = goals;
+    }
+  });
   return result;
+}
+
+function _populateFofGoalSelect(store) {
+  const sel = document.getElementById('fof-goal-select');
+  if (!sel) return;
+  // Collect all month keys from all products, deduplicated + sorted
+  const monthSet = new Set();
+  Object.values(store).forEach(d => Object.keys(d.monthly).forEach(m => monthSet.add(m)));
+  // Sort months chronologically: format is "(YYYY) Mon"
+  const months = [...monthSet].sort((a, b) => {
+    const parse = s => { const m = s.match(/\((\d{4})\)\s+(\w+)/); return m ? new Date(`${m[2]} 1, ${m[1]}`) : new Date(0); };
+    return parse(a) - parse(b);
+  });
+  // Build current month key for labeling
+  const now = new Date();
+  const curKey = `(${now.getFullYear()}) ${now.toLocaleString('en-US',{month:'short'})}`;
+  // Rebuild options
+  sel.innerHTML = '<option value="product">Product Goals</option>';
+  months.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m === curKey ? `${m} — current` : m;
+    if (m === curKey) opt.style.color = 'var(--accent)';
+    sel.appendChild(opt);
+  });
+  sel.value = fofGoalMode;
+}
+
+async function onFofGoalModeChange(mode) {
+  fofGoalMode = mode;
+  // Invalidate per-game cache so renderFoF re-applies the filter
+  _fofGoalsByGame = null;
+  // Re-render cards only — no need to re-fetch phases or re-build columns
+  if (_fofGoalStore) {
+    const goalsByGame = _buildGoalsByGame(_fofGoalStore, fofGoalMode);
+    // Re-render cards in existing phase columns
+    document.querySelectorAll('.fof-phase-col').forEach(col => {
+      const body = col.querySelector('.fof-phase-body');
+      if (!body) return;
+      // Find which product cards are in this column and update their goal rows
+      col.querySelectorAll('.fof-card').forEach(card => {
+        const titleEl = card.querySelector('.fof-card-title');
+        if (!titleEl) return;
+        const title = titleEl.textContent.trim();
+        const goals = goalsByGame[title] || [];
+        let goalsEl = card.querySelector('.fof-card-goals');
+        if (!goals.length) { if (goalsEl) goalsEl.remove(); return; }
+        if (!goalsEl) { goalsEl = document.createElement('div'); goalsEl.className = 'fof-card-goals'; card.appendChild(goalsEl); }
+        goalsEl.innerHTML = goals.map(g => {
+          const dot = g.rag ? `border-color:var(--rag-${g.rag.ring});background:var(--rag-${g.rag.ring})33` : 'border-color:var(--text3);background:transparent';
+          return `<div class="fof-goal-row"><div class="fof-goal-dot" style="${dot}"></div><div class="fof-goal-name">${esc(g.name)}</div></div>`;
+        }).join('');
+      });
+    });
+  } else {
+    // Goals not yet loaded — trigger a full render
+    renderFoF();
+  }
 }
 
 const FOF_PHASES = [
@@ -3093,7 +3188,7 @@ async function renderFoF() {
   // Show loading state
   pipeline.innerHTML = '<div style="padding:24px;font-family:var(--mono);font-size:10px;color:var(--text3);">Loading goals…</div>';
 
-  // Fetch all current-month goals from portfolio overview
+  // Fetch goals (mode controlled by fof-goal-select)
   let goalsByGame = {};
   if (PAT) goalsByGame = await fetchFoFGoals();
 
