@@ -914,7 +914,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.24</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.25</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -958,7 +958,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.24</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.25</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -1940,7 +1940,7 @@ async function switchBoard(){
     $('switch-inp').value='';
   }catch(e){alert('Failed: '+e.message);}finally{setLoad(null);}
 }
-function goSetup(){PAT='';currentPid='';sessionStorage.removeItem('rf_pat');sessionStorage.removeItem('rf_pid');$('inp-pat').value='';$('inp-url').value='';show('screen-setup');}
+function goSetup(){PAT='';currentPid='';_pubGidToGame=null;sessionStorage.removeItem('rf_pat');sessionStorage.removeItem('rf_pid');$('inp-pat').value='';$('inp-url').value='';show('screen-setup');}
 
 /* ─── Budget bar ─── */
 
@@ -2020,6 +2020,7 @@ function buildApp(proj,tasks){
   const mapEntry = Object.entries(PRODUCT_BOARD_MAP).find(([gid]) => gid === currentPid);
   currentBoardCode = mapEntry?.[1]?.code || '';
   roadmapLoaded = false; // reset so next roadmap view re-fetches
+  _pubGidToGame  = null;  // rediscover publishing boards on next load
   // Update game title in topbar — use authoritative title from map
   const titleEl = document.getElementById('tb-game-title');
   if (titleEl) {
@@ -2537,6 +2538,7 @@ const ROADMAP_SECTIONS = [
 
 let roadmapEvents = [];
 let roadmapLoaded = false;
+let _pubGidToGame  = null; // cache: publishing board GID → { title } — discovered at runtime
 let roadmapZoomIdx = 0;
 const ROADMAP_ZOOMS = [
   { label: 'Month', widthPx: 120 },
@@ -2588,13 +2590,38 @@ async function renderRoadmap() {
   statusEl.textContent = '';
 
   // Build lookup: publishing board GID → game info
-  // Used to resolve which game a multihomed task belongs to
-  const pubGidToGame = {};
-  Object.entries(PUBLISHING_BOARDS).forEach(([code, gid]) => {
-    if (!gid) return;
-    const mapEntry = Object.values(PRODUCT_BOARD_MAP).find(e => e.code === code);
-    pubGidToGame[gid] = { code, title: mapEntry?.title || code };
-  });
+  // Discovered dynamically from portfolio items — any project with "Publishing Board" in the name
+  if (!_pubGidToGame) {
+    _pubGidToGame = {};
+    statusEl.textContent = 'Discovering publishing boards…';
+    try {
+      let offset = null, pages = 0;
+      while (pages < 5) {
+        const url = `/portfolios/${PORTFOLIO_GID}/items?opt_fields=name,members.gid` +
+                    (offset ? `&offset=${offset}` : '');
+        const resp = await api(url);
+        // Each portfolio item is a project — check if its name contains "Publishing Board"
+        (resp.data || []).forEach(item => {
+          if (!item.name || !item.gid) return;
+          if (!item.name.toLowerCase().includes('publishing board')) return;
+          // Match to a known game title via PRODUCT_BOARD_MAP by fuzzy name check,
+          // or fall back to the raw project name
+          const knownEntry = Object.values(PRODUCT_BOARD_MAP).find(e =>
+            e.title && item.name.toLowerCase().includes(e.title.toLowerCase())
+          );
+          _pubGidToGame[item.gid] = {
+            title: knownEntry?.title || item.name.replace(/\s*-?\s*Publishing Board\s*/i, '').trim()
+          };
+        });
+        if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
+        else break;
+      }
+      console.log('Publishing boards discovered:', Object.keys(_pubGidToGame).length, _pubGidToGame);
+    } catch(e) {
+      console.warn('Roadmap: publishing board discovery failed:', e.message);
+    }
+  }
+  const pubGidToGame = _pubGidToGame;
   const pubGids = new Set(Object.keys(pubGidToGame));
 
   // Step 1: discover (FoF) Roadmap Type field GID from the project's custom field schema
