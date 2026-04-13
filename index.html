@@ -2597,17 +2597,15 @@ async function renderRoadmap() {
   });
   const pubGids = new Set(Object.keys(pubGidToGame));
 
-  // Step 1: auto-discover (FoF) Roadmap Type field GID from the roadmap project itself
+  // Step 1: discover (FoF) Roadmap Type field GID from the project's custom field schema
+  // Using /custom_field_settings returns all fields attached to the project, not just
+  // those with values set on tasks — so it works even if the first task has no value.
   let roadmapTypeGid = null;
   try {
-    const probe = await api(`/projects/${ROADMAP_PROJECT_GID}/tasks?opt_fields=custom_fields.gid,custom_fields.name&limit=1`);
-    const firstTask = (probe.data || [])[0];
-    if (firstTask) {
-      const found = (firstTask.custom_fields || []).find(f =>
-        f.name && f.name.toLowerCase().includes('roadmap type')
-      );
-      if (found?.gid) roadmapTypeGid = found.gid;
-    }
+    const schemaResp = await api(`/projects/${ROADMAP_PROJECT_GID}/custom_field_settings?opt_fields=custom_field.gid,custom_field.name`);
+    const fields = schemaResp.data || [];
+    const found = fields.find(f => f.custom_field?.name?.toLowerCase().includes('roadmap type'));
+    if (found?.custom_field?.gid) roadmapTypeGid = found.custom_field.gid;
   } catch(e) {
     console.warn('Roadmap: field discovery failed:', e.message);
   }
