@@ -914,7 +914,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.21</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.22</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -958,7 +958,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.21</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.22</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2500,6 +2500,8 @@ function addRow(parent,icon,label,value,color,compact){
 /* ─── Roadmap ─── */
 
 // Publishing board GIDs per game code — maps PRODUCT_BOARD_MAP code → publishing board
+const ROADMAP_PROJECT_GID = '1213763147792225'; // Raw Fury Roadmap project
+
 const PUBLISHING_BOARDS = {
   'BP':     '1212243656271158',
   'DDD':    '1209099082358485',
@@ -2581,83 +2583,89 @@ async function renderRoadmap() {
   if (roadmapLoaded) { drawRoadmapGrid(); return; }
 
   emptyEl.style.display = '';
-  emptyEl.textContent = 'Loading roadmap from publishing boards…';
+  emptyEl.textContent = 'Loading roadmap…';
   innerEl.style.display = 'none';
   statusEl.textContent = '';
 
-  // Build set of known product board GIDs for multihoming check
-  const productGids = new Set(Object.keys(PRODUCT_BOARD_MAP));
+  // Build lookup: publishing board GID → game info
+  // Used to resolve which game a multihomed task belongs to
+  const pubGidToGame = {};
+  Object.entries(PUBLISHING_BOARDS).forEach(([code, gid]) => {
+    if (!gid) return;
+    const mapEntry = Object.values(PRODUCT_BOARD_MAP).find(e => e.code === code);
+    pubGidToGame[gid] = { code, title: mapEntry?.title || code };
+  });
+  const pubGids = new Set(Object.keys(pubGidToGame));
 
-  // Step 1: auto-discover (FoF) Roadmap Type field GID
+  // Step 1: auto-discover (FoF) Roadmap Type field GID from the roadmap project itself
   let roadmapTypeGid = null;
-  const boards = Object.entries(PUBLISHING_BOARDS).filter(([,gid]) => gid);
-  for (const [, boardGid] of boards) {
-    try {
-      const probe = await api(`/projects/${boardGid}/tasks?opt_fields=custom_fields.gid,custom_fields.name&limit=1`);
-      const firstTask = (probe.data || [])[0];
-      if (firstTask) {
-        const found = (firstTask.custom_fields || []).find(f =>
-          f.name && f.name.toLowerCase().includes('roadmap type')
-        );
-        if (found?.gid) { roadmapTypeGid = found.gid; break; }
-      }
-    } catch(_) {}
+  try {
+    const probe = await api(`/projects/${ROADMAP_PROJECT_GID}/tasks?opt_fields=custom_fields.gid,custom_fields.name&limit=1`);
+    const firstTask = (probe.data || [])[0];
+    if (firstTask) {
+      const found = (firstTask.custom_fields || []).find(f =>
+        f.name && f.name.toLowerCase().includes('roadmap type')
+      );
+      if (found?.gid) roadmapTypeGid = found.gid;
+    }
+  } catch(e) {
+    console.warn('Roadmap: field discovery failed:', e.message);
   }
 
   if (!roadmapTypeGid) {
-    emptyEl.textContent = 'Could not find (FoF) Roadmap Type custom field on publishing boards.';
+    emptyEl.textContent = 'Could not find (FoF) Roadmap Type custom field on the Roadmap project.';
     emptyEl.style.display = '';
     return;
   }
 
-  // Step 2: fetch all publishing boards, keep tasks with Roadmap Type set + multihomed to a product board
+  // Step 2: fetch all tasks from the Roadmap project
+  // Keep tasks where: Roadmap Type is set AND multihomed to a known publishing board
   roadmapEvents = [];
-  let loaded = 0;
+  let offset = null;
+  let pages = 0;
+  let total = 0;
 
-  for (const [code, boardGid] of boards) {
-    try {
-      statusEl.textContent = `Loading ${code}… (${loaded+1}/${boards.length})`;
-      const mapEntry = Object.values(PRODUCT_BOARD_MAP).find(e => e.code === code);
+  try {
+    while (pages < 20) {
+      statusEl.textContent = `Loading roadmap… (${total} events so far)`;
+      const url = `/projects/${ROADMAP_PROJECT_GID}/tasks?opt_fields=name,due_on,memberships.project.gid,custom_fields.gid,custom_fields.enum_value.name&limit=100` +
+                  (offset ? `&offset=${offset}` : '');
+      const resp = await api(url);
+      const tasks = resp.data || [];
 
-      let offset = null;
-      let pages = 0;
-      while (pages < 10) {
-        const url = `/projects/${boardGid}/tasks?opt_fields=name,due_on,memberships.project.gid,custom_fields.gid,custom_fields.enum_value.name&limit=100` +
-                    (offset ? `&offset=${offset}` : '');
-        const resp = await api(url);
-        const tasks = resp.data || [];
+      tasks.forEach(t => {
+        if (!t.due_on) return;
 
-        tasks.forEach(t => {
-          if (!t.due_on) return;
+        // Must have Roadmap Type set
+        const typeField = (t.custom_fields || []).find(f => f.gid === roadmapTypeGid);
+        const roadmapType = typeField?.enum_value?.name;
+        if (!roadmapType) return;
 
-          // Must have Roadmap Type set
-          const typeField = (t.custom_fields || []).find(f => f.gid === roadmapTypeGid);
-          const roadmapType = typeField?.enum_value?.name;
-          if (!roadmapType) return;
+        // Must be multihomed to at least one known publishing board
+        const memberships = t.memberships || [];
+        const pubMatch = memberships.find(m => pubGids.has(m.project?.gid));
+        if (!pubMatch) return;
 
-          // Must be multihomed to at least one known product board
-          const memberships = t.memberships || [];
-          const isMultihomed = memberships.some(m => productGids.has(m.project?.gid));
-          if (!isMultihomed) return;
-
-          roadmapEvents.push({
-            code,
-            game: mapEntry?.title || code,
-            name: t.name,
-            date: t.due_on,
-            type: roadmapType,  // exact field value — matches ROADMAP_SECTIONS key
-            gid:  t.gid,
-          });
+        const game = pubGidToGame[pubMatch.project.gid];
+        total++;
+        roadmapEvents.push({
+          code: game.code,
+          game: game.title,
+          name: t.name,
+          date: t.due_on,
+          type: roadmapType,
+          gid:  t.gid,
         });
+      });
 
-        if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
-        else break;
-      }
-      loaded++;
-    } catch(e) {
-      console.warn(`Roadmap: failed to load ${code}:`, e.message);
-      loaded++;
+      if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
+      else break;
     }
+  } catch(e) {
+    console.warn('Roadmap: fetch failed:', e.message);
+    emptyEl.textContent = 'Failed to load roadmap: ' + e.message;
+    emptyEl.style.display = '';
+    return;
   }
 
   roadmapLoaded = true;
