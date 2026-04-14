@@ -923,7 +923,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.30</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.32</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -967,7 +967,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.30</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.32</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2556,34 +2556,22 @@ const PUBLISHING_BOARDS = {
 
 // Roadmap segments — keyed to exact (FoF) Roadmap Type custom field values
 const ROADMAP_SECTIONS = [
-  { key: 'Game Launch',      label: 'Game Launch',      color: '#b8f050' },
-  { key: 'Update Launch',    label: 'Update Launch',    color: '#f09650' },
-  { key: 'DLC Launch',       label: 'DLC Launch',       color: '#c050f0' },
-  { key: 'Port Launch',      label: 'Port Launch',      color: '#50f0a0' },
-  { key: 'Announcement',     label: 'Announcement',     color: '#50c8f0' },
-  { key: 'Live Event',       label: 'Live Event',       color: '#f0d050' },
-  { key: 'Online Event/Sale',label: 'Online Event/Sale',color: '#f09650' },
+  { key: 'Game Launch',      label: 'Game Launch',      color: '#7b9cbf' },
+  { key: 'Update Launch',    label: 'Update Launch',    color: '#9b8abf' },
+  { key: 'DLC Launch',       label: 'DLC Launch',       color: '#a890c0' },
+  { key: 'Port Launch',      label: 'Port Launch',      color: '#6b9e9e' },
+  { key: 'Announcement',     label: 'Announcement',     color: '#7888b8' },
+  { key: 'Live Event',       label: 'Live Event',       color: '#8878a8' },
+  { key: 'Online Event/Sale',label: 'Online Event/Sale',color: '#688898' },
 ];
 
 // Release type comes from (FoF) Roadmap Type custom field — no heuristics needed
 
 // Per-game color palette — drawn from RF brand spectrum, distinct and readable on dark bg
 const GAME_COLOR_PALETTE = [
-  '#7b9cbf', // slate blue
-  '#9b8abf', // muted lavender
-  '#5b8fa8', // steel blue
-  '#8878a8', // dusty purple
-  '#6b9e9e', // teal grey
-  '#7888b8', // periwinkle
-  '#a890c0', // soft purple
-  '#5878a0', // dark blue
-  '#8898c8', // light blue
-  '#7068a0', // deep purple
-  '#6090a8', // ocean blue
-  '#9080b8', // medium purple
-  '#688898', // blue grey
-  '#b0a0d0', // pale lavender
-  '#507898', // cool slate
+  '#f5a230', '#e8748a', '#50c8f0', '#a78bfa', '#50f0a0',
+  '#f0d050', '#c45c6a', '#3d7ebf', '#f09650', '#7b5ea7',
+  '#60cece', '#d4831a', '#e879f9', '#4ade80', '#fb7185',
 ];
 
 function gameColorHash(str) {
@@ -2657,26 +2645,35 @@ async function renderRoadmap() {
     _pubGidToGame = {};
     statusEl.textContent = 'Discovering publishing boards…';
     try {
-      // Search workspace for all projects with "Publishing Board" in the name
-      let offset = null, pages = 0;
-      while (pages < 5) {
-        const url = `/workspaces/${WORKSPACE_GID}/projects?opt_fields=name&limit=100` +
-                    (offset ? `&offset=${offset}` : '');
-        const resp = await api(url);
-        (resp.data || []).forEach(item => {
-          if (!item.name || !item.gid) return;
-          if (!item.name.toLowerCase().includes('publishing board')) return;
-          // Derive game title by stripping "Publishing Board" suffix and separator
-          const knownEntry = Object.values(PRODUCT_BOARD_MAP).find(e =>
-            e.title && item.name.toLowerCase().includes(e.title.toLowerCase())
-          );
-          _pubGidToGame[item.gid] = {
-            title: knownEntry?.title || item.name.replace(/[-–—]?\s*Publishing Board\s*/i, '').trim()
-          };
-        });
-        if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
-        else break;
-      }
+      // Build from PUBLISHING_BOARDS — already maps code→GID, look up title from PRODUCT_BOARD_MAP
+      Object.entries(PUBLISHING_BOARDS).forEach(([code, gid]) => {
+        if (!gid) return;
+        const mapEntry = Object.values(PRODUCT_BOARD_MAP).find(e => e.code === code);
+        _pubGidToGame[gid] = { title: mapEntry?.title || code };
+      });
+
+      // Also scan workspace for any boards not yet in PUBLISHING_BOARDS
+      // (catches boards added after the last code update)
+      try {
+        let offset = null, pages = 0;
+        const knownGids = new Set(Object.values(PUBLISHING_BOARDS).filter(Boolean));
+        while (pages < 5) {
+          const url = `/workspaces/${WORKSPACE_GID}/projects?opt_fields=name&limit=100` +
+                      (offset ? `&offset=${offset}` : '');
+          const resp = await api(url);
+          (resp.data || []).forEach(item => {
+            if (!item.name || !item.gid) return;
+            if (!item.name.toLowerCase().includes('publishing board')) return;
+            if (knownGids.has(item.gid)) return; // already handled above
+            // Strip suffix for display — best we can do without a code match
+            _pubGidToGame[item.gid] = {
+              title: item.name.replace(/[-–—]?\s*Publishing Board\s*/i, '').trim()
+            };
+          });
+          if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
+          else break;
+        }
+      } catch(_) {}
       console.log('Publishing boards discovered:', Object.keys(_pubGidToGame).length, _pubGidToGame);
     } catch(e) {
       console.warn('Roadmap: publishing board discovery failed:', e.message);
