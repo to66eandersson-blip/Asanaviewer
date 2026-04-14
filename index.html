@@ -923,7 +923,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.29</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.30</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -967,7 +967,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.29</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.30</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2569,9 +2569,21 @@ const ROADMAP_SECTIONS = [
 
 // Per-game color palette — drawn from RF brand spectrum, distinct and readable on dark bg
 const GAME_COLOR_PALETTE = [
-  '#f5a230', '#e8748a', '#50c8f0', '#a78bfa', '#50f0a0',
-  '#f0d050', '#c45c6a', '#3d7ebf', '#f09650', '#7b5ea7',
-  '#60cece', '#d4831a', '#e879f9', '#4ade80', '#fb7185',
+  '#7b9cbf', // slate blue
+  '#9b8abf', // muted lavender
+  '#5b8fa8', // steel blue
+  '#8878a8', // dusty purple
+  '#6b9e9e', // teal grey
+  '#7888b8', // periwinkle
+  '#a890c0', // soft purple
+  '#5878a0', // dark blue
+  '#8898c8', // light blue
+  '#7068a0', // deep purple
+  '#6090a8', // ocean blue
+  '#9080b8', // medium purple
+  '#688898', // blue grey
+  '#b0a0d0', // pale lavender
+  '#507898', // cool slate
 ];
 
 function gameColorHash(str) {
@@ -2849,7 +2861,7 @@ function drawRoadmapGrid() {
     // Single track row for this section — events placed by date
     const row = document.createElement('div');
     row.dataset.secKey = sec.key;
-    row.style.cssText = `position:relative;height:26px;border-bottom:0.5px solid var(--border);background:${sec.color}08;`;
+    row.style.cssText = `position:relative;height:38px;border-bottom:0.5px solid var(--border);background:${sec.color}08;`;
 
     // Month cell bands
     months.forEach((m,i) => {
@@ -2882,7 +2894,7 @@ function drawRoadmapGrid() {
       const label = `${evt.game}: ${evt.name}`;
       const short = label.length > 22 ? label.slice(0,20)+'…' : label;
       const approxW = Math.max(80, Math.min(evt.name.length * 6 + 8, 220));
-      const leftPx = moIdx * cellW + Math.round((d.getDate()-1) / 28 * cellW * 0.6);
+      const leftPx = moIdx * cellW + Math.round((d.getDate()-1) / 31 * cellW);
 
       // Find which row this fits in (no overlap)
       let rowIdx = 0;
@@ -2945,7 +2957,8 @@ function drawRoadmapGrid() {
     });
 
     // Expand row height if multiple event rows needed
-    if (eventRows.length > 1) row.style.height = (4 + eventRows.length * 30 + 4) + 'px';
+    // Always set height to fit lanes: 4px top + lanes * 30px + 4px bottom
+    row.style.height = (8 + Math.max(1, eventRows.length) * 30) + 'px';
 
     wrapper.appendChild(row);
   });
