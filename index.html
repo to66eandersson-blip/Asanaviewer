@@ -711,7 +711,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   text-transform: uppercase; color: var(--text3);
   border-right: 0.5px solid var(--border); padding: 6px 8px; text-align: center;
   white-space: nowrap; }
-.roadmap-month-hdr.now { color: var(--accent); background: rgba(184,240,80,0.08); }
+.roadmap-month-hdr.now { color: var(--accent); background: var(--accent-dim); }
 
 /* Roadmap sections */
 .roadmap-section-hdr {
@@ -731,22 +731,31 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .roadmap-cell { flex-shrink: 0; border-right: 0.5px solid var(--border); position: relative; }
 .roadmap-cell.now { background: rgba(184,240,80,0.04); }
 
-/* Roadmap dots */
-.roadmap-dot-wrap { pointer-events: all; }
-.roadmap-dot-wrap:hover .roadmap-dot { transform: scale(1.35); }
-.roadmap-dot-wrap:hover .roadmap-dot-label { color: var(--text); }
-.roadmap-dot {
-  width: 11px; height: 11px; border-radius: 50%;
-  flex-shrink: 0; transition: transform 0.12s;
+/* Roadmap event labels */
+.roadmap-evt {
+  pointer-events: all;
+  display: flex; align-items: stretch; gap: 0;
+  cursor: pointer;
+  opacity: 1; transition: opacity 0.12s;
 }
-.roadmap-dot.launch  { background: rgba(184,240,80,0.18);  box-shadow: 0 0 0 2.5px var(--accent); }
-.roadmap-dot.porting { background: rgba(80,200,240,0.18);  box-shadow: 0 0 0 2.5px #50c8f0; }
-.roadmap-dot.major   { background: rgba(192,80,240,0.18);  box-shadow: 0 0 0 2.5px #c050f0; }
-.roadmap-dot.update  { background: rgba(240,150,80,0.18);  box-shadow: 0 0 0 2.5px #f09650; }
-.roadmap-dot-label {
-  font-family: var(--mono); font-size: 8.5px; color: var(--text2);
-  white-space: nowrap; letter-spacing: 0.02em;
-  pointer-events: none;
+.roadmap-evt:hover { opacity: 0.85; }
+.roadmap-evt-bar {
+  width: 3px; flex-shrink: 0; border-radius: 1.5px;
+  margin-right: 5px; align-self: stretch; min-height: 28px;
+}
+.roadmap-evt-text {
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 1px; pointer-events: none;
+}
+.roadmap-evt-game {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text3);
+  white-space: nowrap; line-height: 1.2;
+}
+.roadmap-evt-name {
+  font-family: var(--sans); font-size: 9.5px; color: var(--text2);
+  white-space: nowrap; line-height: 1.3;
+  max-width: 200px; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* ── Budget tracker ── */
@@ -914,7 +923,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.27</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.28</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -958,7 +967,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.27</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.28</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2537,6 +2546,25 @@ const ROADMAP_SECTIONS = [
 
 // Release type comes from (FoF) Roadmap Type custom field — no heuristics needed
 
+// Per-game color palette — drawn from RF brand spectrum, distinct and readable on dark bg
+const GAME_COLOR_PALETTE = [
+  '#f5a230', '#e8748a', '#50c8f0', '#a78bfa', '#50f0a0',
+  '#f0d050', '#c45c6a', '#3d7ebf', '#f09650', '#7b5ea7',
+  '#60cece', '#d4831a', '#e879f9', '#4ade80', '#fb7185',
+];
+
+function gameColorHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  return GAME_COLOR_PALETTE[Math.abs(h) % GAME_COLOR_PALETTE.length];
+}
+
+const _gameColorCache = {};
+function gameColor(title) {
+  if (!_gameColorCache[title]) _gameColorCache[title] = gameColorHash(title);
+  return _gameColorCache[title];
+}
+
 let roadmapEvents = [];
 let roadmapLoaded = false;
 let _pubGidToGame  = null; // cache: publishing board GID → { title } — discovered at runtime
@@ -2821,7 +2849,7 @@ function drawRoadmapGrid() {
 
       const label = `${evt.game}: ${evt.name}`;
       const short = label.length > 22 ? label.slice(0,20)+'…' : label;
-      const approxW = Math.max(cellW * 0.9, Math.min(short.length * 6.5 + 16, cellW * 2.5));
+      const approxW = Math.max(80, Math.min(evt.name.length * 6 + 8, 220));
       const leftPx = moIdx * cellW + Math.round((d.getDate()-1) / 28 * cellW * 0.6);
 
       // Find which row this fits in (no overlap)
@@ -2835,42 +2863,57 @@ function drawRoadmapGrid() {
       if (!eventRows[rowIdx]) eventRows[rowIdx] = [];
       eventRows[rowIdx].push([leftPx, leftPx + approxW]);
 
-      const dotWrap = document.createElement('div');
-      dotWrap.className = `roadmap-dot-wrap`;
-      dotWrap.style.cssText = `position:absolute;left:${leftPx}px;top:${4 + rowIdx*18}px;display:flex;align-items:center;gap:5px;cursor:pointer;`;
+      const color = gameColor(evt.game);
 
-      const dot = document.createElement('div');
-      dot.className = `roadmap-dot ${evt.type}`;
-      dotWrap.appendChild(dot);
+      const evtEl = document.createElement('div');
+      evtEl.className = 'roadmap-evt';
+      evtEl.style.cssText = `position:absolute;left:${leftPx}px;top:${4 + rowIdx * 30}px;`;
 
-      const lbl = document.createElement('span');
-      lbl.className = 'roadmap-dot-label';
-      lbl.textContent = evt.game;
-      dotWrap.appendChild(lbl);
+      const bar = document.createElement('div');
+      bar.className = 'roadmap-evt-bar';
+      bar.style.background = color;
+      evtEl.appendChild(bar);
+
+      const textWrap = document.createElement('div');
+      textWrap.className = 'roadmap-evt-text';
+
+      const gameLbl = document.createElement('div');
+      gameLbl.className = 'roadmap-evt-game';
+      gameLbl.style.color = color;
+      gameLbl.textContent = evt.game;
+      textWrap.appendChild(gameLbl);
+
+      const evtLbl = document.createElement('div');
+      evtLbl.className = 'roadmap-evt-name';
+      evtLbl.textContent = evt.name;
+      evtLbl.title = evt.name;
+      textWrap.appendChild(evtLbl);
+
+      evtEl.appendChild(textWrap);
 
       // Tooltip — reuse the timeline #tt panel
-      dotWrap.addEventListener('mouseenter', e => {
+      evtEl.addEventListener('mouseenter', e => {
         if (!pinnedEvt) populateRoadmapTT(evt, sec);
       });
-      dotWrap.addEventListener('mousemove', e => {
+      evtEl.addEventListener('mousemove', e => {
         if (!pinnedEvt) moveTT(e);
       });
-      dotWrap.addEventListener('mouseleave', () => {
+      evtEl.addEventListener('mouseleave', () => {
         if (!pinnedEvt) hideTT();
       });
-      dotWrap.addEventListener('click', e => {
+      evtEl.addEventListener('click', e => {
         e.stopPropagation();
         if (pinnedEvt && pinnedEvt.gid === evt.gid) { unpinTT(); return; }
         populateRoadmapTT(evt, sec);
         moveTT(e);
-        pinTT(evt, dotWrap);
+        pinTT(evt, evtEl);
       });
 
-      row.appendChild(dotWrap);
+      row.appendChild(evtEl);
     });
 
     // Expand row height if multiple event rows needed
-    if (eventRows.length > 1) row.style.height = (4 + eventRows.length * 18 + 4) + 'px';
+    if (eventRows.length > 1) row.style.height = (4 + eventRows.length * 30 + 4) + 'px';
 
     wrapper.appendChild(row);
   });
