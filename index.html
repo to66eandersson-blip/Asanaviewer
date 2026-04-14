@@ -923,7 +923,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.28</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.29</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -967,7 +967,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.28</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.29</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2443,27 +2443,48 @@ function populateTT(evt,sec){
 }
 
 function populateRoadmapTT(evt, sec) {
+  const color = gameColor(evt.game);
+
+  // Hide RAG bar — not relevant for roadmap events
+  const ragBar = $('tt-rag-bar'); if (ragBar) ragBar.style.display = 'none';
+  const ragLbl = $('tt-rag-label'); if (ragLbl) ragLbl.style.display = 'none';
+
+  // Title — event name
   $('tt-name').textContent = evt.name;
+
+  // Badges: type + game (with game color)
   const badges = $('tt-badges'); badges.innerHTML = '';
-  const mkBadge = (cls, text) => { const b = document.createElement('span'); b.className = `tt-badge ${cls}`; b.textContent = text; badges.appendChild(b); };
+  const mkBadge = (cls, text, col) => {
+    const b = document.createElement('span');
+    b.className = `tt-badge ${cls}`;
+    b.textContent = text;
+    if (col) { b.style.color = col; b.style.borderColor = col + '60'; b.style.background = col + '18'; }
+    badges.appendChild(b);
+  };
   mkBadge('badge-task', sec.label);
-  mkBadge('badge-milestone', evt.game);
+  mkBadge('badge-milestone', evt.game, color);
 
   const body = $('tt-body'); body.innerHTML = '';
-  // Date
+
+  // Date + relative
   if (evt.date) {
     const dateStr = new Date(evt.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
     addRow(body, '📅', 'Due', dateStr, null, false);
     const cd = daysFromToday(evt.date);
     const ov = isOverdue(evt.date);
-    addRow(body, '', '', cd, ov ? 'var(--danger)' : cd === 'Today' || cd === 'Tomorrow' ? 'var(--accent)' : null, true);
+    if (cd) addRow(body, '', '', cd, ov ? 'var(--danger)' : (cd === 'Today' || cd === 'Tomorrow') ? 'var(--accent)' : null, true);
   }
-  addRow(body, '🎮', 'Game', evt.game, 'var(--text)', false);
-  addRow(body, '🔖', 'Type', sec.label, null, false);
 
-  $('tt-notes').style.display = 'none';
+  // Description / notes — the most valuable field for understanding the event
+  const notesEl = $('tt-notes');
+  if (evt.notes && evt.notes.trim()) {
+    notesEl.textContent = evt.notes.trim();
+    notesEl.style.display = '';
+  } else {
+    notesEl.style.display = 'none';
+  }
+
   const follEl = $('tt-followers'); follEl.innerHTML = '';
-  follEl.innerHTML = '<span class="tt-no-followers"></span>';
   const link = $('tt-open-link'); link.style.display = 'none';
   $('tt').classList.add('show');
 }
@@ -2687,7 +2708,7 @@ async function renderRoadmap() {
   try {
     while (pages < 20) {
       statusEl.textContent = `Loading roadmap… (${total} events so far)`;
-      const url = `/projects/${ROADMAP_PROJECT_GID}/tasks?opt_fields=name,due_on,memberships.project.gid,custom_fields.gid,custom_fields.enum_value.name&limit=100` +
+      const url = `/projects/${ROADMAP_PROJECT_GID}/tasks?opt_fields=name,notes,due_on,memberships.project.gid,custom_fields.gid,custom_fields.enum_value.name,custom_fields.display_value&limit=100` +
                   (offset ? `&offset=${offset}` : '');
       const resp = await api(url);
       const tasks = resp.data || [];
@@ -2706,14 +2727,20 @@ async function renderRoadmap() {
         if (!pubMatch) return;
 
         const game = pubGidToGame[pubMatch.project.gid];
+        // Try to find (FoF) Game Title custom field for display name
+        const gameTitleField = (t.custom_fields || []).find(f =>
+          f.gid === '1213881197306441' // (FoF) Game Title CF GID
+        );
+        const displayGame = gameTitleField?.display_value || game.title;
         total++;
         roadmapEvents.push({
-          code: game.code,
-          game: game.title,
-          name: t.name,
-          date: t.due_on,
-          type: roadmapType,
-          gid:  t.gid,
+          code:  game.code,
+          game:  displayGame,
+          name:  t.name,
+          notes: t.notes || '',
+          date:  t.due_on,
+          type:  roadmapType,
+          gid:   t.gid,
         });
       });
 
@@ -2810,14 +2837,19 @@ function drawRoadmapGrid() {
       const lbl = document.createElement('div');
       lbl.className = 'roadmap-label-cell';
       lbl.dataset.secKey = sec.key;
-      lbl.innerHTML = `<div style="width:7px;height:7px;border-radius:50%;background:${sec.color};flex-shrink:0"></div>${esc(sec.label)}`;
+      lbl.style.color = sec.color;
+      lbl.style.borderLeft = `3px solid ${sec.color}`;
+      lbl.style.paddingLeft = '9px';
+      lbl.style.fontWeight = '600';
+      lbl.style.fontSize = '10px';
+      lbl.textContent = sec.label;
       labelCol.appendChild(lbl);
     }
 
     // Single track row for this section — events placed by date
     const row = document.createElement('div');
     row.dataset.secKey = sec.key;
-    row.style.cssText = `position:relative;height:26px;border-bottom:0.5px solid var(--border);`;
+    row.style.cssText = `position:relative;height:26px;border-bottom:0.5px solid var(--border);background:${sec.color}08;`;
 
     // Month cell bands
     months.forEach((m,i) => {
