@@ -923,7 +923,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.33</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.34</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -967,7 +967,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.33</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.34</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2475,11 +2475,21 @@ function populateRoadmapTT(evt, sec) {
     if (cd) addRow(body, '', '', cd, ov ? 'var(--danger)' : (cd === 'Today' || cd === 'Tomorrow') ? 'var(--accent)' : null, true);
   }
 
-  // Description / notes — the most valuable field for understanding the event
-  const notesEl = $('tt-notes');
-  if (evt.notes && evt.notes.trim()) {
-    notesEl.textContent = evt.notes.trim();
-    notesEl.style.display = '';
+  // Description / notes — prefer html_notes (formatted), fall back to plain notes
+  const notesEl    = $('tt-notes');
+  const contentEl  = $('tt-notes-content');
+  const rawHtml    = evt.htmlNotes || '';
+  const hasHtml    = rawHtml && rawHtml.replace(/<body>|<\/body>/gi,'').trim().length > 0;
+  const hasPlain   = evt.notes && evt.notes.trim().length > 0;
+  if (hasHtml) {
+    contentEl.innerHTML = sanitiseHtmlNotes(rawHtml);
+    notesEl.style.display = 'block';
+  } else if (hasPlain) {
+    const escaped = evt.notes.trim()
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\n\n+/g,'</p><p>').replace(/\n/g,'<br>');
+    contentEl.innerHTML = `<p>${escaped}</p>`;
+    notesEl.style.display = 'block';
   } else {
     notesEl.style.display = 'none';
   }
@@ -2504,10 +2514,16 @@ function pinTT(evt,evEl){
     api(`/tasks/${evt.gid}?opt_fields=html_notes,notes`).then(resp=>{
       evt.htmlNotes=resp.data?.html_notes||'';
       evt.notes=resp.data?.notes||evt.notes;
-      // Re-render tooltip notes section if still pinned
+      // Re-render tooltip if still pinned — detect roadmap vs timeline event
       if(pinnedEvt&&pinnedEvt.gid===evt.gid){
-        const sec=sections.find(s=>s.events.some(e=>e.gid===evt.gid));
-        if(sec)populateTT(evt,sec);
+        const isRoadmap = roadmapEvents.some(e=>e.gid===evt.gid);
+        if(isRoadmap){
+          const sec=ROADMAP_SECTIONS.find(s=>s.key===evt.type)||{label:evt.type_label||evt.type,color:'#888580'};
+          populateRoadmapTT(evt,sec);
+        }else{
+          const sec=sections.find(s=>s.events.some(e=>e.gid===evt.gid));
+          if(sec)populateTT(evt,sec);
+        }
       }
     }).catch(()=>{});
   }
@@ -2746,13 +2762,19 @@ async function renderRoadmap() {
         const displayGame = gameTitleField?.display_value || game.title;
         total++;
         roadmapEvents.push({
-          code:  game.code,
-          game:  displayGame,
-          name:  t.name,
-          notes: t.notes || '',
-          date:  t.due_on,
-          type:  roadmapType,
-          gid:   t.gid,
+          code:      game.code,
+          game:      displayGame,
+          name:      t.name,
+          notes:     t.notes || '',
+          htmlNotes: '',   // lazy-loaded on click via pinTT
+          date:      t.due_on,
+          type:      roadmapType,
+          gid:       t.gid,
+          followers: [],
+          domain:    null,
+          rag:       null,
+          done:      false,
+          type_label: roadmapType,
         });
       });
 
@@ -2844,8 +2866,15 @@ function drawRoadmapGrid() {
       .sort((a,b) => a.date.localeCompare(b.date));
     if (!secEvents.length) return;
 
-    // Label column entry — added to fixed sidebar
+    // Label column: section header spacer (matches the sticky section-hdr in the scroll area)
     if (labelCol) {
+      const hdrSpacer = document.createElement('div');
+      hdrSpacer.className = 'roadmap-label-sec-hdr';
+      hdrSpacer.dataset.secKey = sec.key + '__hdr';
+      hdrSpacer.style.cssText = `background:var(--surface2);border-bottom:0.5px solid var(--border2);border-top:1px solid var(--border2);flex-shrink:0;`;
+      labelCol.appendChild(hdrSpacer);
+
+      // Label cell aligned to the track row
       const lbl = document.createElement('div');
       lbl.className = 'roadmap-label-cell';
       lbl.dataset.secKey = sec.key;
@@ -2965,17 +2994,23 @@ function drawRoadmapGrid() {
 
   innerEl.appendChild(wrapper);
 
-  // Sync label column cell heights with track row heights
+  // Sync label column heights with scroll area rows
   requestAnimationFrame(() => {
     if (!labelCol) return;
-    const labelCells = labelCol.querySelectorAll('.roadmap-label-cell');
-    labelCells.forEach((lbl, i) => {
-      const secKey = lbl.dataset.secKey;
-      // Find the corresponding track row — it's the nth row div in wrapper
-      const trackRows = wrapper.querySelectorAll('div[data-sec-key]');
-      if (trackRows[i]) {
-        lbl.style.height = trackRows[i].offsetHeight + 'px';
-      }
+
+    // Sync month header height
+    const lblHdr = labelCol.querySelector('.roadmap-label-hdr');
+    if (lblHdr && mhdrWrap) lblHdr.style.height = mhdrWrap.offsetHeight + 'px';
+
+    // Sync section header spacers and label cells
+    const secHdrs = wrapper.querySelectorAll('.roadmap-section-hdr');
+    const trackRows = wrapper.querySelectorAll('div[data-sec-key]');
+    const lblSpacers = labelCol.querySelectorAll('.roadmap-label-sec-hdr');
+    const lblCells   = labelCol.querySelectorAll('.roadmap-label-cell');
+
+    secHdrs.forEach((sh, i) => {
+      if (lblSpacers[i]) lblSpacers[i].style.height = sh.offsetHeight + 'px';
+      if (trackRows[i] && lblCells[i]) lblCells[i].style.height = trackRows[i].offsetHeight + 'px';
     });
   });
 
