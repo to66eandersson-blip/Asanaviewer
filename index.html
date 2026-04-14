@@ -675,26 +675,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #roadmap-z-val { font-family: var(--mono); font-size: 10px; color: var(--text2); min-width: 36px; text-align: center; }
 /* Two-panel layout: fixed label sidebar + scrolling track area */
 .roadmap-body { flex: 1; display: flex; overflow: hidden; }
-.roadmap-label-col {
-  width: 120px; flex-shrink: 0;
-  display: flex; flex-direction: column;
-  border-right: 1px solid var(--border2);
-  background: var(--surface);
-  overflow: hidden; z-index: 10;
-}
-.roadmap-label-hdr {
-  height: 27px; flex-shrink: 0;
-  border-bottom: 1px solid var(--border2);
-  background: var(--surface);
-}
-.roadmap-label-cell {
-  display: flex; align-items: center; gap: 7px;
-  padding: 0 12px;
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--text2);
-  border-bottom: 0.5px solid var(--border2);
-  background: var(--surface2); flex-shrink: 0;
-}
 .roadmap-label-track {
   flex-shrink: 0; border-bottom: 0.5px solid var(--border);
   background: var(--surface);
@@ -715,12 +695,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* Roadmap sections */
 .roadmap-section-hdr {
-  display: flex; align-items: center; gap: 8px;
+  display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 12px; background: var(--surface2);
   border-bottom: 0.5px solid var(--border2);
   border-top: 1px solid var(--border2); position: sticky; left: 0;
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--text3);
+  text-transform: uppercase; z-index: 2;
 }
 .roadmap-game-row { display: flex; border-bottom: 0.5px solid var(--border); min-height: 36px; }
 .roadmap-game-label { width: 160px; flex-shrink: 0; border-right: 1px solid var(--border2);
@@ -923,7 +903,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.35</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.36</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -967,7 +947,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.35</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.36</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -1340,9 +1320,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <div id="roadmap-load-status" style="font-family:var(--mono);font-size:10px;color:var(--text3);">137 events loaded</div>
       </div>
       <div class="roadmap-body" id="roadmap-body">
-        <div class="roadmap-label-col" id="roadmap-label-col">
-          <div class="roadmap-label-hdr"></div>
-        </div>
         <div class="roadmap-scroll" id="roadmap-scroll">
         <div id="roadmap-load-status" style="font-family:var(--mono);font-size:9px;color:var(--text3);padding:4px 1.5rem;flex-shrink:0"></div>
         <div class="roadmap-empty" id="roadmap-empty" style="display: none;">Loading release events from publishing boards…</div>
@@ -2797,13 +2774,8 @@ async function renderRoadmap() {
 
 function drawRoadmapGrid() {
   const innerEl = document.getElementById('roadmap-inner');
-  const labelCol = document.getElementById('roadmap-label-col');
   if (!innerEl) return;
   innerEl.innerHTML = '';
-  if (labelCol) {
-    // Reset label col — keep the header spacer, remove old labels
-    labelCol.innerHTML = '<div class="roadmap-label-hdr"></div>';
-  }
 
   const zoom = ROADMAP_ZOOMS[roadmapZoomIdx];
   const cellW = zoom.widthPx;
@@ -2866,26 +2838,7 @@ function drawRoadmapGrid() {
       .sort((a,b) => a.date.localeCompare(b.date));
     if (!secEvents.length) return;
 
-    // Label column: section header spacer (matches the sticky section-hdr in the scroll area)
-    if (labelCol) {
-      const hdrSpacer = document.createElement('div');
-      hdrSpacer.className = 'roadmap-label-sec-hdr';
-      hdrSpacer.dataset.secKey = sec.key + '__hdr';
-      hdrSpacer.style.cssText = `background:var(--surface2);border-bottom:0.5px solid var(--border2);border-top:1px solid var(--border2);flex-shrink:0;`;
-      labelCol.appendChild(hdrSpacer);
 
-      // Label cell aligned to the track row
-      const lbl = document.createElement('div');
-      lbl.className = 'roadmap-label-cell';
-      lbl.dataset.secKey = sec.key;
-      lbl.style.color = sec.color;
-      lbl.style.borderLeft = `3px solid ${sec.color}`;
-      lbl.style.paddingLeft = '9px';
-      lbl.style.fontWeight = '600';
-      lbl.style.fontSize = '10px';
-      lbl.textContent = sec.label;
-      labelCol.appendChild(lbl);
-    }
 
     // Single track row for this section — events placed by date
     const row = document.createElement('div');
@@ -2994,47 +2947,7 @@ function drawRoadmapGrid() {
 
   innerEl.appendChild(wrapper);
 
-  // Sync label column heights — all heights are known at render time, no DOM measurement needed
-  if (labelCol) {
-    // Month header
-    const lblHdr = labelCol.querySelector('.roadmap-label-hdr');
-    if (lblHdr) lblHdr.style.height = mhdrWrap.offsetHeight > 0
-      ? mhdrWrap.offsetHeight + 'px'
-      : '27px';
 
-    // For each section: spacer matches section header height, cell matches track row height
-    const lblSpacers = Array.from(labelCol.querySelectorAll('.roadmap-label-sec-hdr'));
-    const lblCells   = Array.from(labelCol.querySelectorAll('.roadmap-label-cell'));
-
-    let secIdx = 0;
-    ROADMAP_SECTIONS.forEach(sec => {
-      const secEvents = roadmapEvents.filter(e => e.type === sec.key);
-      if (!secEvents.length) return;
-
-      const numLanes = (() => {
-        const evRows = [];
-        secEvents.sort((a,b) => a.date.localeCompare(b.date)).forEach(evt => {
-          const d = new Date(evt.date + 'T00:00:00');
-          const moIdx = months.findIndex(m => m.getFullYear()===d.getFullYear() && m.getMonth()===d.getMonth());
-          if (moIdx < 0) return;
-          const leftPx = moIdx * cellW + Math.round((d.getDate()-1) / 31 * cellW);
-          const approxW = Math.max(80, Math.min(evt.name.length * 6 + 8, 220));
-          let lane = 0;
-          for (let i = 0; i < evRows.length; i++) {
-            if (leftPx >= evRows[i] + 4) { lane = i; break; }
-            if (i === evRows.length - 1) lane = evRows.length;
-          }
-          evRows[lane] = leftPx + approxW;
-        });
-        return Math.max(1, evRows.length);
-      })();
-
-      const trackH = 8 + numLanes * 30;
-      if (lblSpacers[secIdx]) lblSpacers[secIdx].style.height = '33px';
-      if (lblCells[secIdx])   lblCells[secIdx].style.height   = trackH + 'px';
-      secIdx++;
-    });
-  }
 
   // Scroll to today
   requestAnimationFrame(() => {
