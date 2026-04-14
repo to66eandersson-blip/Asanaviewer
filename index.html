@@ -923,7 +923,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.32</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.33</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -967,7 +967,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.32</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.33</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2563,6 +2563,7 @@ const ROADMAP_SECTIONS = [
   { key: 'Announcement',     label: 'Announcement',     color: '#7888b8' },
   { key: 'Live Event',       label: 'Live Event',       color: '#8878a8' },
   { key: 'Online Event/Sale',label: 'Online Event/Sale',color: '#688898' },
+  { key: 'Demo Launch',      label: 'Demo Launch',      color: '#5878a0' },
 ];
 
 // Release type comes from (FoF) Roadmap Type custom field — no heuristics needed
@@ -2665,10 +2666,12 @@ async function renderRoadmap() {
             if (!item.name || !item.gid) return;
             if (!item.name.toLowerCase().includes('publishing board')) return;
             if (knownGids.has(item.gid)) return; // already handled above
-            // Strip suffix for display — best we can do without a code match
-            _pubGidToGame[item.gid] = {
-              title: item.name.replace(/[-–—]?\s*Publishing Board\s*/i, '').trim()
-            };
+            // Strip suffix, then check if result matches a known code for full title
+            const stripped = item.name.replace(/[-–—]?\s*Publishing Board\s*/i, '').trim();
+            const codeMatch = Object.values(PRODUCT_BOARD_MAP).find(e =>
+              e.code && e.code.toLowerCase() === stripped.toLowerCase()
+            );
+            _pubGidToGame[item.gid] = { title: codeMatch?.title || stripped };
           });
           if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
           else break;
