@@ -929,7 +929,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.39</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.40</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -973,7 +973,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.39</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.40</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -1629,33 +1629,9 @@ const SECTION_ORDER = [
 const SKIP_SECTIONS = new Set(['budget tracker','goal excersize results','untitled section','other']);
 
 /* ─── Product Board Map ───
-   Maps Portfolio-Overview product names → Product Board GIDs.
-   Built from live Asana data. Used by the board picker dropdown.    */
-// Authoritative board map — GID → { code, title }
-// Sourced directly from the (FoF) Game Title custom field on each Product Board
-// via the portfolio at app.asana.com/0/portfolio/1211541493171405
-const PRODUCT_BOARD_MAP = {
-  '1213508049767992': { code: 'APP',     title: 'Appulse',                    phase: 'Kick-Off'           , pm: 'Niclas Lagerlöf' , bm: 'Mariela González', pp: 'Dimitrije Dokic'},
-  '1213448651913558': { code: 'TCA',     title: 'Terracotta'                , phase: 'Kick-Off' , pm: 'Viktor Stadler' , bm: 'Gareth Bagg', pp: 'Elisabeth Solberg'},
-  '1212081395447699': { code: 'KTC',     title: 'Kingdom Two Crowns'        , phase: 'Post Release' , pm: 'Niclas Lagerlöf' , bm: 'Pontus Rundqvist', pp: 'Ishani'},
-  '1212151115389244': { code: 'K3',      title: 'Kingdom 3'                 , phase: 'Kick-Off' , pm: 'Niclas Lagerlöf' , bm: 'Pontus Rundqvist', pp: 'Ishani'},
-  '1212149353345742': { code: 'MCF',     title: 'My Cannibal Family'        , phase: 'Kick-Off' , pm: 'Deana Banić-Križaj' , bm: 'Gareth Bagg', pp: 'Elisabeth Solberg'},
-  '1212148535011307': { code: 'ROUTINE', title: 'ROUTINE'                   , phase: 'Post Release' , pm: 'Deana Banić-Križaj' , bm: 'Gareth Bagg', pp: 'Ishani'},
-  '1212013205439519': { code: 'EE',      title: 'Esoteric Ebb'              , phase: 'Post Release' , pm: 'Simas Budrys' , bm: 'Mariela González', pp: 'Ishani'},
-  '1212013201863467': { code: 'DK',      title: 'Dome Keeper'               , phase: 'Post Release' , pm: 'Simas Budrys' , bm: 'Mariela González', pp: 'Ishani'},
-  '1211911867621234': { code: 'CB2',     title: 'Cassette Beasts 2002'      , phase: 'Kick-Off' , pm: 'Kate Billingham' , bm: 'Carly Shields', pp: 'Tina Nilsson'},
-  '1211990738288419': { code: 'SC',      title: 'Sulphur Coast'             , phase: 'Kick-Off' , pm: 'Viktor Stadler' , bm: 'Raphaël', pp: 'Mia Došen'},
-  '1211968270657884': { code: 'SBM',     title: 'Seance of Blake Manor'     , phase: 'Post Release' , pm: 'Viktor Stadler' , bm: 'Gareth Bagg', pp: 'Dimitrije Dokic'},
-  '1211966243305065': { code: 'RIV',     title: 'Rivage'                    , phase: 'Announcement Ready' , pm: 'Niclas Lagerlöf' , bm: 'Raphaël', pp: 'Mia Došen'},
-  '1211967053427418': { code: 'DDD',     title: 'Deep Dish Dungeon'         , phase: 'Release Ready' , pm: 'Simas Budrys' , bm: 'Mariela González', pp: 'Tina Nilsson'},
-  '1211962398846254': { code: 'ST',      title: 'Star Trucker'              , phase: 'Post Release' , pm: 'Viktor Stadler' , bm: 'Mariela González', pp: 'Tina Nilsson'},
-  '1211875734575549': { code: 'BP',      title: 'Blue Prince'               , phase: 'Post Release' , pm: 'Simas Budrys' , bm: 'Cecilia Asp', pp: 'Ishani'},
-  '1211911723653147': { code: 'LMS',     title: 'Last Man Sitting'          , phase: 'Announcement Ready' , pm: 'Niclas Lagerlöf' , bm: 'Pontus Rundqvist', pp: 'Mia Došen'},
-  '1211911867619071': { code: 'MC',      title: 'Monsters Are Coming'       , phase: 'Release Ready' , pm: 'Kate Billingham' , bm: 'Cecilia Asp', pp: 'Mia Došen'},
-  '1211912056412903': { code: 'KNBU',    title: 'Kulo Niku Bowl Up!'        , phase: 'Release Ready' , pm: 'Deana Banić-Križaj' , bm: 'Carly Shields', pp: 'Dimitrije Dokic'},
-  '1211899818368463': { code: 'RR2',     title: 'Regions of Ruin: Runegate' , phase: 'Release Ready' , pm: 'Viktor Stadler' , bm: 'Cecilia Asp', pp: 'Tina Nilsson'},
-  '1213537831150285': { code: 'LL',      title: 'Llamalandia'               , phase: 'Unknown',           pm: 'Simas Budrys' , bm: 'Mariela González', pp: 'Tina Nilsson'},
-};
+   Populated dynamically at connect time by buildProductBoardMap().
+   Maps product board GID → { code, title, phase, pm, bm, pp }     */
+let PRODUCT_BOARD_MAP = {};
 
 // ALL_PHASES must be defined before activePhaseFilter uses it
 const ALL_PHASES = ['Kick-Off', 'Pre-Signing', 'Scouting', 'Announcement Ready', 'Release Ready', 'Post Release'];
@@ -1884,6 +1860,8 @@ async function connect(){
       setLoad('Connecting…','Validating token…',5);
       await api('/users/me?opt_fields=name');
       sessionStorage.setItem('rf_pat', pat);
+      setLoad('Connecting…', 'Scanning portfolio…', 15);
+      await buildProductBoardMap();
       loadPortfolio();
       show('screen-app');
       if (_pendingForecastBuffer) {
@@ -1918,6 +1896,7 @@ async function connect(){
   currentPid=pid;
   try{
     setLoad('Connecting to Asana…','Verifying token…',5);
+    await buildProductBoardMap();
     const projResp=await api(`/projects/${pid}?opt_fields=name`);
     setLoad('Fetching tasks…','Starting…',10);
     const tasks=await fetchAllTasks(pid,(sub,pct)=>setLoad('Fetching tasks…',sub,pct));
@@ -3646,9 +3625,70 @@ document.addEventListener('click', e => {
    BOARD PICKER — loads Portfolio Overview, populates dropdown
    ═══════════════════════════════════════════════════════════════════ */
 
+async function buildProductBoardMap() {
+  // Scan portfolio items, keep those with "Product Board" in the name.
+  // Reads (FoF) Flow of Fury Phase + (FoF) Game Title CFs per item.
+  // Falls back to project name if CFs are missing.
+  try {
+    PRODUCT_BOARD_MAP = {}; // reset
+    let phaseFieldGid = CF_FOF_PHASE;
+    const gameTitleCF = '1213881197306441'; // (FoF) Game Title CF GID
+
+    let offset = null, pages = 0;
+    while (pages < 10) {
+      const url = `/portfolios/${PORTFOLIO_GID}/items` +
+        `?opt_fields=gid,name,custom_fields.gid,custom_fields.name,custom_fields.display_value,custom_fields.enum_value.name` +
+        (offset ? `&offset=${offset}` : '');
+      const resp = await api(url);
+      const items = resp.data || [];
+
+      items.forEach(item => {
+        if (!item.name) return;
+        // Only product boards — skip signing targets and other items
+        if (!item.name.toLowerCase().includes('product board')) return;
+
+        const cfs = item.custom_fields || [];
+
+        // Phase
+        const phaseField = cfs.find(f => f.gid === phaseFieldGid)
+          || cfs.find(f => f.name && f.name.toLowerCase().includes('flow of fury phase'));
+        const phase = phaseField?.enum_value?.name || 'Unknown';
+
+        // Game title / code from (FoF) Game Title CF
+        const gameTitleField = cfs.find(f => f.gid === gameTitleCF)
+          || cfs.find(f => f.name && f.name.toLowerCase().includes('game title'));
+        const gameTitle = gameTitleField?.display_value
+          || item.name.replace(/\s*Product Board\s*/i, '').trim();
+
+        // Derive a short code: uppercase letters + numbers from the title, max 6 chars
+        const code = gameTitle
+          .replace(/[^A-Za-z0-9]/g, '')
+          .toUpperCase()
+          .slice(0, 6) || item.gid.slice(-4);
+
+        // PM/BM/PP — try to find people CFs by name
+        const findPerson = (...keywords) => {
+          const f = cfs.find(f => f.name && keywords.every(k => f.name.toLowerCase().includes(k)));
+          return f?.display_value || '';
+        };
+        const pm = findPerson('product', 'manager');
+        const bm = findPerson('brand', 'manager');
+        const pp = findPerson('publishing') || findPerson('producer');
+
+        PRODUCT_BOARD_MAP[item.gid] = { code, title: gameTitle, phase, pm, bm, pp };
+      });
+
+      if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
+      else break;
+    }
+    console.log('PRODUCT_BOARD_MAP built dynamically:', Object.keys(PRODUCT_BOARD_MAP).length, 'boards');
+  } catch(e) {
+    console.warn('buildProductBoardMap failed:', e.message);
+  }
+}
+
 function loadPortfolio() {
-  // Build dropdown directly from the authoritative PRODUCT_BOARD_MAP —
-  // no API call needed since we have verified data from the portfolio.
+  // Build dropdown from the dynamically populated PRODUCT_BOARD_MAP
   const status = document.getElementById('picker-status');
 
   portfolioProducts = Object.entries(PRODUCT_BOARD_MAP)
