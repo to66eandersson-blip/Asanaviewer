@@ -204,6 +204,32 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 .show-labels .ev-label { opacity: 1; }
 
+/* Compact track two-line label (non-goal sections) */
+.ev-compact-label {
+  display: flex; align-items: stretch; gap: 0;
+  pointer-events: none;
+  opacity: 0; transition: opacity 0.15s;
+}
+.show-labels .ev-compact-label { opacity: 1; }
+.ev-compact-bar {
+  width: 2px; flex-shrink: 0; border-radius: 1px;
+  margin-right: 5px; align-self: stretch; min-height: 24px;
+}
+.ev-compact-text {
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 0px;
+}
+.ev-compact-sec {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.08em;
+  text-transform: uppercase; opacity: 0.6;
+  white-space: nowrap; line-height: 1.2;
+}
+.ev-compact-name {
+  font-family: var(--mono); font-size: 8.5px;
+  white-space: nowrap; line-height: 1.3;
+  max-width: 260px; overflow: hidden; text-overflow: ellipsis;
+}
+
 /* ── TOOLTIP ── */
 #tt {
   position: fixed; background: var(--surface2);
@@ -903,7 +929,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.37</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.38</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -947,7 +973,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.37</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.38</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2236,7 +2262,7 @@ function render(){
       // ── Non-goal sections: single compact track, all events stacked by lane ──
       // Assign each event a vertical lane to avoid label overlap
       // Lane occupancy: track right-edge of each label in px equivalent (approx 7px per char + 20px for dot)
-      const LANE_H = 20; // px per lane
+      const LANE_H = 30; // px per lane — taller to fit two-line labels
       const DOT_W  = 20; // px reserved for the dot itself
       const CHAR_W = 6;  // approx px per character for the mono label
       const MAX_LABEL_CHARS = 28;
@@ -2310,12 +2336,33 @@ function render(){
         }
         evEl.appendChild(shape);
 
-        const labelEl = document.createElement('div');
-        labelEl.className = 'ev-label';
-        labelEl.style.color = sec.color;
-        labelEl.textContent = truncLabel(stripDomainPrefix(evt.name));
-        labelEl.title = evt.name;
-        evEl.appendChild(labelEl);
+        // Two-line compact label: [bar] [section\nname]
+        const compactLbl = document.createElement('div');
+        compactLbl.className = 'ev-compact-label';
+        compactLbl.title = evt.name;
+
+        const bar = document.createElement('div');
+        bar.className = 'ev-compact-bar';
+        bar.style.background = sec.color;
+        compactLbl.appendChild(bar);
+
+        const textWrap = document.createElement('div');
+        textWrap.className = 'ev-compact-text';
+
+        const secLine = document.createElement('div');
+        secLine.className = 'ev-compact-sec';
+        secLine.style.color = sec.color;
+        secLine.textContent = sec.label;
+        textWrap.appendChild(secLine);
+
+        const nameLine = document.createElement('div');
+        nameLine.className = 'ev-compact-name';
+        nameLine.style.color = sec.color;
+        nameLine.textContent = truncLabel(stripDomainPrefix(evt.name));
+        textWrap.appendChild(nameLine);
+
+        compactLbl.appendChild(textWrap);
+        evEl.appendChild(compactLbl);
 
         evEl.addEventListener('mouseenter', e => { if (!pinnedEvt) populateTT(evt, sec); });
         evEl.addEventListener('mousemove',  e => { if (!pinnedEvt) moveTT(e); });
