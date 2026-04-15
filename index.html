@@ -929,7 +929,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.41</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.42</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -973,7 +973,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.41</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.42</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3317,6 +3317,34 @@ async function fetchFoFGoals() {
   } catch(e) { console.warn('FoF goals fetch failed:', e.message); }
   _fofGoalStore = store;
   _fofGoalsLoading = false;
+
+  // Back-fill PRODUCT_BOARD_MAP titles from the goals store.
+  // Some boards are named "DK Product Board" → title="DK" but goals are keyed as "Dome Keeper".
+  // Match by checking if a goal key starts with the abbreviated title or vice versa.
+  const goalKeys = Object.keys(store);
+  Object.entries(PRODUCT_BOARD_MAP).forEach(([gid, entry]) => {
+    if (!entry.title) return;
+    const t = entry.title.toUpperCase();
+    // Skip if already a multi-word title (likely already correct)
+    if (entry.title.includes(' ')) return;
+    // Find a goal key whose initials match this title
+    const match = goalKeys.find(k => {
+      const initials = k.trim().split(/\s+/).map(w => w[0].toUpperCase()).join('');
+      return initials === t || k.toUpperCase().startsWith(t) || t.startsWith(k.toUpperCase().replace(/\s/g,'').slice(0,t.length));
+    });
+    if (match) {
+      console.log(`Back-filling title: ${entry.title} → ${match}`);
+      entry.title = match;
+      // Rebuild code from new title
+      const words = match.trim().split(/\s+/).filter(Boolean);
+      entry.code = words.length > 1
+        ? words.map(w => w[0].toUpperCase()).join('')
+        : match.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,4);
+    }
+  });
+  // Rebuild portfolioProducts with corrected titles
+  loadPortfolio();
+
   _populateFofGoalSelect(store);
   return _buildGoalsByGame(store, fofGoalMode);
 }
@@ -3432,7 +3460,15 @@ async function renderFoF() {
     if (!activePhaseFilter.has('ALL') && !activePhaseFilter.has(phase)) return;
     if (!phaseMap[phase]) phaseMap[phase] = [];
     const title = e.title || e.code;
-    const goals = goalsByGame[title] || goalsByGame[e.code] || [];
+    // Try exact title, then code, then initials match against goal keys
+    const goals = goalsByGame[title] || goalsByGame[e.code] || (() => {
+      const t = (title || e.code || '').toUpperCase();
+      const key = Object.keys(goalsByGame).find(k => {
+        const ki = k.trim().split(/\s+/).map(w => w[0].toUpperCase()).join('');
+        return ki === t || k.toUpperCase().replace(/\s+/g,'').includes(t) || t.includes(k.toUpperCase().replace(/\s+/g,'').slice(0,3));
+      });
+      return key ? goalsByGame[key] : [];
+    })();
     phaseMap[phase].push({ gid, ...e, goals, pm: e.pm||'', gtm: e.gtm||'' });
   });
 
