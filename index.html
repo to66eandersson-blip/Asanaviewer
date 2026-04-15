@@ -929,7 +929,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.40</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.41</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -973,7 +973,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.40</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.41</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3660,11 +3660,13 @@ async function buildProductBoardMap() {
         const gameTitle = gameTitleField?.display_value
           || item.name.replace(/\s*Product Board\s*/i, '').trim();
 
-        // Derive a short code: uppercase letters + numbers from the title, max 6 chars
-        const code = gameTitle
-          .replace(/[^A-Za-z0-9]/g, '')
-          .toUpperCase()
-          .slice(0, 6) || item.gid.slice(-4);
+        // Derive a short code from word initials (e.g. "Dome Keeper" → "DK")
+        // Falls back to first 4 chars of stripped title if single word
+        const words = gameTitle.trim().split(/\s+/).filter(Boolean);
+        const code = words.length > 1
+          ? words.map(w => w[0].toUpperCase()).join('')
+          : gameTitle.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4)
+          || item.gid.slice(-4);
 
         // PM/BM/PP — try to find people CFs by name
         const findPerson = (...keywords) => {
@@ -3893,6 +3895,13 @@ function sheetMatchScore(sheetName, acronym) {
   }
   // Title word match
   if (title && (s.includes(title) || title.includes(s))) return 1;
+  // Initials match — e.g. sheet "DK" matches title "DOME KEEPER"
+  const titleWords = (info.title || '').trim().split(/\s+/).filter(Boolean);
+  if (titleWords.length > 1) {
+    const initials = titleWords.map(w => w[0].toUpperCase()).join('');
+    if (s === initials) return 4;  // exact initials match = same priority as code
+    if (s.startsWith(initials) || initials.startsWith(s)) return 2;
+  }
   return 0;
 }
 
