@@ -721,7 +721,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* Roadmap sections */
 .roadmap-section-hdr {
-  display: inline-flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   padding: 8px 12px; background: var(--surface2);
   border-bottom: 0.5px solid var(--border2);
   border-top: 1px solid var(--border2); position: sticky; left: 0;
@@ -929,7 +929,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.43</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.44</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -973,7 +973,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.43</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.44</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -1619,11 +1619,11 @@ const ZOOMS = [700, 1000, 1400, 2000, 2800];
 const ZLBLS = ['0.5×','0.75×','1×','1.5×','2×'];
 
 const SECTION_ORDER = [
-  { match: 'flow of fury',   label: 'Flow of Fury',   color: '#b8f050' },
-  { match: 'product goal',   label: 'Product Goals',  color: '#50c8f0' },
+  { match: 'flow of fury',   label: 'Flow of Fury',   color: '#f5a230' },
+  { match: 'product goal',   label: 'Product Goals',  color: '#7b9cbf' },
   { match: 'monthly goals',  label: 'Monthly Goals',  color: '#888580', isMonthly: true },
-  { match: 'publishing',     label: 'Publishing',     color: '#f09650' },
-  { match: 'marketing',      label: 'Marketing',      color: '#c850f0' },
+  { match: 'publishing',     label: 'Publishing',     color: '#f5a230' },
+  { match: 'marketing',      label: 'Marketing',      color: '#9b8abf' },
   { match: '1st party',      label: '1st Party',      color: '#50f0a0' },
 ];
 const SKIP_SECTIONS = new Set(['budget tracker','goal excersize results','untitled section','other']);
@@ -1657,10 +1657,10 @@ const DOMAIN_CLASS = {
   'Product Quality':      'badge-quality',
 };
 const DOMAIN_COLORS = {
-  'Commercial Viability': '#6dd97a',
-  'Project Health':       '#60cece',
-  'Player Experience':    '#dd70c0',
-  'Product Quality':      '#e89f50',
+  'Commercial Viability': '#6b9e9e',
+  'Project Health':       '#7b9cbf',
+  'Player Experience':    '#a890c0',
+  'Product Quality':      '#f5a230',
 };
 
 /* ─── State ─── */
