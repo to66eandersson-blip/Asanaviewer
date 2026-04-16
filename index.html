@@ -797,9 +797,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── Three-column body ── */
 .fc-columns { display: flex; gap: 1.25rem; align-items: stretch; flex: 1; min-height: 0; overflow: hidden; }
-.fc-col-changelog { flex: 1; min-width: 0; overflow-y: auto; max-height: calc(100vh - 280px); }
-.fc-col-general   { flex: 1; min-width: 0; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); }
-.fc-col-financial { flex: 1; min-width: 0; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); }
+.fc-col-changelog  { flex: 0 0 40%; min-width: 0; overflow-y: auto; max-height: calc(100vh - 280px); }
+.fc-col-general    { flex: 0 0 28%; min-width: 0; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); overflow-y: auto; }
+.fc-col-contracts  { flex: 0 0 28%; min-width: 0; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); overflow-y: auto; }
+.fc-col-financial  { flex: 1; min-width: 0; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 280px); }
 /* Cards scroll independently within their column */
 .fc-col-general .fc-general-card,
 .fc-col-financial .fc-general-card { flex: 1; overflow-y: auto; min-height: 0; }
@@ -929,7 +930,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.44</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.45</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -973,7 +974,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.44</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.45</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4141,7 +4142,47 @@ function extractSheetData(wb, sheetName) {
     }
   }
 
-  return { game: sheetName, changelog, general: gen, budget, origContract, financial, _rawRows: rawRows };
+  // ── CONTRACT AMENDMENTS: each block has label col + Min + Max ──────────
+  // Column triplets: [labelCol, minCol, maxCol, name]
+  const amendmentDefs = [
+    { labelCol: 'EX', minCol: 'EY', maxCol: 'EZ', name: 'Original Contract' },
+    { labelCol: 'FB', minCol: 'FC', maxCol: 'FD', name: 'Amendment #A' },
+    { labelCol: 'FF', minCol: 'FG', maxCol: 'FH', name: 'Amendment #B' },
+    { labelCol: 'FJ', minCol: 'FK', maxCol: 'FL', name: 'Amendment #C' },
+    { labelCol: 'FN', minCol: 'FO', maxCol: 'FP', name: 'Amendment #D' },
+    { labelCol: 'FR', minCol: 'FS', maxCol: 'FT', name: 'Amendment #E' },
+    { labelCol: 'FV', minCol: 'FW', maxCol: 'FX', name: 'Amendment #F' },
+  ];
+
+  const contracts = [];
+  for (const def of amendmentDefs) {
+    const block = { name: def.name, rows: [] };
+    // Scan all rows looking for label matches in this block's label column
+    for (let r = 1; r <= maxRow; r++) {
+      const lbl = cv(def.labelCol, r);
+      if (!lbl) continue;
+      const lc = lbl.toLowerCase().trim();
+      const minVal = cv(def.minCol, r);
+      const maxVal = cv(def.maxCol, r);
+      // Categorise the row
+      let type = null;
+      if (fuzzy(lc, 'principal') && !fuzzy(lc, 'markup')) type = 'num';
+      else if (fuzzy(lc, 'service'))    type = 'num';
+      else if (fuzzy(lc, 'marketing'))  type = 'num';
+      else if (fuzzy(lc, 'other') && fuzzy(lc, 'spend')) type = 'num';
+      else if (fuzzy(lc, 'total'))      type = 'num';
+      else if (fuzzy(lc, 'effective'))  type = 'text';
+      else if (lc === 'm1')             type = 'text';
+      else if (fuzzy(lc, 'installment')) type = 'text';
+      else if (fuzzy(lc, 'initial') && fuzzy(lc, 'advance')) type = 'text';
+      if (type) block.rows.push({ label: lbl, type, min: minVal, max: maxVal });
+    }
+    // Only include block if at least one num row has a value
+    const hasContent = block.rows.some(r => r.type === 'num' && (r.min || r.max));
+    if (hasContent) contracts.push(block);
+  }
+
+  return { game: sheetName, changelog, general: gen, budget, origContract, financial, contracts, _rawRows: rawRows };
 }
 
 function renderForecastForCurrentBoard() {
@@ -4300,14 +4341,14 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
   clCol.appendChild(clList);
   cols.appendChild(clCol);
 
-  // ── RIGHT: General + Original Contract + Budget table ─────────────────
+  // ── CENTRE-LEFT: Details (general info + budget + financial model) ──────
   const genCol = document.createElement('div');
   genCol.className = 'fc-col-general';
   genCol.innerHTML = `<div class="fc-section-title">Details</div>`;
   const card = document.createElement('div');
   card.className = 'fc-general-card';
 
-  // ── General info (no PM/PP/BM/PEM) ──────────────────────────────────
+  // ── General info ──────────────────────────────────────────────────────
   const infoSection = document.createElement('div');
   [
     { key: 'titleFinance',   label: 'Title (Finance)'  },
@@ -4425,104 +4466,112 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
     card.appendChild(tbl);
   }
 
+  // ── Financial model items into genCol ───────────────────────────────────
+  const { financial } = data;
+
+  if (financial?.fixedDeals?.length) {
+    const sec = document.createElement('div'); sec.className = 'fc-gen-section';
+    sec.textContent = 'Fixed Deals'; card.appendChild(sec);
+    financial.fixedDeals.forEach(deal => {
+      const row = document.createElement('div'); row.className = 'fc-gen-row';
+      row.style.flexDirection = 'column'; row.style.gap = '2px'; row.style.alignItems = 'flex-start';
+      row.innerHTML = `
+        <span class="fc-gen-key">${esc(deal.label)}</span>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          ${deal.value ? `<span class="fc-gen-val num">${fmtNum(deal.value)}</span>` : ''}
+          ${deal.date  ? `<span class="fc-gen-val" style="color:var(--text3)">${esc(deal.date)}</span>` : ''}
+          ${deal.m1    ? `<span class="fc-gen-val" style="color:var(--text3)">M1: ${esc(deal.m1)}</span>` : ''}
+        </div>
+        ${deal.desc ? `<span style="font-size:10px;color:var(--text3);line-height:1.4">${esc(deal.desc)}</span>` : ''}`;
+      card.appendChild(row);
+    });
+  }
+
+  const sc = financial?.signingCase || {};
+  if (Object.keys(sc).length) {
+    const sec = document.createElement('div'); sec.className = 'fc-gen-section';
+    sec.textContent = 'Signing Case'; card.appendChild(sec);
+    [
+      { key: 'y1Units',    label: 'Y1 Units (Steam)',   num: true },
+      { key: 'y1Revenue',  label: 'Y1 Revenue (Steam)', num: true },
+      { key: 'investment', label: 'Investment',          num: true },
+      { key: 'y1mm',       label: 'Y1 MM',              num: true },
+    ].filter(f => sc[f.key]).forEach(f => {
+      const row = document.createElement('div'); row.className = 'fc-gen-row';
+      row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="fc-gen-val num">${fmtNum(sc[f.key])}</span>`;
+      card.appendChild(row);
+    });
+  }
+
+  const um = financial?.unitModel || {};
+  if (Object.keys(um).length) {
+    const sec = document.createElement('div'); sec.className = 'fc-gen-section';
+    sec.textContent = 'Unit Model: Base Game'; card.appendChild(sec);
+    [
+      { key: 'y1UnitsSteam', label: 'Y1 Units Sold (Steam)'              },
+      { key: 'y1UnitsTotal', label: 'Y1 Units Sold (Total), Steam = M1'  },
+      { key: 'y1RevSteam',   label: 'Y1 Revenue (Steam)'                 },
+      { key: 'y1RevTotal',   label: 'Y1 Revenue (Total), Steam = M1'     },
+      { key: 'y1Costs',      label: 'Y1 Costs'                           },
+      { key: 'y1mm',         label: 'Y1 MM'                              },
+    ].filter(f => um[f.key]).forEach(f => {
+      const row = document.createElement('div'); row.className = 'fc-gen-row';
+      row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="fc-gen-val num">${fmtNum(um[f.key])}</span>`;
+      card.appendChild(row);
+    });
+  }
+
   genCol.appendChild(card);
   cols.appendChild(genCol);
 
-  // ── RIGHT: Financial model column ────────────────────────────────────────
-  const { financial } = data;
-  const hasFinancial = financial && (
-    financial.fixedDeals?.length ||
-    Object.keys(financial.signingCase||{}).length ||
-    Object.keys(financial.unitModel||{}).length  ||
-    Object.keys(financial.steam||{}).length
-  );
+  // ── RIGHT: Contracts column (Original + Amendments) ──────────────────
+  const contracts = data.contracts || [];
+  if (contracts.length) {
+    const ctrCol = document.createElement('div');
+    ctrCol.className = 'fc-col-contracts';
+    ctrCol.innerHTML = `<div class="fc-section-title">Contracts</div>`;
 
-  if (hasFinancial) {
-    const finCol = document.createElement('div');
-    finCol.className = 'fc-col-financial';
-    finCol.innerHTML = `<div class="fc-section-title">Financial Model</div>`;
-    const finCard = document.createElement('div');
-    finCard.className = 'fc-general-card';
+    contracts.forEach(block => {
+      const sec = document.createElement('div');
+      sec.className = 'fc-gen-section';
+      sec.textContent = block.name;
+      ctrCol.appendChild(sec);
 
-    // ── Fixed Deals ─────────────────────────────────────────
-    if (financial.fixedDeals?.length) {
-      const sec = document.createElement('div'); sec.className = 'fc-gen-section';
-      sec.textContent = 'Fixed Deals'; finCard.appendChild(sec);
-      financial.fixedDeals.forEach(deal => {
-        const row = document.createElement('div'); row.className = 'fc-gen-row';
-        row.style.flexDirection = 'column'; row.style.gap = '2px'; row.style.alignItems = 'flex-start';
-        row.innerHTML = `
-          <span class="fc-gen-key">${esc(deal.label)}</span>
-          <div style="display:flex;gap:12px;flex-wrap:wrap">
-            ${deal.value ? `<span class="fc-gen-val num">${fmtNum(deal.value)}</span>` : ''}
-            ${deal.date  ? `<span class="fc-gen-val" style="color:var(--text3)">${esc(deal.date)}</span>` : ''}
-            ${deal.m1    ? `<span class="fc-gen-val" style="color:var(--text3)">M1: ${esc(deal.m1)}</span>` : ''}
-          </div>
-          ${deal.desc ? `<span style="font-size:10px;color:var(--text3);line-height:1.4">${esc(deal.desc)}</span>` : ''}`;
-        finCard.appendChild(row);
-      });
-    }
+      // Header: Min / Max
+      const numRows = block.rows.filter(r => r.type === 'num');
+      const textRows = block.rows.filter(r => r.type === 'text');
 
-    // ── Signing Case ─────────────────────────────────────────
-    const sc = financial.signingCase || {};
-    if (Object.keys(sc).length) {
-      const sec = document.createElement('div'); sec.className = 'fc-gen-section';
-      sec.textContent = 'Signing Case'; finCard.appendChild(sec);
-      [
-        { key: 'y1Units',   label: 'Y1 Units (Steam)',    num: true  },
-        { key: 'y1Revenue', label: 'Y1 Revenue (Steam)',   num: true  },
-        { key: 'investment',label: 'Investment',            num: true  },
-        { key: 'y1mm',      label: 'Y1 MM',               num: true  },
-      ].filter(f => sc[f.key]).forEach(f => {
-        const row = document.createElement('div'); row.className = 'fc-gen-row';
-        const valCls = f.num ? 'fc-gen-val num' : 'fc-gen-val bright';
-        const scDisp = f.num ? fmtNum(sc[f.key]) : esc(sc[f.key]);
-        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="${valCls}">${scDisp}</span>`;
-        finCard.appendChild(row);
-      });
-    }
+      if (numRows.length) {
+        const hdr = document.createElement('div');
+        hdr.className = 'fc-bud-hdr';
+        hdr.style.gridTemplateColumns = '1fr 70px 70px';
+        hdr.innerHTML = '<span></span><span>Min</span><span>Max</span>';
+        ctrCol.appendChild(hdr);
 
-    // ── Unit Model ─────────────────────────────────────────
-    const um = financial.unitModel || {};
-    if (Object.keys(um).length) {
-      const sec = document.createElement('div'); sec.className = 'fc-gen-section';
-      sec.textContent = 'Unit Model: Base Game'; finCard.appendChild(sec);
-      [
-        { key: 'y1UnitsSteam', label: 'Y1 Units (Steam)',    num: true,  key: false },
-        { key: 'y1UnitsTotal', label: 'Y1 Units (Total)',    num: true,  hero: true },
-        { key: 'y1RevSteam',   label: 'Y1 Revenue (Steam)',  num: true,  hero: false },
-        { key: 'y1RevTotal',   label: 'Y1 Revenue (Total)',  num: true,  hero: true },
-        { key: 'y1Costs',      label: 'Y1 Costs',            num: true,  hero: false },
-        { key: 'y1mm',         label: 'Y1 MM',               num: true,  hero: true },
-      ].filter(f => um[f.key]).forEach(f => {
+        numRows.forEach(r => {
+          const row = document.createElement('div');
+          row.className = 'fc-bud-row';
+          row.style.gridTemplateColumns = '1fr 70px 70px';
+          row.innerHTML = `
+            <span class="fc-bud-label">${esc(r.label)}</span>
+            <span class="fc-bud-num">${fmtV(r.min)}</span>
+            <span class="fc-bud-num">${fmtV(r.max)}</span>`;
+          ctrCol.appendChild(row);
+        });
+      }
+
+      textRows.forEach(r => {
+        if (!r.min && !r.max) return;
         const row = document.createElement('div');
-        row.className = 'fc-gen-row' + (f.hero ? ' key-metric' : '');
-        const valCls = f.num ? 'fc-gen-val num' : 'fc-gen-val bright';
-        const umDisp = f.num ? fmtNum(um[f.key]) : esc(um[f.key]);
-        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="${valCls}">${umDisp}</span>`;
-        finCard.appendChild(row);
+        row.className = 'fc-gen-row';
+        row.innerHTML = `
+          <span class="fc-gen-key">${esc(r.label)}</span>
+          <span class="fc-gen-val">${esc(r.max || r.min)}</span>`;
+        ctrCol.appendChild(row);
       });
-    }
+    });
 
-    // ── Steam ─────────────────────────────────────────
-    const st = financial.steam || {};
-    if (Object.keys(st).length) {
-      const sec = document.createElement('div'); sec.className = 'fc-gen-section';
-      sec.textContent = 'Steam'; finCard.appendChild(sec);
-      [
-        { key: 'srp',           label: 'SRP'            },
-        { key: 'platformShare', label: 'Platform Share' },
-        { key: 'taxes',         label: 'Taxes'          },
-      ].filter(f => st[f.key]).forEach(f => {
-        const row = document.createElement('div'); row.className = 'fc-gen-row';
-        const stDisp = (f.key === 'srp' ? '$' : '') + fmtNum(st[f.key]);
-        row.innerHTML = `<span class="fc-gen-key">${esc(f.label)}</span><span class="fc-gen-val num">${stDisp}</span>`;
-        finCard.appendChild(row);
-      });
-    }
-
-    finCol.appendChild(finCard);
-    cols.appendChild(finCol);
+    cols.appendChild(ctrCol);
   }
 
   fcView.appendChild(cols);
