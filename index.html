@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.47</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.48</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.47</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.48</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4306,48 +4306,41 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
     const trackerHdr = document.createElement('div');
     trackerHdr.className = 'fc-budget-tracker-hdr';
     trackerHdr.textContent = 'Budget Tracker';
-    tracker.appendChild(trackerHdr);
-    tracker.appendChild(strip);
-
-    // ── Y1 stat cards appended to same tracker bar ───────────────────
+    // ── Y1 stat cards appended to same strip (6 equal sections total) ──
     const { financial } = data;
     const y1Rev = financial?.unitModel?.y1RevTotal || financial?.unitModel?.y1RevSteam;
     const y1mm  = financial?.unitModel?.y1mm;
-    if (y1Rev || y1mm) {
-      const statStrip = document.createElement('div');
-      statStrip.className = 'fc-budget-strip';
-      statStrip.style.marginTop = '6px';
 
-      if (y1Rev) {
-        const c = document.createElement('div');
-        c.className = 'fc-stat-card';
-        c.innerHTML = `
-          <div class="fc-budget-info">
-            <span class="fc-budget-label">Y1 Revenue</span>
-            <span class="fc-stat-value">${fmtNum(y1Rev)}</span>
-            <span class="fc-stat-sub">Total incl. all platforms</span>
-          </div>`;
-        statStrip.appendChild(c);
-      }
-
-      if (y1mm) {
-        const mmVal = parseFloat(y1mm);
-        const mmStr = isNaN(mmVal) ? String(y1mm) : mmVal.toFixed(2) + '×';
-        const mmColor = !isNaN(mmVal) && mmVal >= 2 ? 'var(--rag-g)' : !isNaN(mmVal) && mmVal >= 1 ? 'var(--rag-a)' : 'var(--text)';
-        const c = document.createElement('div');
-        c.className = 'fc-stat-card';
-        c.innerHTML = `
-          <div class="fc-budget-info">
-            <span class="fc-budget-label">Y1 Money Multiplier</span>
-            <span class="fc-stat-value" style="color:${mmColor}">${mmStr}</span>
-            <span class="fc-stat-sub">Return on investment</span>
-          </div>`;
-        statStrip.appendChild(c);
-      }
-
-      tracker.appendChild(statStrip);
+    if (y1Rev) {
+      const revVal = parseFloat(y1Rev);
+      const c = document.createElement('div');
+      c.className = 'fc-stat-card';
+      c.innerHTML = `
+        <div class="fc-budget-info">
+          <span class="fc-budget-label">Y1 Revenue</span>
+          <span class="fc-stat-value">US$${isNaN(revVal) ? fmtNum(y1Rev) : fmtK(Math.round(revVal))}</span>
+          <span class="fc-stat-sub">Total incl. all platforms</span>
+        </div>`;
+      strip.appendChild(c);
     }
 
+    if (y1mm) {
+      const mmVal = parseFloat(y1mm);
+      const mmStr = isNaN(mmVal) ? String(y1mm) : mmVal.toFixed(2) + '×';
+      const mmColor = !isNaN(mmVal) && mmVal >= 2 ? 'var(--rag-g)' : !isNaN(mmVal) && mmVal >= 1 ? 'var(--rag-a)' : 'var(--text)';
+      const c = document.createElement('div');
+      c.className = 'fc-stat-card';
+      c.innerHTML = `
+        <div class="fc-budget-info">
+          <span class="fc-budget-label">Y1 Money Multiplier</span>
+          <span class="fc-stat-value" style="color:${mmColor}">${mmStr}</span>
+          <span class="fc-stat-sub">Net rev / Total investment excl. markup</span>
+        </div>`;
+      strip.appendChild(c);
+    }
+
+    tracker.appendChild(trackerHdr);
+    tracker.appendChild(strip);
     fcView.appendChild(tracker);
   }
 
