@@ -781,6 +781,16 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   padding: 16px 22px; flex: 1; border-right: 0.5px solid var(--border);
 }
 .fc-budget-card:last-child { border-right: none; }
+.fc-stat-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 22px; flex: 1; border-right: 0.5px solid var(--border);
+}
+.fc-stat-card:last-child { border-right: none; }
+.fc-stat-value {
+  font-size: 20px; font-weight: 300; color: var(--text);
+  letter-spacing: -0.02em; line-height: 1.1;
+}
+.fc-stat-sub { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 2px; }
 .fc-budget-info { display: flex; flex-direction: column; gap: 3px; }
 .fc-budget-label {
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
@@ -931,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.46</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.47</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -975,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.46</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.47</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4298,6 +4308,46 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
     trackerHdr.textContent = 'Budget Tracker';
     tracker.appendChild(trackerHdr);
     tracker.appendChild(strip);
+
+    // ── Y1 stat cards appended to same tracker bar ───────────────────
+    const { financial } = data;
+    const y1Rev = financial?.unitModel?.y1RevTotal || financial?.unitModel?.y1RevSteam;
+    const y1mm  = financial?.unitModel?.y1mm;
+    if (y1Rev || y1mm) {
+      const statStrip = document.createElement('div');
+      statStrip.className = 'fc-budget-strip';
+      statStrip.style.marginTop = '6px';
+
+      if (y1Rev) {
+        const c = document.createElement('div');
+        c.className = 'fc-stat-card';
+        c.innerHTML = `
+          <div class="fc-budget-info">
+            <span class="fc-budget-label">Y1 Revenue</span>
+            <span class="fc-stat-value">${fmtNum(y1Rev)}</span>
+            <span class="fc-stat-sub">Total incl. all platforms</span>
+          </div>`;
+        statStrip.appendChild(c);
+      }
+
+      if (y1mm) {
+        const mmVal = parseFloat(y1mm);
+        const mmStr = isNaN(mmVal) ? String(y1mm) : mmVal.toFixed(2) + '×';
+        const mmColor = !isNaN(mmVal) && mmVal >= 2 ? 'var(--rag-g)' : !isNaN(mmVal) && mmVal >= 1 ? 'var(--rag-a)' : 'var(--text)';
+        const c = document.createElement('div');
+        c.className = 'fc-stat-card';
+        c.innerHTML = `
+          <div class="fc-budget-info">
+            <span class="fc-budget-label">Y1 Money Multiplier</span>
+            <span class="fc-stat-value" style="color:${mmColor}">${mmStr}</span>
+            <span class="fc-stat-sub">Return on investment</span>
+          </div>`;
+        statStrip.appendChild(c);
+      }
+
+      tracker.appendChild(statStrip);
+    }
+
     fcView.appendChild(tracker);
   }
 
