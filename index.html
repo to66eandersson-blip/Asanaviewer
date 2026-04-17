@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.49</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.50</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.49</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.50</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4196,7 +4196,7 @@ function extractSheetData(wb, sheetName) {
   // ── CURRENT REVENUE FORECAST: row 22, scan for label at col F ──────────
   // Find the row with "Current Revenue Forecast" label near row 22, then
   // scan across that row to find the first non-zero value and sum 12 cells.
-  let currentRevRow = 22;
+  let currentRevRow = 21; // default row for Current Revenue Forecast
   for (let r = 18; r <= 30; r++) {
     const lbl = cv('F', r).toLowerCase();
     if (lbl.includes('current') && lbl.includes('revenue') && lbl.includes('forecast')) {
@@ -4204,8 +4204,6 @@ function extractSheetData(wb, sheetName) {
     }
   }
 
-  // Scan across all possible columns on that row for non-zero values
-  // Columns run from roughly G (7) to BZ (78) — use column index arithmetic
   let currentRevY1 = null;
   const colIdxToLetter = i => {
     if (i < 26) return String.fromCharCode(65 + i);
@@ -4213,16 +4211,14 @@ function extractSheetData(wb, sheetName) {
   };
 
   for (let ci = 6; ci <= 120; ci++) { // G onwards
-    const col = colIdxToLetter(ci);
-    const val = cn(col, currentRevRow);
+    const val = cn(colIdxToLetter(ci), currentRevRow);
     if (val <= 0) continue;
-    // Found first non-zero — verify at least 12 cells from here
-    let count = 0, sum = 0;
+    // Found first non-zero — always sum exactly 12 cells from here
+    let sum = 0;
     for (let offset = 0; offset < 12; offset++) {
-      const v = cn(colIdxToLetter(ci + offset), currentRevRow);
-      if (v > 0 || offset < 6) { sum += v; count++; } // allow some zeros mid-year
+      sum += cn(colIdxToLetter(ci + offset), currentRevRow);
     }
-    if (count >= 6) { currentRevY1 = sum; } // accept if at least 6 months found
+    currentRevY1 = sum;
     break;
   }
 
