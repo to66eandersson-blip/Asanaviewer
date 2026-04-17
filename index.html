@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.50</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.51</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.50</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.51</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4210,19 +4210,23 @@ function extractSheetData(wb, sheetName) {
     return String.fromCharCode(64 + Math.floor(i / 26)) + String.fromCharCode(65 + (i % 26));
   };
 
+  let currentRevDebug = null;
   for (let ci = 6; ci <= 120; ci++) { // G onwards
     const val = cn(colIdxToLetter(ci), currentRevRow);
     if (val <= 0) continue;
     // Found first non-zero — always sum exactly 12 cells from here
     let sum = 0;
+    const startCol = colIdxToLetter(ci);
+    const endCol   = colIdxToLetter(ci + 11);
     for (let offset = 0; offset < 12; offset++) {
       sum += cn(colIdxToLetter(ci + offset), currentRevRow);
     }
-    currentRevY1 = sum;
+    currentRevY1    = sum;
+    currentRevDebug = `Row ${currentRevRow}, ${startCol}${currentRevRow}:${endCol}${currentRevRow}`;
     break;
   }
 
-  return { game: sheetName, changelog, general: gen, budget, origContract, financial, contracts, currentRevY1, _rawRows: rawRows };
+  return { game: sheetName, changelog, general: gen, budget, origContract, financial, contracts, currentRevY1, currentRevDebug, _rawRows: rawRows };
 }
 
 function renderForecastForCurrentBoard() {
@@ -4348,6 +4352,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
           <span class="fc-budget-label">Y1 Revenue</span>
           <span class="fc-stat-value">US$${fmtK(Math.round(y1Rev))}</span>
           <span class="fc-stat-sub">Current revenue forecast, Y1</span>
+          <span class="fc-stat-sub" style="color:var(--accent);font-size:9px">${esc(data.currentRevDebug || '—')}</span>
         </div>`;
       strip.appendChild(c);
     }
