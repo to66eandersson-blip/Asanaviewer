@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.48</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.49</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.48</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.49</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4193,7 +4193,40 @@ function extractSheetData(wb, sheetName) {
     if (hasContent) contracts.push(block);
   }
 
-  return { game: sheetName, changelog, general: gen, budget, origContract, financial, contracts, _rawRows: rawRows };
+  // ── CURRENT REVENUE FORECAST: row 22, scan for label at col F ──────────
+  // Find the row with "Current Revenue Forecast" label near row 22, then
+  // scan across that row to find the first non-zero value and sum 12 cells.
+  let currentRevRow = 22;
+  for (let r = 18; r <= 30; r++) {
+    const lbl = cv('F', r).toLowerCase();
+    if (lbl.includes('current') && lbl.includes('revenue') && lbl.includes('forecast')) {
+      currentRevRow = r; break;
+    }
+  }
+
+  // Scan across all possible columns on that row for non-zero values
+  // Columns run from roughly G (7) to BZ (78) — use column index arithmetic
+  let currentRevY1 = null;
+  const colIdxToLetter = i => {
+    if (i < 26) return String.fromCharCode(65 + i);
+    return String.fromCharCode(64 + Math.floor(i / 26)) + String.fromCharCode(65 + (i % 26));
+  };
+
+  for (let ci = 6; ci <= 120; ci++) { // G onwards
+    const col = colIdxToLetter(ci);
+    const val = cn(col, currentRevRow);
+    if (val <= 0) continue;
+    // Found first non-zero — verify at least 12 cells from here
+    let count = 0, sum = 0;
+    for (let offset = 0; offset < 12; offset++) {
+      const v = cn(colIdxToLetter(ci + offset), currentRevRow);
+      if (v > 0 || offset < 6) { sum += v; count++; } // allow some zeros mid-year
+    }
+    if (count >= 6) { currentRevY1 = sum; } // accept if at least 6 months found
+    break;
+  }
+
+  return { game: sheetName, changelog, general: gen, budget, origContract, financial, contracts, currentRevY1, _rawRows: rawRows };
 }
 
 function renderForecastForCurrentBoard() {
@@ -4308,18 +4341,17 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
     trackerHdr.textContent = 'Budget Tracker';
     // ── Y1 stat cards appended to same strip (6 equal sections total) ──
     const { financial } = data;
-    const y1Rev = financial?.unitModel?.y1RevTotal || financial?.unitModel?.y1RevSteam;
+    const y1Rev = data.currentRevY1;
     const y1mm  = financial?.unitModel?.y1mm;
 
     if (y1Rev) {
-      const revVal = parseFloat(y1Rev);
       const c = document.createElement('div');
       c.className = 'fc-stat-card';
       c.innerHTML = `
         <div class="fc-budget-info">
           <span class="fc-budget-label">Y1 Revenue</span>
-          <span class="fc-stat-value">US$${isNaN(revVal) ? fmtNum(y1Rev) : fmtK(Math.round(revVal))}</span>
-          <span class="fc-stat-sub">Total incl. all platforms</span>
+          <span class="fc-stat-value">US$${fmtK(Math.round(y1Rev))}</span>
+          <span class="fc-stat-sub">Current revenue forecast, Y1</span>
         </div>`;
       strip.appendChild(c);
     }
