@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.60</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.61</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.60</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.61</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4256,27 +4256,53 @@ function extractSheetData(wb, sheetName) {
   let currentRevDebug = null;
   let currentRevCellDetail = '';
 
-  for (let ci = 6; ci <= 120; ci++) {
-    const val = cnW(colIdxToLetter(ci), currentRevRow);
-    if (val <= 0) continue;
-    // Found first non-zero — sum exactly 12 cells using cnW (prefers cell.w)
+  // Step 1: find the release month column by matching gen.releaseSteam to row 18 headers
+  // Row 18 contains month labels like "Aug 25", "Sept 25", "Nov 25" etc.
+  // We find the column whose header matches the release month+year.
+  let releaseColIdx = -1;
+  if (gen.releaseSteam) {
+    const rd = new Date(gen.releaseSteam);
+    if (!isNaN(rd)) {
+      const relYear  = rd.getFullYear() % 100; // e.g. 25 for 2025
+      const relMonth = rd.getMonth(); // 0-based
+      const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+      const relMonthName = monthNames[relMonth];
+      for (let ci = 6; ci <= 120; ci++) {
+        const hdr = cv(colIdxToLetter(ci), 18).toLowerCase().replace(/[^a-z0-9]/g,'');
+        // Match e.g. "aug25", "sep25", "nov25"
+        if (hdr.includes(relMonthName) && hdr.includes(String(relYear))) {
+          releaseColIdx = ci;
+          break;
+        }
+      }
+    }
+  }
+
+  // Step 2: if we found the release column, start there; otherwise fall back to first non-zero
+  const startCi = releaseColIdx >= 0 ? releaseColIdx : (() => {
+    for (let ci = 6; ci <= 120; ci++) {
+      if (cnW(colIdxToLetter(ci), currentRevRow) > 0) return ci;
+    }
+    return -1;
+  })();
+
+  if (startCi >= 0) {
     let sum = 0;
-    const startCol = colIdxToLetter(ci);
-    const endCol   = colIdxToLetter(ci + 11);
+    const startCol = colIdxToLetter(startCi);
+    const endCol   = colIdxToLetter(startCi + 11);
     const details  = [];
     for (let offset = 0; offset < 12; offset++) {
-      const col  = colIdxToLetter(ci + offset);
+      const col  = colIdxToLetter(startCi + offset);
       const cell = ws[col + currentRevRow];
       const cv_  = cell ? cell.v : 'nil';
       const cw_  = cell ? (cell.w || '—') : '—';
       const cn_  = cnW(col, currentRevRow);
       sum += cn_;
-      details.push(`${col}: v=${cv_} w=${cw_} →${cn_}`);
+      details.push(`${col}: w=${cw_} →${cn_}`);
     }
-    currentRevY1        = sum;
-    currentRevDebug     = `Row ${currentRevRow}, ${startCol}${currentRevRow}:${endCol}${currentRevRow}`;
+    currentRevY1         = sum;
+    currentRevDebug      = `Row ${currentRevRow}, ${startCol}${currentRevRow}:${endCol}${currentRevRow}${releaseColIdx < 0 ? ' (fallback)' : ''}`;
     currentRevCellDetail = details.join(' | ');
-    break;
   }
 
   return { game: sheetName, changelog, general: gen, budget, origContract, financial, contracts, currentRevY1, currentRevDebug, currentRevCellDetail, _rawRows: rawRows };
