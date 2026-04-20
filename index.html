@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.65</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.66</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.65</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.66</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4313,14 +4313,20 @@ function extractSheetData(wb, sheetName) {
 function renderForecastForCurrentBoard() {
   if (!_cachedWorkbook) return;
   const wb = _cachedWorkbook;
-  // Snapshot board info NOW — boardInfo() reads from dropdown which may change
-  const info    = boardInfo();
+  // Snapshot board info NOW using currentPid directly
+  const snapGid = currentPid || (document.getElementById('board-select')?.value || '');
+  const snapProduct = portfolioProducts.find(p => p.boardGid === snapGid);
+  const info = snapProduct
+    ? { code: snapProduct.code || '', title: snapProduct.title || snapProduct.name || '' }
+    : boardInfo();
   const acronym = info.code || boardAcronym();
+
+  console.log('Forecast render — currentPid:', currentPid, 'snapGid:', snapGid, 'code:', info.code, 'title:', info.title);
 
   // Score every sheet using the snapshotted info
   const allScores = wb.SheetNames
     .map(name => ({ name, score: sheetMatchScore(name, acronym, info) }));
-  console.log('Board:', info.code, info.title, '| Sheet scores:', allScores.map(s => `${s.name}:${s.score}`).join(', '));
+  console.log('Sheet scores:', allScores.filter(s=>s.score>0).map(s => `${s.name}:${s.score}`).join(', ') || 'none');
   const scored = allScores
     .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score);
@@ -4328,8 +4334,26 @@ function renderForecastForCurrentBoard() {
   const pickerWrap = document.getElementById('sheet-picker-wrap');
   const pickerSel  = document.getElementById('sheet-picker-sel');
 
-  if (!scored.length) {
-    // No match — show manual picker populated with all sheet names
+  // Title verification: load the top candidate and check Title (Finance) / Title (IndieBI)
+  // against the board title — if mismatch, try other candidates or show picker
+  let bestMatch = null;
+  for (const candidate of scored) {
+    const d = extractSheetData(wb, candidate.name);
+    if (!d) continue;
+    const sheetTitle = (d.general?.titleFinance || d.general?.titleIndie || '').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const boardTitle = (info.title || '').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const codeMatch  = candidate.score >= 3; // exact match — trust without title check
+    const titleMatch = sheetTitle && boardTitle && (
+      sheetTitle.includes(boardTitle.slice(0,6)) ||
+      boardTitle.includes(sheetTitle.slice(0,6))
+    );
+    console.log(`  Candidate: ${candidate.name} (score ${candidate.score}) sheetTitle="${sheetTitle}" boardTitle="${boardTitle}" titleMatch=${titleMatch}`);
+    if (codeMatch || titleMatch) { bestMatch = { data: d, name: candidate.name }; break; }
+    // First candidate with any score — keep as fallback but keep checking
+    if (!bestMatch) bestMatch = { data: d, name: candidate.name, isFallback: true };
+  }
+
+  if (!bestMatch || !scored.length) {
     pickerWrap.classList.add('visible');
     pickerSel.innerHTML = '<option value="">— select a sheet tab —</option>';
     wb.SheetNames.forEach(name => {
@@ -4341,12 +4365,11 @@ function renderForecastForCurrentBoard() {
     return;
   }
 
-  // Good match found — hide manual picker
   pickerWrap.classList.remove('visible');
-
-  const data = extractSheetData(wb, scored[0].name);
-  if (data) { data._matchedSheet = scored[0].name; data._matchScore = scored[0].score; renderForecast(data, data.labelA, data.labelB, acronym, null); }
-  else renderForecast(null, 'EP', 'EQ', acronym, wb.SheetNames);
+  const data = bestMatch.data;
+  data._matchedSheet = bestMatch.name;
+  data._isFallback   = bestMatch.isFallback || false;
+  renderForecast(data, data.labelA, data.labelB, acronym, null);
 }
 
 function onManualSheetPick(sheetName) {
