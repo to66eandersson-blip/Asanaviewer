@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.56</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.57</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.56</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.57</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4390,7 +4390,10 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
     // ── MM: (Y1Rev × 0.60) / investment ──────────────────────────────
     // Released game (has actual spend) → use spend; pre-release → use budget
     if (y1Rev && budget) {
-      const investment = budget.total?.spend > 0
+      // Determine if released: release date exists and is in the past
+      const releaseDate = gen?.releaseSteam ? new Date(gen.releaseSteam) : null;
+      const isReleased  = releaseDate && !isNaN(releaseDate) && releaseDate <= new Date();
+      const investment  = isReleased && budget.total?.spend > 0
         ? budget.total.spend
         : budget.total?.budget || 0;
       if (investment > 0) {
@@ -4398,7 +4401,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
         const mmVal  = netRev / investment;
         const mmStr  = mmVal.toFixed(2) + '×';
         const mmColor = mmVal >= 3 ? 'var(--rag-g)' : mmVal >= 2 ? 'var(--rag-a)' : 'var(--text)';
-        const basis   = budget.total?.spend > 0 ? 'actual spend' : 'planned budget';
+        const basis   = isReleased ? 'actual spend' : 'planned budget';
         const c = document.createElement('div');
         c.className = 'fc-stat-card';
         c.innerHTML = `
