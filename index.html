@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.63</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.64</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.63</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.64</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3924,8 +3924,8 @@ function boardAcronym() {
 /* Score how well a sheet name matches the current board.
    Uses both the board code (e.g. "MCF") and full game title (e.g. "My Cannibal Family").
    4 = exact code match, 3 = exact title match, 2 = starts-with, 1 = contains */
-function sheetMatchScore(sheetName, acronym) {
-  const info  = boardInfo();
+function sheetMatchScore(sheetName, acronym, explicitInfo) {
+  const info  = explicitInfo || boardInfo();
   const code  = (info.code  || acronym || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   const title = (info.title || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   const s     = sheetName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -4311,12 +4311,13 @@ function extractSheetData(wb, sheetName) {
 function renderForecastForCurrentBoard() {
   if (!_cachedWorkbook) return;
   const wb = _cachedWorkbook;
-  const acronym = boardAcronym();
+  // Snapshot board info NOW — boardInfo() reads from dropdown which may change
+  const info    = boardInfo();
+  const acronym = info.code || boardAcronym();
 
-  // Score every sheet and pick the best match
-  const info = boardInfo();
+  // Score every sheet using the snapshotted info
   const allScores = wb.SheetNames
-    .map(name => ({ name, score: sheetMatchScore(name, acronym) }));
+    .map(name => ({ name, score: sheetMatchScore(name, acronym, info) }));
   console.log('Board:', info.code, info.title, '| Sheet scores:', allScores.map(s => `${s.name}:${s.score}`).join(', '));
   const scored = allScores
     .filter(s => s.score > 0)
