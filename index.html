@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.59</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.60</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.59</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.60</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3987,11 +3987,36 @@ function extractSheetData(wb, sheetName) {
     }
     // Fallback: use cell.w (Excel's cached formatted string) for cross-sheet formulas
     // that SheetJS can't evaluate (cell.v = 0 but display shows a real number)
-    // Only use cell.w when cell.v is exactly 0 (unresolved formula), not when it's noise
     if (cell.v === 0 && cell.w) {
-      const stripped = cell.w.replace(/[^0-9.]/g, ''); // strip $, commas, spaces, dashes
+      const stripped = cell.w.replace(/[^0-9.]/g, '');
       const w = parseFloat(stripped);
       if (!isNaN(w) && w >= 1) return Math.round(w * 100) / 100;
+    }
+    return 0;
+  }
+
+  // cnW: always prefer cell.w (formatted display value) over cell.v
+  // Used for rows where cross-sheet formulas make cell.v unreliable
+  // e.g. cell.v=504113086 but cell.w="$2,786k" — trust the display value
+  function cnW(col, r) {
+    const cell = ws[col + r];
+    if (!cell) return 0;
+    // Try cell.w first — strip currency symbols, commas, spaces
+    // Handle "k" suffix: $274k → 274000, $2,786k → 2786000, $1.2M → 1200000
+    if (cell.w) {
+      const w = cell.w.trim();
+      // Match patterns like $274k, $2,786k, $1.2M, 274000, -$100k
+      const mK = w.match(/(-?)[\$]?([\d,]+\.?\d*)\s*k/i);
+      const mM = w.match(/(-?)[\$]?([\d,]+\.?\d*)\s*m/i);
+      const mN = w.match(/(-?)[\$]?([\d,]+\.?\d*)/);
+      if (mK) { const v = parseFloat(mK[2].replace(/,/g,'')) * 1000 * (mK[1] ? -1 : 1); if (!isNaN(v) && Math.abs(v) >= 1) return Math.round(v); }
+      if (mM) { const v = parseFloat(mM[2].replace(/,/g,'')) * 1000000 * (mM[1] ? -1 : 1); if (!isNaN(v) && Math.abs(v) >= 1) return Math.round(v); }
+      if (mN) { const v = parseFloat(mN[2].replace(/,/g,'')) * (mN[1] ? -1 : 1); if (!isNaN(v) && Math.abs(v) >= 1) return Math.round(v); }
+    }
+    // Fall back to cell.v if cell.w is absent or unparseable
+    if (cell.v != null) {
+      const v = parseFloat(String(cell.v));
+      if (!isNaN(v) && Math.abs(v) >= 1) return Math.round(v);
     }
     return 0;
   }
@@ -4232,9 +4257,9 @@ function extractSheetData(wb, sheetName) {
   let currentRevCellDetail = '';
 
   for (let ci = 6; ci <= 120; ci++) {
-    const val = cn(colIdxToLetter(ci), currentRevRow);
+    const val = cnW(colIdxToLetter(ci), currentRevRow);
     if (val <= 0) continue;
-    // Found first non-zero — sum exactly 12 cells and record detail
+    // Found first non-zero — sum exactly 12 cells using cnW (prefers cell.w)
     let sum = 0;
     const startCol = colIdxToLetter(ci);
     const endCol   = colIdxToLetter(ci + 11);
@@ -4244,7 +4269,7 @@ function extractSheetData(wb, sheetName) {
       const cell = ws[col + currentRevRow];
       const cv_  = cell ? cell.v : 'nil';
       const cw_  = cell ? (cell.w || '—') : '—';
-      const cn_  = cn(col, currentRevRow);
+      const cn_  = cnW(col, currentRevRow);
       sum += cn_;
       details.push(`${col}: v=${cv_} w=${cw_} →${cn_}`);
     }
