@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.58</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.59</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.58</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.59</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4229,37 +4229,32 @@ function extractSheetData(wb, sheetName) {
   };
 
   let currentRevDebug = null;
-  // Dump values around the expected range for diagnosis
-  const _diagVals = [];
-  for (let ci = 54; ci <= 75; ci++) {
-    const col = colIdxToLetter(ci);
-    const cell = ws[col + currentRevRow];
-    const raw = cell ? String(cell.v) : 'EMPTY';
-    const num = cn(col, currentRevRow);
-    _diagVals.push(`${col}:${num}(raw=${raw})`);
-  }
-  console.log('Rev forecast row dump:', _diagVals.join(' | '));
+  let currentRevCellDetail = '';
 
-  for (let ci = 6; ci <= 120; ci++) { // G onwards
+  for (let ci = 6; ci <= 120; ci++) {
     const val = cn(colIdxToLetter(ci), currentRevRow);
     if (val <= 0) continue;
-    // Found first non-zero — always sum exactly 12 cells from here
+    // Found first non-zero — sum exactly 12 cells and record detail
     let sum = 0;
     const startCol = colIdxToLetter(ci);
     const endCol   = colIdxToLetter(ci + 11);
-    const cellVals = [];
+    const details  = [];
     for (let offset = 0; offset < 12; offset++) {
-      const v = cn(colIdxToLetter(ci + offset), currentRevRow);
-      sum += v;
-      cellVals.push(`${colIdxToLetter(ci + offset)}=${v}`);
+      const col  = colIdxToLetter(ci + offset);
+      const cell = ws[col + currentRevRow];
+      const cv_  = cell ? cell.v : 'nil';
+      const cw_  = cell ? (cell.w || '—') : '—';
+      const cn_  = cn(col, currentRevRow);
+      sum += cn_;
+      details.push(`${col}: v=${cv_} w=${cw_} →${cn_}`);
     }
-    console.log('Summing:', cellVals.join(', '), '= ', sum);
-    currentRevY1    = sum;
-    currentRevDebug = `Row ${currentRevRow}, ${startCol}${currentRevRow}:${endCol}${currentRevRow}`;
+    currentRevY1        = sum;
+    currentRevDebug     = `Row ${currentRevRow}, ${startCol}${currentRevRow}:${endCol}${currentRevRow}`;
+    currentRevCellDetail = details.join(' | ');
     break;
   }
 
-  return { game: sheetName, changelog, general: gen, budget, origContract, financial, contracts, currentRevY1, currentRevDebug, _rawRows: rawRows };
+  return { game: sheetName, changelog, general: gen, budget, origContract, financial, contracts, currentRevY1, currentRevDebug, currentRevCellDetail, _rawRows: rawRows };
 }
 
 function renderForecastForCurrentBoard() {
@@ -4385,6 +4380,7 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
           <span class="fc-stat-value">US$${fmtK(Math.round(y1Rev))}</span>
           <span class="fc-stat-sub">Current revenue forecast, Y1</span>
           <span class="fc-stat-sub" style="color:var(--accent);font-size:9px">${esc(data.currentRevDebug || '—')}</span>
+          <span class="fc-stat-sub" style="color:var(--text3);font-size:8px;white-space:pre-wrap;word-break:break-all">${esc(data.currentRevCellDetail || '')}</span>
         </div>`;
       strip.appendChild(c);
     }
