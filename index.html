@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.66</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.67</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.66</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.67</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3943,8 +3943,9 @@ function sheetMatchScore(sheetName, acronym, explicitInfo) {
     if (s.startsWith(code) || code.startsWith(s)) return 2;
     if (s.includes(code) || code.includes(s)) return 1;
   }
-  // Title word match
-  if (title && (s.includes(title) || title.includes(s))) return 1;
+  // Title word match — only match if sheet name is at least 4 chars to avoid
+  // false positives like "ST" matching inside "MONSTERSARECOMING"
+  if (title && s.length >= 4 && (s.includes(title) || title.includes(s))) return 1;
   // Initials match — e.g. sheet "DK" matches title "DOME KEEPER"
   const titleWords = (info.title || '').trim().split(/\s+/).filter(Boolean);
   if (titleWords.length > 1) {
@@ -4353,7 +4354,7 @@ function renderForecastForCurrentBoard() {
     if (!bestMatch) bestMatch = { data: d, name: candidate.name, isFallback: true };
   }
 
-  if (!bestMatch || !scored.length) {
+  if (!bestMatch || !scored.length || bestMatch.isFallback) {
     pickerWrap.classList.add('visible');
     pickerSel.innerHTML = '<option value="">— select a sheet tab —</option>';
     wb.SheetNames.forEach(name => {
