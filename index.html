@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.67</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.68</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.67</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.68</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4322,12 +4322,9 @@ function renderForecastForCurrentBoard() {
     : boardInfo();
   const acronym = info.code || boardAcronym();
 
-  console.log('Forecast render — currentPid:', currentPid, 'snapGid:', snapGid, 'code:', info.code, 'title:', info.title);
-
   // Score every sheet using the snapshotted info
   const allScores = wb.SheetNames
     .map(name => ({ name, score: sheetMatchScore(name, acronym, info) }));
-  console.log('Sheet scores:', allScores.filter(s=>s.score>0).map(s => `${s.name}:${s.score}`).join(', ') || 'none');
   const scored = allScores
     .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score);
@@ -4348,7 +4345,6 @@ function renderForecastForCurrentBoard() {
       sheetTitle.includes(boardTitle.slice(0,6)) ||
       boardTitle.includes(sheetTitle.slice(0,6))
     );
-    console.log(`  Candidate: ${candidate.name} (score ${candidate.score}) sheetTitle="${sheetTitle}" boardTitle="${boardTitle}" titleMatch=${titleMatch}`);
     if (codeMatch || titleMatch) { bestMatch = { data: d, name: candidate.name }; break; }
     // First candidate with any score — keep as fallback but keep checking
     if (!bestMatch) bestMatch = { data: d, name: candidate.name, isFallback: true };
@@ -4467,7 +4463,6 @@ function renderForecast(data, _u1, _u2, acronym, allSheets) {
           <span class="fc-stat-value">US$${fmtK(Math.round(y1Rev))}</span>
           <span class="fc-stat-sub">Current revenue forecast, Y1</span>
           <span class="fc-stat-sub" style="color:var(--accent);font-size:9px">${esc(data.currentRevDebug || '—')}</span>
-          <span class="fc-stat-sub" style="color:var(--text3);font-size:8px;white-space:pre-wrap;word-break:break-all">${esc(data.currentRevCellDetail || '')}</span>
         </div>`;
       strip.appendChild(c);
     }
