@@ -941,7 +941,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.68</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.71</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +985,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.68</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.71</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2115,7 +2115,18 @@ function toggleFilter(key,group){
   document.querySelectorAll(`.chip[data-group="${group}"]`).forEach(c=>c.classList.toggle('on',store.has(c.dataset.key)));
   render();
 }
-function toggleDone(){hideDone=!hideDone;$('done-btn').classList.toggle('on',hideDone);$('done-btn').textContent=hideDone?'Show done':'Hide done';render();}
+function toggleDone(){
+  hideDone=!hideDone;
+  $('done-btn').classList.toggle('on',hideDone);
+  $('done-btn').textContent=hideDone?'Show done':'Hide done';
+  if (activeTab==='timeline') render();
+  else if (activeTab==='goals') renderGoalsBoard();
+  else if (activeTab==='fof') {
+    // Invalidate goal cache so filter is re-applied
+    _fofGoalsByGame = null;
+    renderFoF();
+  }
+}
 function toggleLabels(){
   showLabels=!showLabels;
   $('labels-btn').classList.toggle('on',!showLabels);
@@ -3114,6 +3125,7 @@ function renderGoalsBoard() {
       return;
     }
     if (!evt.isMonthly || !evt.monthKey) return;
+    if (hideDone && evt.done) return; // respect hide-done for monthly goals only
     const bucket = `${evt.domain}__${evt.monthKey}`;
     if (!monthly[bucket]) monthly[bucket] = [];
     monthly[bucket].push(evt);
@@ -3297,14 +3309,17 @@ async function fetchFoFGoals() {
   _fofGoalsLoading = true;
   const store = {}; // { product: { productGoals: [], monthly: { key: [] } } }
   const MONTH_CF = '1211670301793184';
+  let totalFetched = 0, totalStored = 0;
+  const dropped = []; // track dropped tasks for audit
   try {
     let offset = null, pages = 0;
-    const fields = 'name,custom_fields.gid,custom_fields.display_value,custom_fields.enum_value';
-    while (pages < 15) {
+    const fields = 'gid,name,completed,custom_fields.gid,custom_fields.name,custom_fields.display_value,custom_fields.enum_value';
+    while (pages < 50) { // increased from 15 to handle large portfolios
       const url = `/projects/${PORTFOLIO_OVERVIEW_GID}/tasks?opt_fields=${fields}&limit=100` +
                   (offset ? `&offset=${offset}` : '');
       const resp = await api(url);
       const tasks = resp.data || [];
+      totalFetched += tasks.length;
       tasks.forEach(t => {
         const getCF = (gid) => (t.custom_fields||[]).find(f=>f.gid===gid);
         const goalType = getCF(CF_GOAL_TYPE)?.display_value || '';
@@ -3312,19 +3327,44 @@ async function fetchFoFGoals() {
         const product  = getCF(CF_PRODUCT)?.display_value || '';
         const ragRaw   = getCF(CF_RAG)?.enum_value?.gid;
         const rag      = ragRaw ? (RAG_MAP[ragRaw] || null) : null;
-        if (!product || !t.name?.trim()) return;
+        const name     = t.name?.trim() || '';
+
+        // Track and skip tasks missing required fields
+        if (!name) { dropped.push({ gid: t.gid, reason: 'empty name' }); return; }
+        if (!product) { dropped.push({ gid: t.gid, name, reason: 'no product CF' }); return; }
+
         if (!store[product]) store[product] = { productGoals: [], monthly: {} };
+
         const isProduct = goalType.toLowerCase().includes('product');
         const isMonthly = goalType.toLowerCase().includes('monthly');
+
         if (isProduct) {
-          store[product].productGoals.push({ name: t.name, rag });
-        } else if (isMonthly && month) {
-          if (!store[product].monthly[month]) store[product].monthly[month] = [];
-          store[product].monthly[month].push({ name: t.name, rag });
+          store[product].productGoals.push({ name, rag, done: !!t.completed, gid: t.gid });
+          totalStored++;
+        } else if (isMonthly) {
+          const monthKey = month || '(unscheduled)';
+          if (!month) console.warn('Monthly goal has no month CF — placed in (unscheduled):', name, t.gid);
+          if (!store[product].monthly[monthKey]) store[product].monthly[monthKey] = [];
+          store[product].monthly[monthKey].push({ name, rag, done: !!t.completed, gid: t.gid });
+          totalStored++;
+        } else {
+          // Goal exists but type is unrecognised — store under product goals as fallback
+          // so nothing is silently lost
+          if (!goalType) {
+            dropped.push({ gid: t.gid, name, product, reason: 'no goal type CF' });
+          } else {
+            dropped.push({ gid: t.gid, name, product, reason: `unrecognised type: "${goalType}"` });
+          }
         }
       });
       if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
       else break;
+    }
+    console.log(`Goals: fetched ${totalFetched}, stored ${totalStored}, dropped ${dropped.length}`);
+    if (dropped.length) {
+      console.group('Dropped goals (not shown in viewer):');
+      dropped.forEach(d => console.log(`  [${d.gid}] "${d.name || '?'}" — ${d.reason}${d.product ? ` (product: ${d.product})` : ''}`));
+      console.groupEnd();
     }
   } catch(e) { console.warn('FoF goals fetch failed:', e.message); }
   _fofGoalStore = store;
@@ -3365,9 +3405,12 @@ function _buildGoalsByGame(store, mode) {
   const result = {};
   Object.entries(store).forEach(([product, data]) => {
     if (mode === 'product') {
+      // Product goals: never filter by done — always show all
       if (data.productGoals.length) result[product] = data.productGoals;
     } else {
-      const goals = data.monthly[mode] || [];
+      // Monthly goals: respect hideDone toggle
+      let goals = data.monthly[mode] || [];
+      if (hideDone) goals = goals.filter(g => !g.done);
       if (goals.length) result[product] = goals;
     }
   });
@@ -3420,7 +3463,11 @@ async function onFofGoalModeChange(mode) {
         let goalsEl = card.querySelector('.fof-card-goals');
         if (!goals.length) { if (goalsEl) goalsEl.remove(); return; }
         if (!goalsEl) { goalsEl = document.createElement('div'); goalsEl.className = 'fof-card-goals'; card.appendChild(goalsEl); }
-        goalsEl.innerHTML = goals.map(g => {
+        const visGoals = fofGoalMode === 'product'
+          ? goals
+          : (hideDone ? goals.filter(g => !g.done) : goals);
+        if (!visGoals.length) { if (goalsEl) goalsEl.remove(); return; }
+        goalsEl.innerHTML = visGoals.map(g => {
           const ragColor = g.rag ? (g.rag.ring==='rag-green'?'var(--rag-g)':g.rag.ring==='rag-amber'?'var(--rag-a)':'var(--rag-r)') : null;
           const dot = ragColor ? `border-color:${ragColor};background:${ragColor}33` : 'border-color:var(--border2);background:transparent';
           return `<div class="fof-goal-row"><div class="fof-goal-dot" style="${dot}"></div><div class="fof-goal-name">${esc(g.name)}</div></div>`;
@@ -3533,15 +3580,18 @@ async function renderFoF() {
         const gtmBadge = p.gtm ? `<div class="fof-card-gtm">${esc(p.gtm)}</div>` : '';
 
         let goalsHtml = '';
-        if (p.goals.length) {
-          goalsHtml = '<div class="fof-card-goals">' + p.goals.slice(0,4).map(g => {
+        const visibleGoals = fofGoalMode === 'product'
+          ? p.goals  // product goals: always show all
+          : (hideDone ? p.goals.filter(g => !g.done) : p.goals);
+        if (visibleGoals.length) {
+          goalsHtml = '<div class="fof-card-goals">' + visibleGoals.slice(0,4).map(g => {
             const rag = g.rag;
             const dotColor = rag ? (rag.ring==='rag-green'?'var(--rag-g)':rag.ring==='rag-amber'?'var(--rag-a)':'var(--rag-r)') : 'var(--border2)';
             return `<div class="fof-goal-row">
               <div class="fof-goal-dot" style="border-color:${dotColor};background:${rag?dotColor+'33':'transparent'}"></div>
               <div class="fof-goal-name">${esc(stripDomainPrefix(g.name))}</div>
             </div>`;
-          }).join('') + (p.goals.length > 4 ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:2px 13px">+${p.goals.length-4} more</div>` : '') + '</div>';
+          }).join('') + (visibleGoals.length > 4 ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:2px 13px">+${visibleGoals.length-4} more</div>` : '') + '</div>';
         }
 
         card.innerHTML = `
