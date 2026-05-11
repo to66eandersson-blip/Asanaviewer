@@ -604,6 +604,45 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 #excel-scroll { flex: 1; overflow: hidden; padding: 0; display: flex; flex-direction: column; min-height: 0; }
 
+/* ─── PITCH FUNNEL ─────────────────────────────────────────────── */
+#funnel-view { padding: 0 0 2rem; }
+.funnel-header { display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 2rem 1rem; border-bottom: 0.5px solid var(--border2); flex-wrap: wrap; gap: 8px; }
+.funnel-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text2); }
+.funnel-filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.funnel-filter-btn { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 3px 10px; border: 0.5px solid var(--border2);
+  border-radius: 3px; background: none; color: var(--text3); cursor: pointer; }
+.funnel-filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.funnel-body { display: flex; flex-direction: column; padding: 1.5rem 2rem 0; gap: 0; }
+.funnel-stage { width: 100%; }
+.funnel-trap-wrap { display: flex; align-items: stretch; gap: 0; min-height: 64px; }
+.funnel-trap { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  clip-path: polygon(5% 0%, 95% 0%, 85% 100%, 15% 100%);
+  padding: 12px 20px; flex-shrink: 0; transition: filter 0.12s; }
+.funnel-trap:hover { filter: brightness(1.15); }
+.funnel-trap-count { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; color: #fff; }
+.funnel-trap-label { font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6); margin-top: 3px; text-align: center; }
+.funnel-cards-wrap { flex: 1; min-width: 0; overflow-x: auto; display: flex;
+  align-items: flex-start; gap: 8px; padding: 8px 0 8px 14px; }
+.funnel-connector { padding: 3px 0; display: flex; align-items: center; }
+.funnel-connector-inner { font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text3); padding-left: 20px; }
+.funnel-game-card { flex: 0 0 180px; background: var(--surface2); border: 0.5px solid var(--border2);
+  border-radius: 5px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.funnel-game-card:hover { border-color: var(--border3); background: var(--surface3); }
+.funnel-card-title { font-size: 11.5px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.funnel-card-studio { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.funnel-card-meta { display: flex; flex-wrap: wrap; gap: 4px; }
+.funnel-tag { font-family: var(--mono); font-size: 8px; letter-spacing: 0.06em;
+  padding: 2px 5px; border-radius: 2px; }
+.funnel-card-poc { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.funnel-empty { font-family: var(--mono); font-size: 9px; color: var(--text3); padding: 8px 0; align-self: center; }
+.funnel-count-only { flex: 1; display: flex; align-items: center; padding-left: 14px; }
+.funnel-count-only-txt { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+
 /* ── FORECAST VIEW ── */
 #fc-view {
   padding: 1.75rem 1.5rem 2rem;
@@ -941,7 +980,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.71</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.72</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -985,7 +1024,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.71</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.72</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -1019,6 +1058,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <span class="tab-nav-label">Portfolio</span>
       <button class="tab-btn" id="tab-btn-fof" onclick="switchTab('fof')">Flow of Fury</button>
       <button class="tab-btn" id="tab-btn-roadmap" onclick="switchTab('roadmap')">Roadmap</button>
+      <button class="tab-btn" id="tab-btn-funnel" onclick="switchTab('funnel')">Pitch Funnel</button>
     </div>
   </div>
 
@@ -1369,6 +1409,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   </div><!-- /panel-roadmap -->
 
   <!-- ── TAB 5: FORECAST ── -->
+  <!-- ── TAB: PITCH FUNNEL ── -->
+  <div class="tab-panel" id="panel-funnel">
+    <div id="funnel-view" style="height:100%;overflow-y:auto;display:flex;flex-direction:column"></div>
+  </div>
+
   <div class="tab-panel" id="panel-excel">
     <div class="excel-toolbar">
       <div class="excel-local-note">
@@ -2631,6 +2676,8 @@ function gameColor(title) {
 
 let roadmapEvents = [];
 let roadmapLoaded = false;
+let _funnelLoaded  = false;
+let _funnelData    = null; // cached funnel tasks
 let _pubGidToGame  = null; // cache: publishing board GID → { title } — discovered at runtime
 let roadmapZoomIdx = 0;
 const ROADMAP_ZOOMS = [
@@ -3034,6 +3081,209 @@ if (_tlInner && _ruler) {
     _ruler.style.left = (e.clientX - rect.left) + 'px';
   });
 }
+
+// ─── PITCH FUNNEL ────────────────────────────────────────────────────────────
+
+const FUNNEL_PROJECT_GID  = '1163485042326161';
+const CF_FUNNEL_STAGE_F   = '1213279036159063';
+const CF_FEEL_OF_FURY_F   = '1211670565777837';
+const CF_RISK_PROFILE_F   = '1211542716543041';
+const CF_RELEASE_YEAR_F   = '1211739525854727';
+const CF_BUDGET_F         = '1212301169427838';
+const CF_STUDIO_F         = '1207338085052929';
+const CF_POC_F            = '1168612942840453';
+const CF_PROJECT_TITLE_F  = '1207330334188778';
+const CF_SIGNING_TARGET_F = '1211739543598422';
+
+const FUNNEL_STAGES = [
+  { key: 'Inbound',                 showCards: false,
+    transition: 'Initial Filter — scope, format, relevance' },
+  { key: 'Qualified',               showCards: false,
+    transition: 'Scout Screening — human playthrough and review' },
+  { key: 'Shortlist',               showCards: true,
+    transition: 'Playtest — hands-on builds, execution, proof' },
+  { key: 'Playtest',                showCards: true,
+    transition: 'Product Evaluation — findings documented in GTM 0.2' },
+  { key: 'Deep Product Evaluation', showCards: true,
+    transition: 'Product Team Proposal' },
+  { key: 'Signed',                  showCards: true, transition: null },
+];
+
+const FUNNEL_WIDTHS = { 'Inbound': 100, 'Qualified': 82, 'Shortlist': 64,
+  'Playtest': 48, 'Deep Product Evaluation': 34, 'Signed': 24 };
+const FUNNEL_COLORS = { 'Inbound': '#4a1212', 'Qualified': '#5e1a1a',
+  'Shortlist': '#722222', 'Playtest': '#872b2b', 'Deep Product Evaluation': '#9c3838',
+  'Signed': '#b87c2a' };
+const FEEL_COLORS = { 'Good': 'var(--rag-g)', 'Fear': 'var(--rag-r)',
+  'Smart': '#6b9e9e', 'Invincible': '#a890c0' };
+const RISK_COLORS = { 'Art Game': '#7b9cbf', 'Safe Bet': 'var(--rag-g)',
+  'High Risk / High Reward': 'var(--rag-a)' };
+
+let _funnelYearFilter = 'all';
+let _funnelRiskFilter = 'all';
+
+async function fetchFunnelData() {
+  if (_funnelData) return _funnelData;
+  const fields = 'name,completed,custom_fields.gid,custom_fields.display_value,custom_fields.enum_value,custom_fields.multi_enum_values,custom_fields.number_value';
+  const tasks = [];
+  let offset = null, pages = 0;
+  while (pages < 40) {
+    const url = `/projects/${FUNNEL_PROJECT_GID}/tasks?opt_fields=${fields}&limit=100` +
+      (offset ? `&offset=${offset}` : '');
+    const resp = await api(url);
+    (resp.data || []).forEach(t => { if (!t.completed) tasks.push(t); });
+    if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
+    else break;
+  }
+  _funnelData = tasks.map(t => {
+    const getCF = gid => (t.custom_fields || []).find(f => f.gid === gid);
+    const stage  = getCF(CF_FUNNEL_STAGE_F)?.enum_value?.name || null;
+    const feel   = (getCF(CF_FEEL_OF_FURY_F)?.multi_enum_values || []).map(v => v.name);
+    const risk   = getCF(CF_RISK_PROFILE_F)?.enum_value?.name || null;
+    const year   = getCF(CF_RELEASE_YEAR_F)?.enum_value?.name || null;
+    const budRaw = getCF(CF_BUDGET_F)?.display_value;
+    const budget = budRaw ? parseInt(budRaw.replace(/[^0-9]/g,'')) || null : null;
+    return {
+      gid: t.gid, name: t.name,
+      title:  getCF(CF_PROJECT_TITLE_F)?.display_value || t.name,
+      studio: getCF(CF_STUDIO_F)?.display_value || null,
+      poc:    getCF(CF_POC_F)?.display_value || null,
+      signingTarget: getCF(CF_SIGNING_TARGET_F)?.enum_value?.name || null,
+      stage, feel, risk, year, budget,
+    };
+  }).filter(t => t.stage && t.stage !== 'Closed/Pass');
+  return _funnelData;
+}
+
+function fmtBudget(n) {
+  if (!n) return null;
+  if (n >= 1000000) return `$${(n/1000000).toFixed(1)}M`;
+  if (n >= 1000)    return `$${Math.round(n/1000)}k`;
+  return `$${n}`;
+}
+
+function renderFunnelCard(g) {
+  const card = document.createElement('div');
+  card.className = 'funnel-game-card';
+  let h = `<div class="funnel-card-title">${esc(g.title)}</div>`;
+  if (g.studio) h += `<div class="funnel-card-studio">${esc(g.studio)}</div>`;
+  const tags = [
+    ...g.feel.map(f => { const c=FEEL_COLORS[f]||'var(--text3)'; return `<span class="funnel-tag" style="background:${c}22;color:${c};border:0.5px solid ${c}55">${esc(f)}</span>`; }),
+    ...(g.risk ? [(() => { const c=RISK_COLORS[g.risk]||'var(--text3)'; return `<span class="funnel-tag" style="background:${c}22;color:${c};border:0.5px solid ${c}55">${esc(g.risk==='High Risk / High Reward'?'High Risk':g.risk)}</span>`; })()] : []),
+  ];
+  if (tags.length) h += `<div class="funnel-card-meta">${tags.join('')}</div>`;
+  const meta = [g.year, fmtBudget(g.budget)].filter(Boolean);
+  if (meta.length) h += `<div class="funnel-card-meta" style="gap:6px;color:var(--text3)">${meta.map(esc).join(' · ')}</div>`;
+  if (g.poc)           h += `<div class="funnel-card-poc">${esc(g.poc)}</div>`;
+  if (g.signingTarget) h += `<div class="funnel-card-poc" style="color:var(--accent)">${esc(g.signingTarget)}</div>`;
+  card.innerHTML = h;
+  return card;
+}
+
+function rebuildFunnelBody(buckets, body) {
+  body.innerHTML = '';
+  FUNNEL_STAGES.forEach((stage, i) => {
+    const all      = buckets[stage.key] || [];
+    const filtered = all.filter(g =>
+      (_funnelYearFilter === 'all' || g.year === _funnelYearFilter) &&
+      (_funnelRiskFilter === 'all' || g.risk === _funnelRiskFilter)
+    );
+    const pct   = FUNNEL_WIDTHS[stage.key] || 25;
+    const color = FUNNEL_COLORS[stage.key] || '#5a1a1a';
+    const stageEl = document.createElement('div');
+    stageEl.className = 'funnel-stage';
+    const trapWrap = document.createElement('div');
+    trapWrap.className = 'funnel-trap-wrap';
+    // Trapezoid
+    const trap = document.createElement('div');
+    trap.className = 'funnel-trap';
+    trap.style.cssText = `background:${color};width:${pct}%;min-width:160px`;
+    trap.innerHTML = `<div class="funnel-trap-count">${all.length}</div><div class="funnel-trap-label">${esc(stage.key)}</div>`;
+    trapWrap.appendChild(trap);
+    // Cards or context
+    if (stage.showCards) {
+      const wrap = document.createElement('div');
+      wrap.className = 'funnel-cards-wrap';
+      if (filtered.length) {
+        filtered.forEach(g => wrap.appendChild(renderFunnelCard(g)));
+      } else {
+        const em = document.createElement('div');
+        em.className = 'funnel-empty';
+        em.textContent = all.length ? `${all.length} game${all.length>1?'s':''} (filtered out)` : 'No games at this stage';
+        wrap.appendChild(em);
+      }
+      trapWrap.appendChild(wrap);
+    } else {
+      const prev = i > 0 ? (buckets[FUNNEL_STAGES[i-1].key] || []).length : 0;
+      const ctx = document.createElement('div');
+      ctx.className = 'funnel-count-only';
+      ctx.innerHTML = `<span class="funnel-count-only-txt">${all.length} active${prev > 0 ? ` — ${Math.round(all.length/prev*100)}% from previous stage` : ''}</span>`;
+      trapWrap.appendChild(ctx);
+    }
+    stageEl.appendChild(trapWrap);
+    if (stage.transition) {
+      const conn = document.createElement('div');
+      conn.className = 'funnel-connector';
+      conn.innerHTML = `<div class="funnel-connector-inner">↓ &nbsp;${esc(stage.transition)}</div>`;
+      stageEl.appendChild(conn);
+    }
+    body.appendChild(stageEl);
+  });
+}
+
+async function renderFunnel() {
+  const view = document.getElementById('funnel-view');
+  if (!view) return;
+  view.innerHTML = '';
+  const hdr = document.createElement('div');
+  hdr.className = 'funnel-header';
+  hdr.innerHTML = '<div class="funnel-title">Publishing Pitch Funnel</div><div class="funnel-filters" id="funnel-filters"></div>';
+  view.appendChild(hdr);
+  const loading = document.createElement('div');
+  loading.style.cssText = 'padding:2rem;font-family:var(--mono);font-size:10px;color:var(--text3)';
+  loading.textContent = 'Loading funnel data from Asana…';
+  view.appendChild(loading);
+  let tasks;
+  try { tasks = await fetchFunnelData(); }
+  catch(e) { loading.textContent = 'Error: ' + e.message; return; }
+  loading.remove();
+  // Build buckets
+  const buckets = {};
+  FUNNEL_STAGES.forEach(s => { buckets[s.key] = []; });
+  tasks.forEach(t => { if (buckets[t.stage]) buckets[t.stage].push(t); });
+  // Filter bar
+  const filterBar = hdr.querySelector('#funnel-filters');
+  const addFilterBtn = (label, val, group, active) => {
+    const btn = document.createElement('button');
+    btn.className = 'funnel-filter-btn' + (active ? ' active' : '');
+    btn.textContent = label; btn.dataset.group = group;
+    btn.onclick = () => {
+      if (group === 'year') _funnelYearFilter = val;
+      else _funnelRiskFilter = val;
+      document.querySelectorAll(`.funnel-filter-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      rebuildFunnelBody(buckets, body);
+    };
+    filterBar.appendChild(btn);
+  };
+  addFilterBtn('All years', 'all', 'year', _funnelYearFilter === 'all');
+  [...new Set(tasks.map(t=>t.year).filter(Boolean))].sort().forEach(y =>
+    addFilterBtn(y, y, 'year', _funnelYearFilter === y)
+  );
+  const sep = document.createElement('span');
+  sep.style.cssText = 'width:1px;height:14px;background:var(--border2);margin:0 2px;display:inline-block';
+  filterBar.appendChild(sep);
+  addFilterBtn('All risk', 'all', 'risk', _funnelRiskFilter === 'all');
+  [['Art Game','Art Game'],['Safe Bet','Safe Bet'],['High Risk','High Risk / High Reward']].forEach(([lbl,val]) =>
+    addFilterBtn(lbl, val, 'risk', _funnelRiskFilter === val)
+  );
+  const body = document.createElement('div');
+  body.className = 'funnel-body';
+  view.appendChild(body);
+  rebuildFunnelBody(buckets, body);
+}
+
+
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT')return;
   if(e.key==='+'||e.key==='=')zoom(1);
@@ -3054,6 +3304,7 @@ function switchTab(tab) {
   if (tab === 'goals' && allEvents.length) renderGoalsBoard();
   if (tab === 'fof') { renderFoF(); }
   if (tab === 'roadmap') renderRoadmap();
+  if (tab === 'funnel' && !_funnelLoaded) { _funnelLoaded = true; renderFunnel(); }
   if (tab === 'excel') renderForecastForCurrentBoard();
   unpinTT();
 }
