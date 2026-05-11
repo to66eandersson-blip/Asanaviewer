@@ -1009,7 +1009,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.74</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.75</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1053,7 +1053,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.74</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.75</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3159,7 +3159,13 @@ async function fetchFunnelData() {
     const url = `/projects/${FUNNEL_PROJECT_GID}/tasks?opt_fields=${fields}&limit=100` +
       (offset ? `&offset=${offset}` : '');
     const resp = await api(url);
-    (resp.data || []).forEach(t => { if (!t.completed) tasks.push(t); });
+    (resp.data || []).forEach(t => {
+      // Keep incomplete tasks, AND completed tasks that are in the Signed stage
+      // (signed games are marked complete in Asana but still belong in the funnel)
+      if (!t.completed) { tasks.push(t); return; }
+      const stageField = (t.custom_fields || []).find(f => f.gid === CF_FUNNEL_STAGE_F);
+      if (stageField?.enum_value?.name === 'Signed') tasks.push(t);
+    });
     if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
     else break;
   }
