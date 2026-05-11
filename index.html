@@ -1009,7 +1009,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.78</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.81</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1053,7 +1053,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.78</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.81</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3155,7 +3155,7 @@ async function fetchFunnelData() {
     'custom_fields.enum_value', 'custom_fields.multi_enum_values',
     'custom_fields.number_value'
   ].join(',');
-  // Fetch 1: incomplete tasks (active pipeline)
+  // Fetch 1: incomplete tasks (active pipeline) — up to 40 pages
   const tasks = [];
   let offset = null, pages = 0;
   while (pages < 40) {
@@ -3166,28 +3166,23 @@ async function fetchFunnelData() {
     if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
     else break;
   }
-  // Fetch 2: completed tasks since 2020 — needed to get Signed games
-  // (Asana only returns incomplete tasks by default; completed_since overrides this)
+  // Fetch 2: Signed section directly — bypasses pagination depth issue
+  // The Signed section sits deep in the project (5000+ tasks) so the project-level
+  // fetch may never reach it. Fetching by section GID gets them directly.
+  const SIGNED_SECTION_GID = '1163492904147521';
   const seenGids = new Set(tasks.map(t => t.gid));
-  let offset2 = null, pages2 = 0, signedFound = 0, completedTotal = 0;
-  while (pages2 < 40) {
-    const url2 = `/projects/${FUNNEL_PROJECT_GID}/tasks?opt_fields=${fields}&limit=100&completed_since=2020-01-01` +
+  let offset2 = null, pages2 = 0;
+  while (pages2 < 20) {
+    const url2 = `/sections/${SIGNED_SECTION_GID}/tasks?opt_fields=${fields}&limit=100` +
       (offset2 ? `&offset=${offset2}` : '');
     const resp2 = await api(url2);
-    completedTotal += (resp2.data || []).length;
     (resp2.data || []).forEach(t => {
-      if (seenGids.has(t.gid)) return;
-      const stageField = (t.custom_fields || []).find(f => f.gid === CF_FUNNEL_STAGE_F);
-      const stageName = stageField?.enum_value?.name;
-      if (stageName === 'Signed') {
-        tasks.push(t); seenGids.add(t.gid); signedFound++;
-        console.log('Found Signed:', t.name, '| stage:', stageName);
-      }
+      if (!seenGids.has(t.gid)) { tasks.push(t); seenGids.add(t.gid); }
     });
     if (resp2.next_page?.offset) { offset2 = resp2.next_page.offset; pages2++; }
     else break;
   }
-  console.log(`Fetch2: ${completedTotal} completed tasks fetched, ${signedFound} Signed found`);
+  console.log(`Funnel fetch: ${tasks.length} total tasks (${tasks.filter(t=>{ const s=(t.custom_fields||[]).find(f=>f.gid===CF_FUNNEL_STAGE_F); return s?.enum_value?.name==='Signed'; }).length} Signed)`);
   _funnelData = tasks.map(t => {
     const getCF  = gid => (t.custom_fields || []).find(f => f.gid === gid);
     const stage  = getCF(CF_FUNNEL_STAGE_F)?.enum_value?.name || null;
@@ -3452,202 +3447,180 @@ async function fetchFunnelAnnualData() {
   return _funnelAnnualData;
 }
 
-function renderAnnualStats(snapshotTasks, annualTasks, container) {
-  // Merge + deduplicate
+function renderRollingStats(snapshotTasks, annualTasks, container) {
   const byGid = {};
   [...snapshotTasks, ...annualTasks].forEach(t => { byGid[t.gid] = t; });
   const allTasks = Object.values(byGid);
 
-  // Bucket by submission year — 2026+ only
-  const byYear = {};
-  allTasks.forEach(t => {
-    const yr = t.submittedDate ? t.submittedDate.getFullYear() : null;
-    if (!yr || yr < 2026) return;
-    const y = String(yr);
-    if (!byYear[y]) byYear[y] = [];
-    byYear[y].push(t);
-  });
+  const STAGE_DEPTH = {
+    'Inbound': 0, 'Qualified': 1, 'Shortlist': 2,
+    'Playtest': 3, 'Deep Product Evaluation': 4, 'Signed': 5, 'Closed/Pass': -1
+  };
 
-  const years = Object.keys(byYear).sort();
-  if (!years.length) {
-    container.innerHTML = '<div style="padding:2rem;font-family:var(--mono);font-size:10px;color:var(--text3)">No 2026+ submission date data available</div>';
-    return;
-  }
-
-  const stageOrder = [
-    'Inbound', 'Qualified', 'Shortlist', 'Playtest',
-    'Deep Product Evaluation', 'Signed'
+  const windows = [
+    { label: 'Last 12 months', days: 365 },
+    { label: 'Last 6 months',  days: 180 },
+    { label: 'Last 3 months',  days:  90 },
   ];
-  // Closed/Pass shown separately as drop-off
 
-  // Count matrix
-  const matrix = {};
-  stageOrder.concat(['Closed/Pass']).forEach(s => {
-    matrix[s] = {};
-    years.forEach(y => { matrix[s][y] = []; });
-  });
-  allTasks.forEach(t => {
-    const yr = t.submittedDate ? t.submittedDate.getFullYear() : null;
-    if (!yr || yr < 2026) return;
-    const y = String(yr);
-    const s = t.stage;
-    if (matrix[s] && matrix[s][y] !== undefined) matrix[s][y].push(t);
-  });
-
-  const totals = {};
-  years.forEach(y => { totals[y] = byYear[y].length; });
-
-  // Max count across all stages+years for bar scaling
-  const maxCount = Math.max(
-    ...stageOrder.map(s => Math.max(...years.map(y => matrix[s][y].length))), 1
-  );
+  const now = Date.now();
+  const stageOrder = ['Inbound','Qualified','Shortlist','Playtest','Deep Product Evaluation','Signed'];
+  const BAR_MAX = 260;
 
   container.innerHTML = '';
   const wrap = document.createElement('div');
   wrap.style.cssText = 'padding:1rem 1.5rem 2rem;display:flex;flex-direction:column;gap:0';
   container.appendChild(wrap);
 
-  // Year legend
-  const legend = document.createElement('div');
-  legend.style.cssText = 'display:flex;gap:16px;margin-bottom:16px;padding-left:160px';
-  years.forEach((y, i) => {
-    const hue = ['#f5a230','#7b9cbf','#a890c0','#6b9e9e'][i % 4];
-    legend.innerHTML += `<div style="display:flex;align-items:center;gap:5px">
-      <div style="width:10px;height:10px;border-radius:2px;background:${hue}"></div>
-      <span style="font-family:var(--mono);font-size:9px;color:var(--text2)">${y}</span>
-    </div>`;
+  const winSel = document.createElement('div');
+  winSel.style.cssText = 'display:flex;gap:6px;margin-bottom:20px';
+  let activeWindow = 0;
+  const winBtns = [];
+  windows.forEach((w, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'funnel-filter-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = w.label;
+    btn.onclick = () => {
+      winBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeWindow = i;
+      buildTable();
+    };
+    winSel.appendChild(btn);
+    winBtns.push(btn);
   });
-  wrap.appendChild(legend);
+  wrap.appendChild(winSel);
 
-  const BAR_MAX = 300; // max bar width px
+  const tableWrap = document.createElement('div');
+  wrap.appendChild(tableWrap);
 
-  stageOrder.forEach((stage, si) => {
-    const isSigned = stage === 'Signed';
-    const stageColor = FUNNEL_COLORS[stage] || '#5a1a1a';
-    const yearColors = ['#f5a230','#7b9cbf','#a890c0','#6b9e9e'];
+  function buildTable() {
+    tableWrap.innerHTML = '';
+    const cutoff = now - windows[activeWindow].days * 86400000;
 
-    const stageRow = document.createElement('div');
-    stageRow.style.cssText = 'display:flex;flex-direction:column;gap:0;margin-bottom:2px';
+    const windowTasks = allTasks.filter(t =>
+      t.submittedDate && !isNaN(t.submittedDate) && t.submittedDate.getTime() >= cutoff
+    );
 
-    // Stage label + bars for each year
-    const barsRow = document.createElement('div');
-    barsRow.style.cssText = 'display:flex;align-items:center;gap:0';
-
-    // Stage label (fixed 160px)
-    const lbl = document.createElement('div');
-    lbl.style.cssText = 'width:160px;flex-shrink:0;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:' +
-      (isSigned ? 'var(--rag-g)' : 'var(--text2)') + ';padding-right:12px;text-align:right';
-    lbl.textContent = stage;
-    barsRow.appendChild(lbl);
-
-    // Bars + counts per year
-    const barsGroup = document.createElement('div');
-    barsGroup.style.cssText = 'display:flex;flex-direction:column;gap:2px';
-
-    years.forEach((y, yi) => {
-      const count = matrix[stage][y].length;
-      const barW  = count > 0 ? Math.max(Math.round(count / maxCount * BAR_MAX), 4) : 0;
-      const color = yearColors[yi % yearColors.length];
-      const barRow = document.createElement('div');
-      barRow.style.cssText = 'display:flex;align-items:center;gap:6px';
-      barRow.innerHTML = `
-        <div style="width:${barW}px;height:14px;background:${color}${isSigned?'':'88'};
-          border-radius:0 2px 2px 0;min-width:${count>0?'4px':'0'};transition:width 0.3s"></div>
-        <span style="font-family:var(--mono);font-size:9px;color:${count>0?'var(--text2)':'var(--text3)'}">${count||'—'}</span>`;
-      barsGroup.appendChild(barRow);
+    const passedThrough = {};
+    const currentlyHere = {};
+    stageOrder.forEach(s => {
+      const depth = STAGE_DEPTH[s];
+      passedThrough[s] = windowTasks.filter(t => (STAGE_DEPTH[t.stage] ?? -1) >= depth).length;
+      currentlyHere[s] = windowTasks.filter(t => t.stage === s).length;
     });
-    barsRow.appendChild(barsGroup);
 
-    // Pass rates (one per year, aligned after bars)
-    const passCol = document.createElement('div');
-    passCol.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-left:16px';
+    const totalWindow = windowTasks.length;
+    const maxVal = Math.max(...Object.values(passedThrough), 1);
+    const col1 = '#f5a230';
+    const col2 = '#7b9cbf';
 
-    years.forEach((y, yi) => {
-      const count = matrix[stage][y].length;
-      let passHtml = '<span style="font-family:var(--mono);font-size:9px;color:var(--text3)"></span>';
+    // Legend
+    const legend = document.createElement('div');
+    legend.style.cssText = 'display:flex;gap:16px;margin-bottom:14px;padding-left:190px';
+    legend.innerHTML = `
+      <div style="display:flex;align-items:center;gap:5px">
+        <div style="width:10px;height:10px;border-radius:2px;background:${col1}88"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text2)">Passed through (cumulative)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <div style="width:10px;height:10px;border-radius:2px;background:${col2}88"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text2)">Currently at this stage</span>
+      </div>`;
+    tableWrap.appendChild(legend);
+
+    stageOrder.forEach((stage, si) => {
+      const passed  = passedThrough[stage];
+      const current = currentlyHere[stage];
+      const isSigned = stage === 'Signed';
+
+      const stageEl = document.createElement('div');
+      stageEl.style.cssText = 'display:flex;flex-direction:column;margin-bottom:2px';
+
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:0';
+
+      const lbl = document.createElement('div');
+      lbl.style.cssText = `width:190px;flex-shrink:0;font-family:var(--mono);font-size:9px;
+        letter-spacing:0.08em;text-transform:uppercase;padding-right:12px;
+        text-align:right;padding-top:2px;color:${isSigned ? 'var(--rag-g)' : 'var(--text2)'}`;
+      lbl.textContent = stage;
+      row.appendChild(lbl);
+
+      const barsWrap = document.createElement('div');
+      barsWrap.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+
+      const bar1W = passed > 0 ? Math.max(Math.round(passed / maxVal * BAR_MAX), 4) : 0;
+      barsWrap.innerHTML += `<div style="display:flex;align-items:center;gap:6px">
+        <div style="width:${bar1W}px;height:13px;background:${col1}88;border-radius:0 2px 2px 0"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:${passed > 0 ? 'var(--text2)' : 'var(--text3)'}">${passed || '—'}</span>
+      </div>`;
+
+      const bar2W = current > 0 ? Math.max(Math.round(current / maxVal * BAR_MAX), 4) : 0;
+      barsWrap.innerHTML += `<div style="display:flex;align-items:center;gap:6px">
+        <div style="width:${bar2W}px;height:13px;background:${col2}88;border-radius:0 2px 2px 0"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:${current > 0 ? 'var(--text2)' : 'var(--text3)'}">${current || '—'}</span>
+      </div>`;
+
+      row.appendChild(barsWrap);
+
+      // Pass rates column
+      const rateEl = document.createElement('div');
+      rateEl.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-left:14px;padding-top:2px';
 
       if (si === 0) {
-        // Inbound: % of total submitted
-        const total = totals[y];
-        if (total > 0 && count > 0) {
-          const pct = Math.round(count / total * 100);
-          passHtml = `<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">${pct}% of submitted</span>`;
-        }
+        rateEl.innerHTML = `
+          <span style="font-family:var(--mono);font-size:8.5px;color:var(--text3);height:13px;display:flex;align-items:center">top of funnel</span>
+          <span style="height:13px;display:block"></span>`;
       } else {
-        // Pass rate = this stage count / PREVIOUS stage count (not total)
-        // Use the immediately preceding stage in stageOrder
-        const prevStage = stageOrder[si - 1];
-        const prevCount = matrix[prevStage][y].length;
-        if (prevCount > 0 && count > 0) {
-          const pct = Math.round(count / prevCount * 100);
-          const color = pct >= 40 ? 'var(--rag-g)' : pct >= 20 ? 'var(--rag-a)' : 'var(--text3)';
-          passHtml = `<span style="font-family:var(--mono);font-size:9px;color:${color}">${pct}% pass</span>`;
-        } else if (prevCount === 0 && count > 0) {
-          // More in this stage than previous — data anomaly (bulk moves etc)
-          passHtml = `<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">* ${count}</span>`;
+        const prevPassed = passedThrough[stageOrder[si - 1]];
+        if (prevPassed > 0 && passed > 0) {
+          const pctPrev = Math.round(passed / prevPassed * 100);
+          const pctTop  = totalWindow > 0 ? Math.round(passed / totalWindow * 100) : 0;
+          const rColor  = pctPrev >= 40 ? 'var(--rag-g)' : pctPrev >= 20 ? 'var(--rag-a)' : 'var(--text3)';
+          rateEl.innerHTML = `
+            <span style="font-family:var(--mono);font-size:8.5px;color:${rColor};height:13px;display:flex;align-items:center">${pctPrev}% from prev</span>
+            <span style="font-family:var(--mono);font-size:8.5px;color:var(--text3);height:13px;display:flex;align-items:center">${pctTop}% from top</span>`;
+        } else {
+          rateEl.innerHTML = `<span style="font-family:var(--mono);font-size:8.5px;color:var(--text3);height:13px;display:flex;align-items:center">—</span><span style="height:13px;display:block"></span>`;
         }
       }
+      row.appendChild(rateEl);
+      stageEl.appendChild(row);
 
-      const pr = document.createElement('div');
-      pr.style.cssText = 'height:14px;display:flex;align-items:center';
-      pr.innerHTML = passHtml;
-      passCol.appendChild(pr);
-    });
-    barsRow.appendChild(passCol);
-    stageRow.appendChild(barsRow);
-
-    // Transition label between stages
-    if (si < stageOrder.length - 1) {
-      const trans = FUNNEL_STAGES[si]?.transition;
-      if (trans) {
-        const trow = document.createElement('div');
-        trow.style.cssText = 'padding:2px 0 2px 160px;font-family:var(--mono);font-size:8px;color:var(--text3)';
-        trow.textContent = `↓  ${trans}`;
-        stageRow.appendChild(trow);
+      if (si < stageOrder.length - 1) {
+        const trans = FUNNEL_STAGES[si]?.transition;
+        if (trans) {
+          const trow = document.createElement('div');
+          trow.style.cssText = 'padding:2px 0 2px 190px;font-family:var(--mono);font-size:8px;color:var(--text3)';
+          trow.textContent = `↓  ${trans}`;
+          stageEl.appendChild(trow);
+        }
       }
-    }
+      tableWrap.appendChild(stageEl);
+    });
 
-    wrap.appendChild(stageRow);
-  });
+    // Summary
+    const divider = document.createElement('div');
+    divider.style.cssText = 'border-top:0.5px solid var(--border2);margin:14px 0 10px 190px';
+    tableWrap.appendChild(divider);
 
-  // Divider
-  const divider = document.createElement('div');
-  divider.style.cssText = 'border-top:0.5px solid var(--border2);margin:12px 0 10px 160px';
-  wrap.appendChild(divider);
+    const summary = document.createElement('div');
+    summary.style.cssText = 'padding-left:190px;font-family:var(--mono);font-size:9px;display:flex;flex-direction:column;gap:4px';
+    const signRate = totalWindow > 0 ? (passedThrough['Signed'] / totalWindow * 100).toFixed(1) : '—';
+    const signColor = parseFloat(signRate) >= 2 ? 'var(--rag-g)' : parseFloat(signRate) >= 1 ? 'var(--rag-a)' : 'var(--text3)';
+    summary.innerHTML = `
+      <div style="color:var(--text2)">Total submitted in window: <strong style="color:var(--text)">${totalWindow}</strong></div>
+      <div style="color:var(--text2)">Signed: <strong style="color:var(--rag-g)">${passedThrough['Signed']}</strong> &nbsp;·&nbsp; Sign rate: <strong style="color:${signColor}">${signRate}%</strong></div>
+      <div style="color:var(--text3);font-size:8px;margin-top:4px">
+        Passed through = games submitted in window that reached at least this stage &nbsp;·&nbsp;
+        Both pass rates shown: from previous stage and from top of funnel &nbsp;·&nbsp;
+        Requires submission date to be set
+      </div>`;
+    tableWrap.appendChild(summary);
+  }
 
-  // Totals row
-  const totRow = document.createElement('div');
-  totRow.style.cssText = 'display:flex;align-items:flex-start;gap:0';
-  const totLbl = document.createElement('div');
-  totLbl.style.cssText = 'width:160px;flex-shrink:0;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);padding-right:12px;text-align:right';
-  totLbl.textContent = 'Total submitted';
-  totRow.appendChild(totLbl);
-  const totVals = document.createElement('div');
-  totVals.style.cssText = 'display:flex;flex-direction:column;gap:2px';
-  years.forEach((y, yi) => {
-    const color = ['#f5a230','#7b9cbf','#a890c0','#6b9e9e'][yi % 4];
-    totVals.innerHTML += `<div style="height:14px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:${color};font-weight:500">${totals[y]}</div>`;
-  });
-  totRow.appendChild(totVals);
-
-  // Sign rates
-  const signRateCol = document.createElement('div');
-  signRateCol.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-left:16px';
-  years.forEach(y => {
-    const signed = matrix['Signed'][y].length;
-    const total  = totals[y];
-    const rate   = total > 0 ? (signed / total * 100).toFixed(1) + '%' : '—';
-    const color  = total > 0 && signed/total >= 0.02 ? 'var(--rag-g)' : total > 0 && signed/total >= 0.01 ? 'var(--rag-a)' : 'var(--text3)';
-    signRateCol.innerHTML += `<div style="height:14px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:${color}">sign rate: ${rate}</div>`;
-  });
-  totRow.appendChild(signRateCol);
-  wrap.appendChild(totRow);
-
-  // Note
-  const note = document.createElement('div');
-  note.style.cssText = 'margin-top:16px;margin-left:160px;font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.8';
-  note.innerHTML = 'Pass rate = games at this stage ÷ games at previous stage, by submission year &nbsp;·&nbsp; * = data anomaly (bulk moves or missing data) &nbsp;·&nbsp; 2026+ only';
-  wrap.appendChild(note);
+  buildTable();
 }
 
 
@@ -3677,7 +3650,7 @@ async function switchFunnelView(view) {
       main._annualBody.innerHTML = '<div style="padding:2rem;font-family:var(--mono);font-size:10px;color:var(--text3)">Loading annual data…</div>';
       try {
         const annualTasks = await fetchFunnelAnnualData();
-        renderAnnualStats(main._allTasks, annualTasks, main._annualBody);
+        renderRollingStats(main._allTasks, annualTasks, main._annualBody);
       } catch(e) {
         main._annualBody.innerHTML = '<div style="padding:2rem;font-family:var(--mono);font-size:10px;color:var(--rag-r)">Error: ' + esc(e.message) + '</div>';
       }
@@ -3717,7 +3690,7 @@ async function renderFunnel() {
           padding:3px 10px;border:none;cursor:pointer;background:var(--accent-dim);color:var(--accent)">Snapshot</button>
         <button id="funnel-view-annual" onclick="switchFunnelView('annual')"
           style="font-family:var(--mono);font-size:8.5px;letter-spacing:0.09em;text-transform:uppercase;
-          padding:3px 10px;border:none;border-left:0.5px solid var(--border2);cursor:pointer;background:none;color:var(--text3)">Annual Stats</button>
+          padding:3px 10px;border:none;border-left:0.5px solid var(--border2);cursor:pointer;background:none;color:var(--text3)">Rolling Stats</button>
       </div>
     </div>
     <div class="funnel-filters" id="funnel-filters"></div>`;
