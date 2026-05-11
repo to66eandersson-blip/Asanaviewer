@@ -607,71 +607,78 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 /* ─── PITCH FUNNEL ─────────────────────────────────────────────── */
 #funnel-view { height: 100%; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
 .funnel-header { display: flex; align-items: center; justify-content: space-between;
-  padding: 0.9rem 1.5rem; border-bottom: 0.5px solid var(--border2);
-  flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+  padding: 1rem 1.75rem; border-bottom: 0.5px solid var(--border2);
+  flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
 .funnel-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
   text-transform: uppercase; color: var(--text2); }
-.funnel-filters { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-.funnel-filter-btn { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.09em;
-  text-transform: uppercase; padding: 2px 8px; border: 0.5px solid var(--border2);
+.funnel-filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.funnel-filter-btn { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 4px 12px; border: 0.5px solid var(--border2);
   border-radius: 3px; background: none; color: var(--text3); cursor: pointer;
   transition: color 0.1s, border-color 0.1s; }
 .funnel-filter-btn:hover { color: var(--text2); border-color: var(--border3); }
 .funnel-filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 /* Main + sidebar layout */
-.funnel-body { display: flex; flex-direction: column; padding: 1rem 1.5rem 1.5rem; gap: 0; overflow-y: auto; flex: 1; min-height: 0; }
-.funnel-sidebar { width: 220px; flex-shrink: 0; border-left: 0.5px solid var(--border2);
-  overflow-y: auto; padding: 1rem 1rem 1.5rem; height: 100%; }
-/* Stage rows */
+.funnel-body { display: flex; flex-direction: column; padding: 1.25rem 1.75rem 2rem;
+  gap: 0; overflow-y: auto; flex: 1; min-height: 0; }
+.funnel-sidebar { width: 240px; flex-shrink: 0; border-left: 0.5px solid var(--border2);
+  overflow-y: auto; padding: 1.25rem 1.25rem 1.5rem; height: 100%; }
+/* Snapshot stage rows */
 .funnel-stage { width: 100%; }
-.funnel-row { display: flex; align-items: stretch; gap: 0; min-height: 52px; }
-.funnel-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-  padding: 8px 14px; border-radius: 0 3px 3px 0; transition: filter 0.12s; cursor: default; }
-.funnel-bar:hover { filter: brightness(1.1); }
-.funnel-bar-count { font-size: 22px; font-weight: 300; letter-spacing: -0.03em; color: #fff; line-height: 1; }
-.funnel-bar-label { font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(255,255,255,0.55); }
+.funnel-row { display: flex; align-items: stretch; gap: 0; min-height: 60px; }
+.funnel-bar { display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  padding: 10px 16px; border-radius: 0 3px 3px 0; transition: filter 0.12s; cursor: default; }
+.funnel-bar:hover { filter: brightness(1.12); }
+.funnel-bar-count { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; color: #fff; line-height: 1; }
+.funnel-bar-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6); max-width: 80px; line-height: 1.4; }
 .funnel-cards-wrap { flex: 1; min-width: 0; overflow-x: auto; display: flex;
-  align-items: flex-start; gap: 6px; padding: 6px 0 6px 12px; }
-.funnel-ctx { display: flex; align-items: center; padding-left: 12px;
-  font-family: var(--mono); font-size: 9px; color: var(--text3); }
-.funnel-transition { font-family: var(--mono); font-size: 8px; letter-spacing: 0.08em;
-  color: var(--text3); padding: 3px 0 3px 6px; }
+  align-items: flex-start; gap: 8px; padding: 8px 0 8px 14px; }
+.funnel-ctx { display: flex; align-items: center; padding-left: 14px;
+  font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.funnel-transition { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
+  color: var(--text3); padding: 4px 0 4px 8px; }
 /* Cards — compact with hover expand */
-a.funnel-game-card { flex: 0 0 130px; background: var(--surface2); border: 0.5px solid var(--border2);
-  border-radius: 4px; padding: 7px 9px; display: flex; flex-direction: column; gap: 0;
+a.funnel-game-card { flex: 0 0 150px; background: var(--surface2); border: 0.5px solid var(--border2);
+  border-radius: 4px; padding: 9px 11px; display: flex; flex-direction: column; gap: 0;
   text-decoration: none; overflow: hidden; transition: border-color 0.12s, background 0.12s; cursor: pointer; }
 a.funnel-game-card:hover { border-color: var(--accent); background: var(--surface3); }
-.funnel-card-compact { display: flex; flex-direction: column; gap: 2px; }
-.funnel-card-title { font-size: 10.5px; font-weight: 500; color: var(--text); line-height: 1.3; }
-.funnel-card-studio { font-family: var(--mono); font-size: 8px; color: var(--text3); }
-.funnel-card-detail { max-height: 0; overflow: hidden; transition: max-height 0.2s ease, margin-top 0.2s;
-  display: flex; flex-direction: column; gap: 3px; }
-a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6px; }
-.funnel-card-meta { display: flex; flex-wrap: wrap; gap: 3px; }
-.funnel-tag { font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.05em;
-  padding: 1px 4px; border-radius: 2px; }
-.funnel-card-poc { font-family: var(--mono); font-size: 8px; color: var(--text3); }
+.funnel-card-compact { display: flex; flex-direction: column; gap: 3px; }
+.funnel-card-title { font-size: 11.5px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.funnel-card-studio { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.funnel-card-detail { max-height: 0; overflow: hidden;
+  transition: max-height 0.22s ease, margin-top 0.22s;
+  display: flex; flex-direction: column; gap: 4px; }
+a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8px; }
+.funnel-card-meta { display: flex; flex-wrap: wrap; gap: 4px; }
+.funnel-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em;
+  padding: 2px 6px; border-radius: 2px; }
+.funnel-card-poc { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.funnel-empty { font-family: var(--mono); font-size: 10px; color: var(--text3);
+  padding: 8px 0; align-self: center; }
+.funnel-count-only { display: flex; align-items: center; padding-left: 14px;
+  font-family: var(--mono); font-size: 10px; color: var(--text3); }
 /* Signing targets sidebar */
 .funnel-targets-panel { display: flex; flex-direction: column; gap: 0; }
-.funnel-targets-title { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--text2); margin-bottom: 12px;
-  padding-bottom: 6px; border-bottom: 0.5px solid var(--border2); }
-.funnel-targets-year { margin-bottom: 12px; }
-.funnel-targets-year-hdr { font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-.funnel-targets-row { display: flex; align-items: flex-start; gap: 7px;
-  padding: 4px 0; border-bottom: 0.5px solid var(--border); }
+.funnel-targets-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text2); margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 0.5px solid var(--border2); }
+.funnel-targets-year { margin-bottom: 14px; }
+.funnel-targets-year-hdr { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.funnel-targets-row { display: flex; align-items: flex-start; gap: 8px;
+  padding: 6px 0; border-bottom: 0.5px solid var(--border); }
 .funnel-targets-row:last-child { border-bottom: none; }
-.funnel-target-dot { font-size: 10px; flex-shrink: 0; margin-top: 1px; }
+.funnel-target-dot { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
 .funnel-target-dot.signed   { color: var(--rag-g); }
 .funnel-target-dot.candidate{ color: var(--rag-a); }
 .funnel-target-dot.open     { color: var(--text3); }
-.funnel-target-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.funnel-target-name { font-family: var(--mono); font-size: 8.5px; color: var(--text2); }
-.funnel-target-game { font-size: 9px; color: var(--rag-g); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.funnel-target-candidates { font-size: 8.5px; color: var(--rag-a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
+.funnel-target-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.funnel-target-name { font-family: var(--mono); font-size: 10px; color: var(--text2); }
+.funnel-target-game { font-size: 10px; color: var(--rag-g); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.funnel-target-candidates { font-size: 9.5px; color: var(--rag-a);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* ── FORECAST VIEW ── */
 #fc-view {
   padding: 1.75rem 1.5rem 2rem;
@@ -1009,7 +1016,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.81</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.82</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1053,7 +1060,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.81</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.82</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3469,7 +3476,7 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
 
   container.innerHTML = '';
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'padding:1rem 1.5rem 2rem;display:flex;flex-direction:column;gap:0';
+  wrap.style.cssText = 'padding:1.25rem 1.75rem 2rem;display:flex;flex-direction:column;gap:0';
   container.appendChild(wrap);
 
   const winSel = document.createElement('div');
@@ -3517,15 +3524,15 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
 
     // Legend
     const legend = document.createElement('div');
-    legend.style.cssText = 'display:flex;gap:16px;margin-bottom:14px;padding-left:190px';
+    legend.style.cssText = 'display:flex;gap:20px;margin-bottom:16px;padding-left:190px';
     legend.innerHTML = `
       <div style="display:flex;align-items:center;gap:5px">
         <div style="width:10px;height:10px;border-radius:2px;background:${col1}88"></div>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--text2)">Passed through (cumulative)</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">Passed through (cumulative)</span>
       </div>
       <div style="display:flex;align-items:center;gap:5px">
         <div style="width:10px;height:10px;border-radius:2px;background:${col2}88"></div>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--text2)">Currently at this stage</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">Currently at this stage</span>
       </div>`;
     tableWrap.appendChild(legend);
 
@@ -3541,9 +3548,9 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
       row.style.cssText = 'display:flex;align-items:flex-start;gap:0';
 
       const lbl = document.createElement('div');
-      lbl.style.cssText = `width:190px;flex-shrink:0;font-family:var(--mono);font-size:9px;
-        letter-spacing:0.08em;text-transform:uppercase;padding-right:12px;
-        text-align:right;padding-top:2px;color:${isSigned ? 'var(--rag-g)' : 'var(--text2)'}`;
+      lbl.style.cssText = `width:190px;flex-shrink:0;font-family:var(--mono);font-size:11px;
+        letter-spacing:0.08em;text-transform:uppercase;padding-right:14px;
+        text-align:right;padding-top:3px;color:${isSigned ? 'var(--rag-g)' : 'var(--text2)'}`;
       lbl.textContent = stage;
       row.appendChild(lbl);
 
@@ -3570,8 +3577,8 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
 
       if (si === 0) {
         rateEl.innerHTML = `
-          <span style="font-family:var(--mono);font-size:8.5px;color:var(--text3);height:13px;display:flex;align-items:center">top of funnel</span>
-          <span style="height:13px;display:block"></span>`;
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text3);height:16px;display:flex;align-items:center">top of funnel</span>
+          <span style="height:16px;display:block"></span>`;
       } else {
         const prevPassed = passedThrough[stageOrder[si - 1]];
         if (prevPassed > 0 && passed > 0) {
@@ -3579,10 +3586,10 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
           const pctTop  = totalWindow > 0 ? Math.round(passed / totalWindow * 100) : 0;
           const rColor  = pctPrev >= 40 ? 'var(--rag-g)' : pctPrev >= 20 ? 'var(--rag-a)' : 'var(--text3)';
           rateEl.innerHTML = `
-            <span style="font-family:var(--mono);font-size:8.5px;color:${rColor};height:13px;display:flex;align-items:center">${pctPrev}% from prev</span>
-            <span style="font-family:var(--mono);font-size:8.5px;color:var(--text3);height:13px;display:flex;align-items:center">${pctTop}% from top</span>`;
+            <span style="font-family:var(--mono);font-size:11px;color:${rColor};height:16px;display:flex;align-items:center">${pctPrev}% from prev stage</span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text3);height:16px;display:flex;align-items:center">${pctTop}% from top of funnel</span>`;
         } else {
-          rateEl.innerHTML = `<span style="font-family:var(--mono);font-size:8.5px;color:var(--text3);height:13px;display:flex;align-items:center">—</span><span style="height:13px;display:block"></span>`;
+          rateEl.innerHTML = `<span style="font-family:var(--mono);font-size:11px;color:var(--text3);height:16px;display:flex;align-items:center">—</span><span style="height:16px;display:block"></span>`;
         }
       }
       row.appendChild(rateEl);
@@ -3592,7 +3599,7 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
         const trans = FUNNEL_STAGES[si]?.transition;
         if (trans) {
           const trow = document.createElement('div');
-          trow.style.cssText = 'padding:2px 0 2px 190px;font-family:var(--mono);font-size:8px;color:var(--text3)';
+          trow.style.cssText = 'padding:3px 0 3px 190px;font-family:var(--mono);font-size:10px;color:var(--text3)';
           trow.textContent = `↓  ${trans}`;
           stageEl.appendChild(trow);
         }
@@ -3606,13 +3613,13 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
     tableWrap.appendChild(divider);
 
     const summary = document.createElement('div');
-    summary.style.cssText = 'padding-left:190px;font-family:var(--mono);font-size:9px;display:flex;flex-direction:column;gap:4px';
+    summary.style.cssText = 'padding-left:190px;font-family:var(--mono);font-size:11px;display:flex;flex-direction:column;gap:6px';
     const signRate = totalWindow > 0 ? (passedThrough['Signed'] / totalWindow * 100).toFixed(1) : '—';
     const signColor = parseFloat(signRate) >= 2 ? 'var(--rag-g)' : parseFloat(signRate) >= 1 ? 'var(--rag-a)' : 'var(--text3)';
     summary.innerHTML = `
       <div style="color:var(--text2)">Total submitted in window: <strong style="color:var(--text)">${totalWindow}</strong></div>
       <div style="color:var(--text2)">Signed: <strong style="color:var(--rag-g)">${passedThrough['Signed']}</strong> &nbsp;·&nbsp; Sign rate: <strong style="color:${signColor}">${signRate}%</strong></div>
-      <div style="color:var(--text3);font-size:8px;margin-top:4px">
+      <div style="color:var(--text3);font-size:9px;margin-top:6px;line-height:1.7">
         Passed through = games submitted in window that reached at least this stage &nbsp;·&nbsp;
         Both pass rates shown: from previous stage and from top of funnel &nbsp;·&nbsp;
         Requires submission date to be set
