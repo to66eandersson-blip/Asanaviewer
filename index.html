@@ -1009,7 +1009,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.75</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.77</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1053,7 +1053,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.75</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.77</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2707,6 +2707,8 @@ let roadmapEvents = [];
 let roadmapLoaded = false;
 let _funnelLoaded  = false;
 let _funnelData    = null; // cached funnel tasks
+let _funnelAnnualData = null; // cached completed tasks for annual view
+let _funnelView    = 'snapshot'; // 'snapshot' | 'annual'
 let _pubGidToGame  = null; // cache: publishing board GID → { title } — discovered at runtime
 let roadmapZoomIdx = 0;
 const ROADMAP_ZOOMS = [
@@ -3153,20 +3155,34 @@ async function fetchFunnelData() {
     'custom_fields.enum_value', 'custom_fields.multi_enum_values',
     'custom_fields.number_value'
   ].join(',');
+  // Fetch 1: incomplete tasks (active pipeline)
   const tasks = [];
   let offset = null, pages = 0;
   while (pages < 40) {
     const url = `/projects/${FUNNEL_PROJECT_GID}/tasks?opt_fields=${fields}&limit=100` +
       (offset ? `&offset=${offset}` : '');
     const resp = await api(url);
-    (resp.data || []).forEach(t => {
-      // Keep incomplete tasks, AND completed tasks that are in the Signed stage
-      // (signed games are marked complete in Asana but still belong in the funnel)
-      if (!t.completed) { tasks.push(t); return; }
-      const stageField = (t.custom_fields || []).find(f => f.gid === CF_FUNNEL_STAGE_F);
-      if (stageField?.enum_value?.name === 'Signed') tasks.push(t);
-    });
+    (resp.data || []).forEach(t => { if (!t.completed) tasks.push(t); });
     if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
+    else break;
+  }
+  // Fetch 2: completed tasks since 2020 — needed to get Signed games
+  // (Asana only returns incomplete tasks by default; completed_since overrides this)
+  const seenGids = new Set(tasks.map(t => t.gid));
+  let offset2 = null, pages2 = 0;
+  while (pages2 < 40) {
+    const url2 = `/projects/${FUNNEL_PROJECT_GID}/tasks?opt_fields=${fields}&limit=100&completed_since=2020-01-01` +
+      (offset2 ? `&offset=${offset2}` : '');
+    const resp2 = await api(url2);
+    (resp2.data || []).forEach(t => {
+      if (seenGids.has(t.gid)) return; // deduplicate
+      const stageField = (t.custom_fields || []).find(f => f.gid === CF_FUNNEL_STAGE_F);
+      if (stageField?.enum_value?.name === 'Signed') {
+        tasks.push(t);
+        seenGids.add(t.gid);
+      }
+    });
+    if (resp2.next_page?.offset) { offset2 = resp2.next_page.offset; pages2++; }
     else break;
   }
   _funnelData = tasks.map(t => {
@@ -3388,6 +3404,258 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
   }
 }
 
+
+async function fetchFunnelAnnualData() {
+  if (_funnelAnnualData) return _funnelAnnualData;
+  // Fetch completed tasks since 2026-01-01 — mostly Closed/Pass and Signed
+  const fields = [
+    'name', 'completed', 'completed_at', 'permalink_url',
+    'custom_fields.gid', 'custom_fields.display_value',
+    'custom_fields.enum_value', 'custom_fields.multi_enum_values',
+    'custom_fields.number_value'
+  ].join(',');
+  const tasks = [];
+  let offset = null, pages = 0;
+  while (pages < 60) {
+    const url = `/projects/${FUNNEL_PROJECT_GID}/tasks` +
+      `?opt_fields=${fields}&limit=100&completed_since=2026-01-01` +
+      (offset ? `&offset=${offset}` : '');
+    const resp = await api(url);
+    (resp.data || []).forEach(t => tasks.push(t));
+    if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
+    else break;
+  }
+  // Parse same way as fetchFunnelData
+  _funnelAnnualData = tasks.map(t => {
+    const getCF = gid => (t.custom_fields || []).find(f => f.gid === gid);
+    const stage  = getCF(CF_FUNNEL_STAGE_F)?.enum_value?.name || null;
+    const subRaw = getCF(CF_SUBMISSION_DATE_F)?.display_value;
+    const submittedDate = subRaw ? new Date(subRaw) : null;
+    const feel   = (getCF(CF_FEEL_OF_FURY_F)?.multi_enum_values || []).map(v => v.name);
+    const risk   = getCF(CF_RISK_PROFILE_F)?.enum_value?.name || null;
+    const year   = getCF(CF_RELEASE_YEAR_F)?.enum_value?.name || null;
+    const budRaw = getCF(CF_BUDGET_F)?.display_value;
+    const budget = budRaw ? parseInt(budRaw.replace(/[^0-9]/g,'')) || null : null;
+    return {
+      gid: t.gid, name: t.name, url: t.permalink_url || null,
+      title:  getCF(CF_PROJECT_TITLE_F)?.display_value || t.name,
+      studio: getCF(CF_STUDIO_F)?.display_value || null,
+      poc:    getCF(CF_POC_F)?.display_value || null,
+      signingTarget: getCF(CF_SIGNING_TARGET_F)?.enum_value?.name || null,
+      completed: !!t.completed,
+      stage, feel, risk, year, budget, submittedDate,
+    };
+  }).filter(t => t.stage); // must have a stage
+  return _funnelAnnualData;
+}
+
+function renderAnnualStats(snapshotTasks, annualTasks, container) {
+  // Merge snapshot + annual, deduplicate by GID
+  const byGid = {};
+  [...snapshotTasks, ...annualTasks].forEach(t => { byGid[t.gid] = t; });
+  const allTasks = Object.values(byGid);
+
+  // Bucket by submission year
+  const byYear = {};
+  allTasks.forEach(t => {
+    const yr = t.submittedDate ? t.submittedDate.getFullYear() : null;
+    if (!yr) return; // skip unknown submission date
+    const y = String(yr);
+    if (!byYear[y]) byYear[y] = [];
+    byYear[y].push(t);
+  });
+
+  const years = Object.keys(byYear).sort();
+  if (!years.length) {
+    container.innerHTML = '<div style="padding:2rem;font-family:var(--mono);font-size:10px;color:var(--text3)">No submission date data available</div>';
+    return;
+  }
+
+  // Stage order for the table — Closed/Pass at the bottom
+  const stageOrder = [
+    'Inbound', 'Qualified', 'Shortlist', 'Playtest',
+    'Deep Product Evaluation', 'Signed', 'Closed/Pass'
+  ];
+
+  // Build count matrix: stageOrder × years
+  const matrix = {};
+  stageOrder.forEach(s => { matrix[s] = {}; years.forEach(y => { matrix[s][y] = []; }); });
+  allTasks.forEach(t => {
+    const yr = t.submittedDate ? String(t.submittedDate.getFullYear()) : null;
+    if (!yr || !matrix[t.stage]) return;
+    matrix[t.stage][yr].push(t);
+  });
+
+  // Total submitted per year (all stages)
+  const totals = {};
+  years.forEach(y => { totals[y] = byYear[y].length; });
+
+  container.innerHTML = '';
+
+  // Table wrapper
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'overflow-x:auto;padding:1rem 1.5rem 2rem';
+  container.appendChild(wrap);
+
+  const table = document.createElement('table');
+  table.style.cssText = 'border-collapse:collapse;width:100%;font-family:var(--mono);font-size:10px';
+  wrap.appendChild(table);
+
+  // Header row
+  const thead = document.createElement('thead');
+  const hrow = document.createElement('tr');
+  hrow.innerHTML = `<th style="text-align:left;padding:8px 16px 8px 0;color:var(--text3);letter-spacing:0.1em;font-weight:400;border-bottom:1px solid var(--border2);white-space:nowrap">STAGE</th>` +
+    years.map(y => `<th colspan="2" style="text-align:center;padding:8px 16px;color:var(--accent);letter-spacing:0.1em;font-weight:400;border-bottom:1px solid var(--border2)">${y}</th>`).join('');
+  thead.appendChild(hrow);
+  // Sub-header: Count / Pass rate per year
+  const srow = document.createElement('tr');
+  srow.innerHTML = `<th style="padding:2px 16px 6px 0;border-bottom:0.5px solid var(--border)"></th>` +
+    years.map(() => `
+      <th style="text-align:right;padding:2px 8px 6px;color:var(--text3);font-weight:400;font-size:9px;border-bottom:0.5px solid var(--border)">COUNT</th>
+      <th style="text-align:right;padding:2px 16px 6px 8px;color:var(--text3);font-weight:400;font-size:9px;border-bottom:0.5px solid var(--border)">PASS→</th>
+    `).join('');
+  thead.appendChild(srow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+
+  stageOrder.forEach((stage, si) => {
+    const isClosedPass = stage === 'Closed/Pass';
+    const isSigned     = stage === 'Signed';
+    const isSeparator  = isClosedPass;
+
+    // Stage row
+    const row = document.createElement('tr');
+    const stageColor = isClosedPass ? 'var(--text3)'
+      : isSigned ? 'var(--rag-g)'
+      : FUNNEL_COLORS[stage] ? '#fff' : 'var(--text2)';
+    const stageBg = isClosedPass ? 'transparent'
+      : isSigned ? 'transparent'
+      : (FUNNEL_COLORS[stage] || 'transparent');
+
+    let labelCell = `<td style="padding:${isSeparator?'12px':'6px'} 16px ${isSeparator?'6px':'6px'} 0;
+      color:${stageColor};white-space:nowrap;
+      ${isSeparator ? 'border-top:0.5px solid var(--border2);' : ''}">
+      ${isClosedPass ? '' : `<span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:${stageBg};margin-right:7px;vertical-align:middle"></span>`}
+      ${esc(stage)}
+    </td>`;
+    row.innerHTML = labelCell;
+
+    years.forEach((y, yi) => {
+      const count = matrix[stage][y].length;
+      // Pass rate: count of THIS stage / count of PREVIOUS stage
+      let passRate = '';
+      if (!isClosedPass && si > 0) {
+        const prevStage = stageOrder[si - 1];
+        const prevCount = matrix[prevStage]?.[y]?.length || 0;
+        if (prevCount > 0) {
+          const pct = Math.round(count / prevCount * 100);
+          const color = isSigned
+            ? (pct >= 50 ? 'var(--rag-g)' : pct >= 25 ? 'var(--rag-a)' : 'var(--text3)')
+            : (pct >= 40 ? 'var(--rag-g)' : pct >= 20 ? 'var(--rag-a)' : 'var(--rag-r)');
+          passRate = `<span style="color:${color}">${pct}%</span>`;
+        } else {
+          passRate = '<span style="color:var(--text3)">—</span>';
+        }
+      } else if (si === 0) {
+        // Inbound: % of total submitted that year
+        passRate = `<span style="color:var(--text3)">${totals[y]}</span>`;
+      }
+
+      const countColor = count === 0 ? 'var(--text3)'
+        : isSigned ? 'var(--rag-g)'
+        : isClosedPass ? 'var(--text3)' : 'var(--text)';
+
+      row.innerHTML += `
+        <td style="text-align:right;padding:6px 8px;color:${countColor};
+          ${isSeparator ? 'border-top:0.5px solid var(--border2);' : ''}">
+          ${count || '<span style="color:var(--text3)">—</span>'}
+        </td>
+        <td style="text-align:right;padding:6px 16px 6px 8px;
+          ${isSeparator ? 'border-top:0.5px solid var(--border2);' : ''}">
+          ${isClosedPass ? '' : passRate}
+        </td>`;
+    });
+
+    tbody.appendChild(row);
+
+    // After Deep Eval, before Signed: show overall conversion row
+    if (stage === 'Deep Product Evaluation') {
+      const divRow = document.createElement('tr');
+      divRow.innerHTML = `<td colspan="${1 + years.length * 2}" style="padding:2px 0;border-bottom:0.5px solid var(--border2)"></td>`;
+      tbody.appendChild(divRow);
+    }
+  });
+
+  // Total submitted row
+  const totalRow = document.createElement('tr');
+  totalRow.innerHTML = `<td style="padding:10px 16px 4px 0;color:var(--text2);border-top:1px solid var(--border2);font-size:9px;letter-spacing:0.08em">TOTAL SUBMITTED</td>` +
+    years.map(y => `
+      <td style="text-align:right;padding:10px 8px 4px;color:var(--text2);border-top:1px solid var(--border2);font-weight:500">${totals[y]}</td>
+      <td style="border-top:1px solid var(--border2)"></td>
+    `).join('');
+  tbody.appendChild(totalRow);
+
+  // Overall sign rate row
+  const signRateRow = document.createElement('tr');
+  signRateRow.innerHTML = `<td style="padding:2px 16px 8px 0;color:var(--text3);font-size:9px;letter-spacing:0.08em">SIGN RATE</td>` +
+    years.map(y => {
+      const signed = matrix['Signed'][y].length;
+      const total  = totals[y];
+      const rate   = total > 0 ? (signed / total * 100).toFixed(1) + '%' : '—';
+      const color  = total > 0 && signed/total >= 0.02 ? 'var(--rag-g)'
+        : total > 0 && signed/total >= 0.01 ? 'var(--rag-a)' : 'var(--text3)';
+      return `<td style="text-align:right;padding:2px 8px 8px;color:${color}">${rate}</td><td></td>`;
+    }).join('');
+  tbody.appendChild(signRateRow);
+
+  table.appendChild(tbody);
+
+  // Active pipeline note
+  const note = document.createElement('div');
+  note.style.cssText = 'padding:0 0 0 1.5rem;font-family:var(--mono);font-size:8.5px;color:var(--text3);line-height:1.8';
+  note.innerHTML = `
+    <span style="color:var(--text2)">Pass rate</span> = games reaching this stage ÷ games in previous stage, by submission year &nbsp;·&nbsp;
+    <span style="color:var(--text2)">Active games</span> counted at their current stage &nbsp;·&nbsp;
+    Submission date required for cohort assignment
+  `;
+  container.appendChild(note);
+}
+
+async function switchFunnelView(view) {
+  _funnelView = view;
+  const main = window._funnelMain;
+  if (!main) return;
+
+  const snapshotBtn = document.getElementById('funnel-view-snapshot');
+  const annualBtn   = document.getElementById('funnel-view-annual');
+  const filterBar   = document.getElementById('funnel-filters');
+
+  if (view === 'snapshot') {
+    main._snapshotBody.style.display = '';
+    main._annualBody.style.display   = 'none';
+    if (filterBar) filterBar.style.display = '';
+    if (snapshotBtn) { snapshotBtn.style.background='var(--accent-dim)'; snapshotBtn.style.color='var(--accent)'; }
+    if (annualBtn)   { annualBtn.style.background='none'; annualBtn.style.color='var(--text3)'; }
+  } else {
+    main._snapshotBody.style.display = 'none';
+    main._annualBody.style.display   = '';
+    if (filterBar) filterBar.style.display = 'none';
+    if (snapshotBtn) { snapshotBtn.style.background='none'; snapshotBtn.style.color='var(--text3)'; }
+    if (annualBtn)   { annualBtn.style.background='var(--accent-dim)'; annualBtn.style.color='var(--accent)'; }
+
+    if (!main._annualBody.hasChildNodes()) {
+      main._annualBody.innerHTML = '<div style="padding:2rem;font-family:var(--mono);font-size:10px;color:var(--text3)">Loading annual data…</div>';
+      try {
+        const annualTasks = await fetchFunnelAnnualData();
+        renderAnnualStats(main._allTasks, annualTasks, main._annualBody);
+      } catch(e) {
+        main._annualBody.innerHTML = '<div style="padding:2rem;font-family:var(--mono);font-size:10px;color:var(--rag-r)">Error: ' + esc(e.message) + '</div>';
+      }
+    }
+  }
+}
+
 async function renderFunnel() {
   const view = document.getElementById('funnel-view');
   if (!view) return;
@@ -3411,7 +3679,19 @@ async function renderFunnel() {
   // Header
   const hdr = document.createElement('div');
   hdr.className = 'funnel-header';
-  hdr.innerHTML = '<div class="funnel-title">Publishing Pitch Funnel</div><div class="funnel-filters" id="funnel-filters"></div>';
+  hdr.innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="funnel-title">Publishing Pitch Funnel</div>
+      <div style="display:flex;gap:0;border:0.5px solid var(--border2);border-radius:3px;overflow:hidden">
+        <button id="funnel-view-snapshot" onclick="switchFunnelView('snapshot')"
+          style="font-family:var(--mono);font-size:8.5px;letter-spacing:0.09em;text-transform:uppercase;
+          padding:3px 10px;border:none;cursor:pointer;background:var(--accent-dim);color:var(--accent)">Snapshot</button>
+        <button id="funnel-view-annual" onclick="switchFunnelView('annual')"
+          style="font-family:var(--mono);font-size:8.5px;letter-spacing:0.09em;text-transform:uppercase;
+          padding:3px 10px;border:none;border-left:0.5px solid var(--border2);cursor:pointer;background:none;color:var(--text3)">Annual Stats</button>
+      </div>
+    </div>
+    <div class="funnel-filters" id="funnel-filters"></div>`;
   main.appendChild(hdr);
 
   // Loading
@@ -3471,6 +3751,20 @@ async function renderFunnel() {
   const body = document.createElement('div');
   body.className = 'funnel-body';
   main.appendChild(body);
+
+  const annualBody = document.createElement('div');
+  annualBody.style.cssText = 'flex:1;min-height:0;overflow-y:auto;display:none';
+  main.appendChild(annualBody);
+
+  // Store references for the toggle
+  main._snapshotBody = body;
+  main._annualBody   = annualBody;
+  main._allTasks     = allTasks;
+  main._buckets      = buckets;
+  main._sidebar      = sidebar;
+
+  // Make switchFunnelView accessible in this closure
+  window._funnelMain = main;
 
   rebuildFunnelBody(allTasks, buckets, body, sidebar);
 }
