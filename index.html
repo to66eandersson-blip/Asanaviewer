@@ -1009,7 +1009,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.77</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.78</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1053,7 +1053,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 120px; margin-top: 6p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.77</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.78</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3169,22 +3169,25 @@ async function fetchFunnelData() {
   // Fetch 2: completed tasks since 2020 — needed to get Signed games
   // (Asana only returns incomplete tasks by default; completed_since overrides this)
   const seenGids = new Set(tasks.map(t => t.gid));
-  let offset2 = null, pages2 = 0;
+  let offset2 = null, pages2 = 0, signedFound = 0, completedTotal = 0;
   while (pages2 < 40) {
     const url2 = `/projects/${FUNNEL_PROJECT_GID}/tasks?opt_fields=${fields}&limit=100&completed_since=2020-01-01` +
       (offset2 ? `&offset=${offset2}` : '');
     const resp2 = await api(url2);
+    completedTotal += (resp2.data || []).length;
     (resp2.data || []).forEach(t => {
-      if (seenGids.has(t.gid)) return; // deduplicate
+      if (seenGids.has(t.gid)) return;
       const stageField = (t.custom_fields || []).find(f => f.gid === CF_FUNNEL_STAGE_F);
-      if (stageField?.enum_value?.name === 'Signed') {
-        tasks.push(t);
-        seenGids.add(t.gid);
+      const stageName = stageField?.enum_value?.name;
+      if (stageName === 'Signed') {
+        tasks.push(t); seenGids.add(t.gid); signedFound++;
+        console.log('Found Signed:', t.name, '| stage:', stageName);
       }
     });
     if (resp2.next_page?.offset) { offset2 = resp2.next_page.offset; pages2++; }
     else break;
   }
+  console.log(`Fetch2: ${completedTotal} completed tasks fetched, ${signedFound} Signed found`);
   _funnelData = tasks.map(t => {
     const getCF  = gid => (t.custom_fields || []).find(f => f.gid === gid);
     const stage  = getCF(CF_FUNNEL_STAGE_F)?.enum_value?.name || null;
@@ -3450,16 +3453,16 @@ async function fetchFunnelAnnualData() {
 }
 
 function renderAnnualStats(snapshotTasks, annualTasks, container) {
-  // Merge snapshot + annual, deduplicate by GID
+  // Merge + deduplicate
   const byGid = {};
   [...snapshotTasks, ...annualTasks].forEach(t => { byGid[t.gid] = t; });
   const allTasks = Object.values(byGid);
 
-  // Bucket by submission year
+  // Bucket by submission year — 2026+ only
   const byYear = {};
   allTasks.forEach(t => {
     const yr = t.submittedDate ? t.submittedDate.getFullYear() : null;
-    if (!yr) return; // skip unknown submission date
+    if (!yr || yr < 2026) return;
     const y = String(yr);
     if (!byYear[y]) byYear[y] = [];
     byYear[y].push(t);
@@ -3467,160 +3470,186 @@ function renderAnnualStats(snapshotTasks, annualTasks, container) {
 
   const years = Object.keys(byYear).sort();
   if (!years.length) {
-    container.innerHTML = '<div style="padding:2rem;font-family:var(--mono);font-size:10px;color:var(--text3)">No submission date data available</div>';
+    container.innerHTML = '<div style="padding:2rem;font-family:var(--mono);font-size:10px;color:var(--text3)">No 2026+ submission date data available</div>';
     return;
   }
 
-  // Stage order for the table — Closed/Pass at the bottom
   const stageOrder = [
     'Inbound', 'Qualified', 'Shortlist', 'Playtest',
-    'Deep Product Evaluation', 'Signed', 'Closed/Pass'
+    'Deep Product Evaluation', 'Signed'
   ];
+  // Closed/Pass shown separately as drop-off
 
-  // Build count matrix: stageOrder × years
+  // Count matrix
   const matrix = {};
-  stageOrder.forEach(s => { matrix[s] = {}; years.forEach(y => { matrix[s][y] = []; }); });
+  stageOrder.concat(['Closed/Pass']).forEach(s => {
+    matrix[s] = {};
+    years.forEach(y => { matrix[s][y] = []; });
+  });
   allTasks.forEach(t => {
-    const yr = t.submittedDate ? String(t.submittedDate.getFullYear()) : null;
-    if (!yr || !matrix[t.stage]) return;
-    matrix[t.stage][yr].push(t);
+    const yr = t.submittedDate ? t.submittedDate.getFullYear() : null;
+    if (!yr || yr < 2026) return;
+    const y = String(yr);
+    const s = t.stage;
+    if (matrix[s] && matrix[s][y] !== undefined) matrix[s][y].push(t);
   });
 
-  // Total submitted per year (all stages)
   const totals = {};
   years.forEach(y => { totals[y] = byYear[y].length; });
 
-  container.innerHTML = '';
+  // Max count across all stages+years for bar scaling
+  const maxCount = Math.max(
+    ...stageOrder.map(s => Math.max(...years.map(y => matrix[s][y].length))), 1
+  );
 
-  // Table wrapper
+  container.innerHTML = '';
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'overflow-x:auto;padding:1rem 1.5rem 2rem';
+  wrap.style.cssText = 'padding:1rem 1.5rem 2rem;display:flex;flex-direction:column;gap:0';
   container.appendChild(wrap);
 
-  const table = document.createElement('table');
-  table.style.cssText = 'border-collapse:collapse;width:100%;font-family:var(--mono);font-size:10px';
-  wrap.appendChild(table);
+  // Year legend
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:16px;margin-bottom:16px;padding-left:160px';
+  years.forEach((y, i) => {
+    const hue = ['#f5a230','#7b9cbf','#a890c0','#6b9e9e'][i % 4];
+    legend.innerHTML += `<div style="display:flex;align-items:center;gap:5px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${hue}"></div>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--text2)">${y}</span>
+    </div>`;
+  });
+  wrap.appendChild(legend);
 
-  // Header row
-  const thead = document.createElement('thead');
-  const hrow = document.createElement('tr');
-  hrow.innerHTML = `<th style="text-align:left;padding:8px 16px 8px 0;color:var(--text3);letter-spacing:0.1em;font-weight:400;border-bottom:1px solid var(--border2);white-space:nowrap">STAGE</th>` +
-    years.map(y => `<th colspan="2" style="text-align:center;padding:8px 16px;color:var(--accent);letter-spacing:0.1em;font-weight:400;border-bottom:1px solid var(--border2)">${y}</th>`).join('');
-  thead.appendChild(hrow);
-  // Sub-header: Count / Pass rate per year
-  const srow = document.createElement('tr');
-  srow.innerHTML = `<th style="padding:2px 16px 6px 0;border-bottom:0.5px solid var(--border)"></th>` +
-    years.map(() => `
-      <th style="text-align:right;padding:2px 8px 6px;color:var(--text3);font-weight:400;font-size:9px;border-bottom:0.5px solid var(--border)">COUNT</th>
-      <th style="text-align:right;padding:2px 16px 6px 8px;color:var(--text3);font-weight:400;font-size:9px;border-bottom:0.5px solid var(--border)">PASS→</th>
-    `).join('');
-  thead.appendChild(srow);
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
+  const BAR_MAX = 300; // max bar width px
 
   stageOrder.forEach((stage, si) => {
-    const isClosedPass = stage === 'Closed/Pass';
-    const isSigned     = stage === 'Signed';
-    const isSeparator  = isClosedPass;
+    const isSigned = stage === 'Signed';
+    const stageColor = FUNNEL_COLORS[stage] || '#5a1a1a';
+    const yearColors = ['#f5a230','#7b9cbf','#a890c0','#6b9e9e'];
 
-    // Stage row
-    const row = document.createElement('tr');
-    const stageColor = isClosedPass ? 'var(--text3)'
-      : isSigned ? 'var(--rag-g)'
-      : FUNNEL_COLORS[stage] ? '#fff' : 'var(--text2)';
-    const stageBg = isClosedPass ? 'transparent'
-      : isSigned ? 'transparent'
-      : (FUNNEL_COLORS[stage] || 'transparent');
+    const stageRow = document.createElement('div');
+    stageRow.style.cssText = 'display:flex;flex-direction:column;gap:0;margin-bottom:2px';
 
-    let labelCell = `<td style="padding:${isSeparator?'12px':'6px'} 16px ${isSeparator?'6px':'6px'} 0;
-      color:${stageColor};white-space:nowrap;
-      ${isSeparator ? 'border-top:0.5px solid var(--border2);' : ''}">
-      ${isClosedPass ? '' : `<span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:${stageBg};margin-right:7px;vertical-align:middle"></span>`}
-      ${esc(stage)}
-    </td>`;
-    row.innerHTML = labelCell;
+    // Stage label + bars for each year
+    const barsRow = document.createElement('div');
+    barsRow.style.cssText = 'display:flex;align-items:center;gap:0';
+
+    // Stage label (fixed 160px)
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'width:160px;flex-shrink:0;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:' +
+      (isSigned ? 'var(--rag-g)' : 'var(--text2)') + ';padding-right:12px;text-align:right';
+    lbl.textContent = stage;
+    barsRow.appendChild(lbl);
+
+    // Bars + counts per year
+    const barsGroup = document.createElement('div');
+    barsGroup.style.cssText = 'display:flex;flex-direction:column;gap:2px';
 
     years.forEach((y, yi) => {
       const count = matrix[stage][y].length;
-      // Pass rate: count of THIS stage / count of PREVIOUS stage
-      let passRate = '';
-      if (!isClosedPass && si > 0) {
-        const prevStage = stageOrder[si - 1];
-        const prevCount = matrix[prevStage]?.[y]?.length || 0;
-        if (prevCount > 0) {
-          const pct = Math.round(count / prevCount * 100);
-          const color = isSigned
-            ? (pct >= 50 ? 'var(--rag-g)' : pct >= 25 ? 'var(--rag-a)' : 'var(--text3)')
-            : (pct >= 40 ? 'var(--rag-g)' : pct >= 20 ? 'var(--rag-a)' : 'var(--rag-r)');
-          passRate = `<span style="color:${color}">${pct}%</span>`;
-        } else {
-          passRate = '<span style="color:var(--text3)">—</span>';
+      const barW  = count > 0 ? Math.max(Math.round(count / maxCount * BAR_MAX), 4) : 0;
+      const color = yearColors[yi % yearColors.length];
+      const barRow = document.createElement('div');
+      barRow.style.cssText = 'display:flex;align-items:center;gap:6px';
+      barRow.innerHTML = `
+        <div style="width:${barW}px;height:14px;background:${color}${isSigned?'':'88'};
+          border-radius:0 2px 2px 0;min-width:${count>0?'4px':'0'};transition:width 0.3s"></div>
+        <span style="font-family:var(--mono);font-size:9px;color:${count>0?'var(--text2)':'var(--text3)'}">${count||'—'}</span>`;
+      barsGroup.appendChild(barRow);
+    });
+    barsRow.appendChild(barsGroup);
+
+    // Pass rates (one per year, aligned after bars)
+    const passCol = document.createElement('div');
+    passCol.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-left:16px';
+
+    years.forEach((y, yi) => {
+      const count = matrix[stage][y].length;
+      let passHtml = '<span style="font-family:var(--mono);font-size:9px;color:var(--text3)"></span>';
+
+      if (si === 0) {
+        // Inbound: % of total submitted
+        const total = totals[y];
+        if (total > 0 && count > 0) {
+          const pct = Math.round(count / total * 100);
+          passHtml = `<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">${pct}% of submitted</span>`;
         }
-      } else if (si === 0) {
-        // Inbound: % of total submitted that year
-        passRate = `<span style="color:var(--text3)">${totals[y]}</span>`;
+      } else {
+        // Pass rate = this stage count / PREVIOUS stage count (not total)
+        // Use the immediately preceding stage in stageOrder
+        const prevStage = stageOrder[si - 1];
+        const prevCount = matrix[prevStage][y].length;
+        if (prevCount > 0 && count > 0) {
+          const pct = Math.round(count / prevCount * 100);
+          const color = pct >= 40 ? 'var(--rag-g)' : pct >= 20 ? 'var(--rag-a)' : 'var(--text3)';
+          passHtml = `<span style="font-family:var(--mono);font-size:9px;color:${color}">${pct}% pass</span>`;
+        } else if (prevCount === 0 && count > 0) {
+          // More in this stage than previous — data anomaly (bulk moves etc)
+          passHtml = `<span style="font-family:var(--mono);font-size:9px;color:var(--text3)">* ${count}</span>`;
+        }
       }
 
-      const countColor = count === 0 ? 'var(--text3)'
-        : isSigned ? 'var(--rag-g)'
-        : isClosedPass ? 'var(--text3)' : 'var(--text)';
-
-      row.innerHTML += `
-        <td style="text-align:right;padding:6px 8px;color:${countColor};
-          ${isSeparator ? 'border-top:0.5px solid var(--border2);' : ''}">
-          ${count || '<span style="color:var(--text3)">—</span>'}
-        </td>
-        <td style="text-align:right;padding:6px 16px 6px 8px;
-          ${isSeparator ? 'border-top:0.5px solid var(--border2);' : ''}">
-          ${isClosedPass ? '' : passRate}
-        </td>`;
+      const pr = document.createElement('div');
+      pr.style.cssText = 'height:14px;display:flex;align-items:center';
+      pr.innerHTML = passHtml;
+      passCol.appendChild(pr);
     });
+    barsRow.appendChild(passCol);
+    stageRow.appendChild(barsRow);
 
-    tbody.appendChild(row);
-
-    // After Deep Eval, before Signed: show overall conversion row
-    if (stage === 'Deep Product Evaluation') {
-      const divRow = document.createElement('tr');
-      divRow.innerHTML = `<td colspan="${1 + years.length * 2}" style="padding:2px 0;border-bottom:0.5px solid var(--border2)"></td>`;
-      tbody.appendChild(divRow);
+    // Transition label between stages
+    if (si < stageOrder.length - 1) {
+      const trans = FUNNEL_STAGES[si]?.transition;
+      if (trans) {
+        const trow = document.createElement('div');
+        trow.style.cssText = 'padding:2px 0 2px 160px;font-family:var(--mono);font-size:8px;color:var(--text3)';
+        trow.textContent = `↓  ${trans}`;
+        stageRow.appendChild(trow);
+      }
     }
+
+    wrap.appendChild(stageRow);
   });
 
-  // Total submitted row
-  const totalRow = document.createElement('tr');
-  totalRow.innerHTML = `<td style="padding:10px 16px 4px 0;color:var(--text2);border-top:1px solid var(--border2);font-size:9px;letter-spacing:0.08em">TOTAL SUBMITTED</td>` +
-    years.map(y => `
-      <td style="text-align:right;padding:10px 8px 4px;color:var(--text2);border-top:1px solid var(--border2);font-weight:500">${totals[y]}</td>
-      <td style="border-top:1px solid var(--border2)"></td>
-    `).join('');
-  tbody.appendChild(totalRow);
+  // Divider
+  const divider = document.createElement('div');
+  divider.style.cssText = 'border-top:0.5px solid var(--border2);margin:12px 0 10px 160px';
+  wrap.appendChild(divider);
 
-  // Overall sign rate row
-  const signRateRow = document.createElement('tr');
-  signRateRow.innerHTML = `<td style="padding:2px 16px 8px 0;color:var(--text3);font-size:9px;letter-spacing:0.08em">SIGN RATE</td>` +
-    years.map(y => {
-      const signed = matrix['Signed'][y].length;
-      const total  = totals[y];
-      const rate   = total > 0 ? (signed / total * 100).toFixed(1) + '%' : '—';
-      const color  = total > 0 && signed/total >= 0.02 ? 'var(--rag-g)'
-        : total > 0 && signed/total >= 0.01 ? 'var(--rag-a)' : 'var(--text3)';
-      return `<td style="text-align:right;padding:2px 8px 8px;color:${color}">${rate}</td><td></td>`;
-    }).join('');
-  tbody.appendChild(signRateRow);
+  // Totals row
+  const totRow = document.createElement('div');
+  totRow.style.cssText = 'display:flex;align-items:flex-start;gap:0';
+  const totLbl = document.createElement('div');
+  totLbl.style.cssText = 'width:160px;flex-shrink:0;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);padding-right:12px;text-align:right';
+  totLbl.textContent = 'Total submitted';
+  totRow.appendChild(totLbl);
+  const totVals = document.createElement('div');
+  totVals.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+  years.forEach((y, yi) => {
+    const color = ['#f5a230','#7b9cbf','#a890c0','#6b9e9e'][yi % 4];
+    totVals.innerHTML += `<div style="height:14px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:${color};font-weight:500">${totals[y]}</div>`;
+  });
+  totRow.appendChild(totVals);
 
-  table.appendChild(tbody);
+  // Sign rates
+  const signRateCol = document.createElement('div');
+  signRateCol.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-left:16px';
+  years.forEach(y => {
+    const signed = matrix['Signed'][y].length;
+    const total  = totals[y];
+    const rate   = total > 0 ? (signed / total * 100).toFixed(1) + '%' : '—';
+    const color  = total > 0 && signed/total >= 0.02 ? 'var(--rag-g)' : total > 0 && signed/total >= 0.01 ? 'var(--rag-a)' : 'var(--text3)';
+    signRateCol.innerHTML += `<div style="height:14px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:${color}">sign rate: ${rate}</div>`;
+  });
+  totRow.appendChild(signRateCol);
+  wrap.appendChild(totRow);
 
-  // Active pipeline note
+  // Note
   const note = document.createElement('div');
-  note.style.cssText = 'padding:0 0 0 1.5rem;font-family:var(--mono);font-size:8.5px;color:var(--text3);line-height:1.8';
-  note.innerHTML = `
-    <span style="color:var(--text2)">Pass rate</span> = games reaching this stage ÷ games in previous stage, by submission year &nbsp;·&nbsp;
-    <span style="color:var(--text2)">Active games</span> counted at their current stage &nbsp;·&nbsp;
-    Submission date required for cohort assignment
-  `;
-  container.appendChild(note);
+  note.style.cssText = 'margin-top:16px;margin-left:160px;font-family:var(--mono);font-size:8px;color:var(--text3);line-height:1.8';
+  note.innerHTML = 'Pass rate = games at this stage ÷ games at previous stage, by submission year &nbsp;·&nbsp; * = data anomaly (bulk moves or missing data) &nbsp;·&nbsp; 2026+ only';
+  wrap.appendChild(note);
 }
+
 
 async function switchFunnelView(view) {
   _funnelView = view;
