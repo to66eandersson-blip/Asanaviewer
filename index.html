@@ -1016,7 +1016,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.84</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.85</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1060,7 +1060,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.84</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.85</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -4028,10 +4028,19 @@ async function fetchFoFPhases() {
         if (phaseField?.enum_value?.name) {
           _fofPhaseByGid[item.gid] = phaseField.enum_value.name;
           _fofPhaseNames[item.gid] = item.name || '';
-          // Also store PM for signing target cards
-          const pmField = (item.custom_fields || []).find(f => f.gid === '1211671698226604');
-          const pmVal = pmField?.people_value?.length ? pmField.people_value.map(p => p.name).join(', ') : (pmField?.display_value || '');
+          // Store PM/BM/PP for signing target cards and staff panel
+          const readPerson = gid => {
+            const f = (item.custom_fields || []).find(f => f.gid === gid);
+            if (!f) return '';
+            if (f.people_value?.length) return f.people_value.map(p => p.name).join(', ');
+            return f.display_value || '';
+          };
+          const pmVal = readPerson('1211671698226604');
+          const bmVal = readPerson('1211671698080280');
+          const ppVal = readPerson('1211671749440763');
           if (pmVal) _fofPhaseNames[item.gid + '_pm'] = pmVal;
+          if (bmVal) _fofPhaseNames[item.gid + '_bm'] = bmVal;
+          if (ppVal) _fofPhaseNames[item.gid + '_pp'] = ppVal;
         }
       });
       if (resp.next_page?.offset) { offset = resp.next_page.offset; pages++; }
@@ -4291,7 +4300,7 @@ async function renderFoF() {
     if (!phaseMap[phase]) phaseMap[phase] = [];
     // Use the name from livePhaseNames if available (fetched alongside phase)
     const title = livePhaseNames[gid] || gid;
-    phaseMap[phase].push({ gid, title, code: '', phase, goals: [], pm: livePhaseNames[gid + '_pm'] || '', gtm: '' });
+    phaseMap[phase].push({ gid, title, code: '', phase, goals: [], pm: livePhaseNames[gid + '_pm'] || '', bm: livePhaseNames[gid + '_bm'] || '', pp: livePhaseNames[gid + '_pp'] || '', gtm: '' });
   });
 
   // ── Render pipeline columns ──
@@ -4371,11 +4380,27 @@ function renderFoFStaff(container) {
     const phase = e.phase || PRODUCT_BOARD_MAP[e.boardGid]?.phase || '';
     const inactive = ['Back Catalogue', 'Scouting'].includes(phase);
     if (inactive) return;
-    // Read people from the map entry (pm/bm/pp set by buildProductBoardMap)
     const entry = PRODUCT_BOARD_MAP[e.boardGid || e.gid] || e;
     if (entry.pm) entry.pm.split(', ').forEach(p => { pmCount[p] = (pmCount[p]||0) + 1; });
     if (entry.bm) entry.bm.split(', ').forEach(p => { bmCount[p] = (bmCount[p]||0) + 1; });
     if (entry.pp) entry.pp.split(', ').forEach(p => { ppCount[p] = (ppCount[p]||0) + 1; });
+  });
+  // Also count signing targets — they're in _fofPhaseNames, not PRODUCT_BOARD_MAP
+  Object.entries(_fofPhaseNames).forEach(([key, val]) => {
+    if (!key.endsWith('_pm') && !key.endsWith('_bm') && !key.endsWith('_pp')) return;
+    const gid    = key.slice(0, -3);
+    const role   = key.slice(-2); // 'pm', 'bm', 'pp'
+    const phase  = _fofPhaseByGid?.[gid] || '';
+    // Only count active signing targets (Pre-Signing, not Scouting)
+    if (!['Pre-Signing'].includes(phase)) return;
+    // Skip if already counted via PRODUCT_BOARD_MAP (product boards)
+    if (PRODUCT_BOARD_MAP[gid]) return;
+    if (!val) return;
+    val.split(', ').forEach(p => {
+      if (role === 'pm') pmCount[p] = (pmCount[p]||0) + 1;
+      if (role === 'bm') bmCount[p] = (bmCount[p]||0) + 1;
+      if (role === 'pp') ppCount[p] = (ppCount[p]||0) + 1;
+    });
   });
 
   function makeTable(title, counts, color) {
