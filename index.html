@@ -662,26 +662,35 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   font-family: var(--mono); font-size: 10px; color: var(--text3); }
 .funnel-transition { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
   color: var(--text3); padding: 6px 0 6px 10px; }
-/* Cards — compact with hover expand */
+/* Cards — compact, simple. Detail lifts into a hover tooltip (see below). */
 a.funnel-game-card { flex: 0 0 150px; background: var(--surface2); border: 0.5px solid var(--border2);
-  border-radius: 4px; padding: 9px 11px; display: flex; flex-direction: column; gap: 0;
-  text-decoration: none; overflow: hidden; transition: border-color 0.12s, background 0.12s; cursor: pointer; }
-a.funnel-game-card:hover { border-color: var(--accent); background: var(--surface3); }
-.funnel-card-compact { display: flex; flex-direction: column; gap: 3px; }
+  border-radius: 4px; padding: 9px 11px; display: flex; flex-direction: column; gap: 3px;
+  text-decoration: none; overflow: hidden;
+  transition: border-color 0.12s, background 0.12s; cursor: pointer; }
+a.funnel-game-card:hover { border-color: var(--accent-border); background: var(--surface3); }
 .funnel-card-title { font-size: 11.5px; font-weight: 500; color: var(--text); line-height: 1.3; }
 .funnel-card-studio { font-family: var(--mono); font-size: 9px; color: var(--text3); }
-.funnel-card-detail { max-height: 0; overflow: hidden;
-  transition: max-height 0.22s ease, margin-top 0.22s;
-  display: flex; flex-direction: column; gap: 4px; }
-a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8px; }
-.funnel-card-meta { display: flex; flex-wrap: wrap; gap: 4px; }
-.funnel-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em;
-  padding: 2px 6px; border-radius: 2px; }
-.funnel-card-poc { font-family: var(--mono); font-size: 9px; color: var(--text3); }
 .funnel-empty { font-family: var(--mono); font-size: 10px; color: var(--text3);
   padding: 8px 0; align-self: center; }
 .funnel-count-only { display: flex; align-items: center; padding-left: 14px;
   font-family: var(--mono); font-size: 10px; color: var(--text3); }
+/* Hover tooltip — positioned absolute, no layout reflow. */
+.funnel-card-tt { position: fixed; z-index: 1000; min-width: 220px; max-width: 280px;
+  background: var(--surface2); border: 0.5px solid var(--border3);
+  border-radius: 4px; padding: 10px 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.12s ease; }
+.funnel-card-tt.show { opacity: 1; }
+.funnel-card-tt-hdr { padding-bottom: 8px; margin-bottom: 8px;
+  border-bottom: 0.5px solid var(--border2); }
+.funnel-card-tt-title { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.funnel-card-tt-studio { font-family: var(--mono); font-size: 9.5px; color: var(--text3); margin-top: 2px; }
+.funnel-card-tt-body { display: flex; flex-direction: column; gap: 4px; }
+.funnel-card-tt-row { display: flex; align-items: baseline; gap: 12px; }
+.funnel-card-tt-key { font-family: var(--mono); font-size: 9px; letter-spacing: 0.10em;
+  text-transform: uppercase; color: var(--text3); width: 56px; flex-shrink: 0; }
+.funnel-card-tt-val { font-family: var(--mono); font-size: 10px; color: var(--text2); line-height: 1.4; }
 /* Signing targets sidebar */
 .funnel-targets-panel { display: flex; flex-direction: column; gap: 0; }
 .funnel-targets-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
@@ -1040,7 +1049,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.93</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.94</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1084,7 +1093,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.93</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.94</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3325,40 +3334,71 @@ function renderFunnelCard(g) {
   const card = document.createElement('a');
   card.className = 'funnel-game-card';
   if (g.url) { card.href = g.url; card.target = '_blank'; card.rel = 'noopener'; }
-
-  // Compact view (always visible)
-  const compact = document.createElement('div');
-  compact.className = 'funnel-card-compact';
-  compact.innerHTML = `<div class="funnel-card-title">${esc(g.title)}</div>` +
+  card.innerHTML = `<div class="funnel-card-title">${esc(g.title)}</div>` +
     (g.studio ? `<div class="funnel-card-studio">${esc(g.studio)}</div>` : '');
 
-  // Expanded detail (shown on hover via CSS max-height)
-  const detail = document.createElement('div');
-  detail.className = 'funnel-card-detail';
-
-  const tags = [
-    ...g.feel.map(f => {
-      const c = FEEL_COLORS[f] || 'var(--text3)';
-      return `<span class="funnel-tag" style="background:${c}22;color:${c};border:0.5px solid ${c}55">${esc(f)}</span>`;
-    }),
-    ...(g.risk ? [(() => {
-      const c = RISK_COLORS[g.risk] || 'var(--text3)';
-      const lbl = g.risk === 'High Risk / High Reward' ? 'High Risk' : g.risk;
-      return `<span class="funnel-tag" style="background:${c}22;color:${c};border:0.5px solid ${c}55">${esc(lbl)}</span>`;
-    })()] : []),
-  ];
-  let dh = '';
-  if (tags.length) dh += `<div class="funnel-card-meta">${tags.join('')}</div>`;
-  const meta = [g.year, fmtBudget(g.budget), fmtAge(g.submittedDate)].filter(Boolean);
-  if (meta.length) dh += `<div class="funnel-card-meta" style="gap:6px;color:var(--text3)">${meta.map(esc).join(' · ')}</div>`;
-  if (g.poc)           dh += `<div class="funnel-card-poc">${esc(g.poc)}</div>`;
-  if (g.signingTarget) dh += `<div class="funnel-card-poc" style="color:var(--accent)">${esc(g.signingTarget)}</div>`;
-  detail.innerHTML = dh;
-
-  card.appendChild(compact);
-  card.appendChild(detail);
+  // Hover tooltip — no layout reflow. Builds a key/value list on first hover.
+  card.addEventListener('mouseenter', e => showFunnelCardTooltip(g, card));
+  card.addEventListener('mouseleave', () => hideFunnelCardTooltip());
   return card;
 }
+
+// Single shared tooltip element, lazy-created on first hover
+let _funnelTT = null;
+function getFunnelTT() {
+  if (_funnelTT) return _funnelTT;
+  _funnelTT = document.createElement('div');
+  _funnelTT.className = 'funnel-card-tt';
+  document.body.appendChild(_funnelTT);
+  return _funnelTT;
+}
+function showFunnelCardTooltip(g, anchorEl) {
+  const tt = getFunnelTT();
+  const rows = [];
+  if (g.risk)           rows.push(['Risk',    g.risk === 'High Risk / High Reward' ? 'High Risk' : g.risk]);
+  if (g.feel?.length)   rows.push(['Feel',    g.feel.join(', ')]);
+  if (g.year)           rows.push(['Release', g.year]);
+  if (g.budget)         rows.push(['Budget',  fmtBudget(g.budget)]);
+  if (g.submittedDate)  rows.push(['Age',     fmtAge(g.submittedDate)]);
+  if (g.poc)            rows.push(['POC',     g.poc]);
+  if (g.signingTarget)  rows.push(['Target',  g.signingTarget]);
+  const rowsHtml = rows.map(([k, v]) =>
+    `<div class="funnel-card-tt-row"><span class="funnel-card-tt-key">${esc(k)}</span><span class="funnel-card-tt-val">${esc(v)}</span></div>`
+  ).join('');
+  tt.innerHTML = `
+    <div class="funnel-card-tt-hdr">
+      <div class="funnel-card-tt-title">${esc(g.title)}</div>
+      ${g.studio ? `<div class="funnel-card-tt-studio">${esc(g.studio)}</div>` : ''}
+    </div>
+    ${rows.length ? `<div class="funnel-card-tt-body">${rowsHtml}</div>` : ''}`;
+  // Position: prefer below the card, flip above if not enough room
+  const r = anchorEl.getBoundingClientRect();
+  tt.style.visibility = 'hidden';
+  tt.classList.add('show');
+  const ttR = tt.getBoundingClientRect();
+  const gap = 6;
+  let top = r.bottom + gap;
+  if (top + ttR.height > window.innerHeight - 8) top = r.top - ttR.height - gap;
+  let left = r.left;
+  if (left + ttR.width > window.innerWidth - 8) left = window.innerWidth - ttR.width - 8;
+  if (left < 8) left = 8;
+  tt.style.top = top + 'px';
+  tt.style.left = left + 'px';
+  tt.style.visibility = '';
+}
+function hideFunnelCardTooltip() {
+  if (_funnelTT) _funnelTT.classList.remove('show');
+}
+// Any scroll inside the funnel area should kill the tooltip — fixed positioning
+// would otherwise leave it pointing at the wrong card.
+document.addEventListener('scroll', e => {
+  if (!_funnelTT || !_funnelTT.classList.contains('show')) return;
+  const t = e.target;
+  if (t && t.nodeType === 1 && (t.classList?.contains('funnel-cards-wrap') ||
+      t.classList?.contains('funnel-body') || t.closest?.('#funnel-view'))) {
+    hideFunnelCardTooltip();
+  }
+}, true);
 
 function buildSigningTargetsPanel(allTasks) {
   // Derive signing target status from funnel tasks
