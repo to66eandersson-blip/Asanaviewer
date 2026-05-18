@@ -1016,7 +1016,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.86</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.87</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1060,7 +1060,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.86</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.87</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3134,6 +3134,28 @@ const CF_PROJECT_TITLE_F  = '1207330334188778';
 const CF_SIGNING_TARGET_F = '1211739543598422';
 const CF_SUBMISSION_DATE_F= '1207319688785734';
 
+// Section GID → funnel stage fallback (for tasks where CF is not yet set)
+const SECTION_TO_STAGE = {
+  '1163485042326162': 'Inbound',       // 📇Incoming
+  '1163492904183522': 'Inbound',       // 🎮In Review (also Inbound)
+  '1208460531667650': 'Failed',        // Failed
+  '1208460531667651': '1-3 Stars',     // 1-3 Stars
+  '1208460531667652': '4 Stars',       // 4 Stars
+  '1208460531667653': '5 Stars',       // 5 Stars
+  '1205351217276246': 'Rejected',      // Rejected
+  '1212670882743376': 'Shortlist',     // Shortlist
+  '1167070376805738': 'Playtest',      // Playtest
+  '1211153528617851': 'PreSigning',    // PreSigning
+  '1163492904183521': 'Advanced Talks',// 📞Adv Talks
+  '1163492904147521': 'Signed',        // 💚Signed
+  '1163492904160521': 'Closed/Pass',   // ⛔Pass
+  '1163492904140521': 'Inbound',       // ⌛Waiting for Dev (still inbound)
+  '1214732609541877': 'Training set',  // Training set
+  '1209794284804451': null,            // 2026 (signing target sections — skip)
+  '1208460531667489': null,            // 2027
+  '1208460531667490': null,            // 2028+
+};
+
 // Main funnel stages — shown as primary flow
 const FUNNEL_STAGES = [
   { key: 'Inbound',         showCards: false, transition: 'Scribe AI assessment' },
@@ -3171,6 +3193,7 @@ async function fetchFunnelData() {
   if (_funnelData) return _funnelData;
   const fields = [
     'name', 'completed', 'permalink_url',
+    'memberships.section.gid',
     'custom_fields.gid', 'custom_fields.display_value',
     'custom_fields.enum_value', 'custom_fields.multi_enum_values',
     'custom_fields.number_value'
@@ -3205,7 +3228,12 @@ async function fetchFunnelData() {
   console.log(`Funnel fetch: ${tasks.length} total tasks (${tasks.filter(t=>{ const s=(t.custom_fields||[]).find(f=>f.gid===CF_FUNNEL_STAGE_F); return s?.enum_value?.name==='Signed'; }).length} Signed)`);
   _funnelData = tasks.map(t => {
     const getCF  = gid => (t.custom_fields || []).find(f => f.gid === gid);
-    const stage  = getCF(CF_FUNNEL_STAGE_F)?.enum_value?.name || null;
+    const stageCF = getCF(CF_FUNNEL_STAGE_F)?.enum_value?.name || null;
+    // Fall back to section-based stage when CF not yet set (pre-automation tasks)
+    const sectionGid = (t.memberships || [])
+      .find(m => m.section?.gid && SECTION_TO_STAGE[m.section.gid] !== undefined)
+      ?.section?.gid;
+    const stage = stageCF || (sectionGid ? SECTION_TO_STAGE[sectionGid] : null);
     const feel   = (getCF(CF_FEEL_OF_FURY_F)?.multi_enum_values || []).map(v => v.name);
     const risk   = getCF(CF_RISK_PROFILE_F)?.enum_value?.name || null;
     const year   = getCF(CF_RELEASE_YEAR_F)?.enum_value?.name || null;
