@@ -1016,7 +1016,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.85</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.86</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1060,7 +1060,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.85</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.86</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3134,18 +3134,31 @@ const CF_PROJECT_TITLE_F  = '1207330334188778';
 const CF_SIGNING_TARGET_F = '1211739543598422';
 const CF_SUBMISSION_DATE_F= '1207319688785734';
 
+// Main funnel stages — shown as primary flow
 const FUNNEL_STAGES = [
-  { key: 'Inbound',                 showCards: false, transition: 'Initial Filter — scope, format, relevance' },
-  { key: 'Qualified',               showCards: false, transition: 'Scout Screening — human playthrough and review' },
-  { key: 'Shortlist',               showCards: true,  transition: 'Playtest — hands-on builds, execution, proof' },
-  { key: 'Playtest',                showCards: true,  transition: 'Product Evaluation — findings in GTM 0.2' },
-  { key: 'Deep Product Evaluation', showCards: true,  transition: 'Product Team Proposal' },
-  { key: 'Signed',                  showCards: true,  transition: null },
+  { key: 'Inbound',         showCards: false, transition: 'Scribe AI assessment' },
+  { key: 'Qualified',       showCards: false, isGroup: true,
+    subStages: ['1-3 Stars', '4 Stars', '5 Stars'],
+    transition: 'Scout screening — human playthrough and review' },
+  { key: 'Shortlist',       showCards: true,  transition: 'Playtest — hands-on builds, execution, proof' },
+  { key: 'Playtest',        showCards: true,  transition: 'PreSigning evaluation — findings in GTM 0.2' },
+  { key: 'PreSigning',      showCards: true,  transition: 'Advanced contract talks' },
+  { key: 'Advanced Talks',  showCards: true,  transition: null },
+  { key: 'Signed',          showCards: true,  transition: null },
 ];
 
+// Exit stages — shown separately below main funnel
+const EXIT_STAGES = ['Failed', 'Rejected', 'Closed/Pass'];
+
+// Qualified sub-tiers map to these stage enum values
+const QUALIFIED_TIERS = ['1-3 Stars', '4 Stars', '5 Stars'];
+
 const FUNNEL_COLORS = {
-  'Inbound': '#3d1010', 'Qualified': '#541818', 'Shortlist': '#6a2020',
-  'Playtest': '#7e2828', 'Deep Product Evaluation': '#923535', 'Signed': '#b87c2a'
+  'Inbound': '#3d1010', 'Qualified': '#541818',
+  '1-3 Stars': '#4a1a1a', '4 Stars': '#541818', '5 Stars': '#5e1e1e',
+  'Shortlist': '#6a2020', 'Playtest': '#7e2828',
+  'PreSigning': '#923535', 'Advanced Talks': '#a04040', 'Signed': '#b87c2a',
+  'Failed': '#2a1a1a', 'Rejected': '#2a1a1a', 'Closed/Pass': '#2a1a1a',
 };
 const FEEL_COLORS  = { 'Good': 'var(--rag-g)', 'Fear': 'var(--rag-r)', 'Smart': '#6b9e9e', 'Invincible': '#a890c0' };
 const RISK_COLORS  = { 'Art Game': '#7b9cbf', 'Safe Bet': 'var(--rag-g)', 'High Risk / High Reward': 'var(--rag-a)' };
@@ -3208,7 +3221,7 @@ async function fetchFunnelData() {
       signingTarget: getCF(CF_SIGNING_TARGET_F)?.enum_value?.name || null,
       stage, feel, risk, year, budget, submittedDate,
     };
-  }).filter(t => t.stage && t.stage !== 'Closed/Pass');
+  }).filter(t => t.stage && t.stage !== 'Training set'); // keep all except Training set
   return _funnelData;
 }
 
@@ -3347,20 +3360,29 @@ function buildSigningTargetsPanel(allTasks) {
 function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
   body.innerHTML = '';
 
-  // Compute filtered buckets (filters affect counts too)
+  // Filtered buckets — filters apply to counts AND cards
   const filteredBuckets = {};
-  FUNNEL_STAGES.forEach(s => {
-    filteredBuckets[s.key] = (buckets[s.key] || []).filter(passesFilters);
+  const allStageKeys = FUNNEL_STAGES.map(s => s.key)
+    .concat(FUNNEL_STAGES.flatMap(s => s.subStages || []))
+    .concat(EXIT_STAGES);
+  allStageKeys.forEach(k => {
+    filteredBuckets[k] = (buckets[k] || []).filter(passesFilters);
   });
-  const maxCount = Math.max(...FUNNEL_STAGES.map(s => filteredBuckets[s.key].length), 1);
-  const BAR_MAX_PX = 320; // max bar width in px
 
+  // For Qualified group: aggregate sub-tiers
+  filteredBuckets['Qualified'] = QUALIFIED_TIERS.flatMap(t => filteredBuckets[t] || []);
+
+  const maxCount = Math.max(
+    ...FUNNEL_STAGES.map(s => filteredBuckets[s.key]?.length || 0), 1
+  );
+  const BAR_MAX_PX = 320;
+
+  // ── Main funnel stages ──
   FUNNEL_STAGES.forEach((stage, i) => {
-    const games  = filteredBuckets[stage.key];
+    const games  = filteredBuckets[stage.key] || [];
     const count  = games.length;
     const color  = FUNNEL_COLORS[stage.key] || '#5a1a1a';
-    // Bar width proportional to count relative to max
-    const barPx  = Math.max(Math.round((count / maxCount) * BAR_MAX_PX), count > 0 ? 80 : 40);
+    const barPx  = Math.max(Math.round((count / maxCount) * BAR_MAX_PX), count > 0 ? 60 : 30);
 
     const stageEl = document.createElement('div');
     stageEl.className = 'funnel-stage';
@@ -3368,30 +3390,42 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
     const row = document.createElement('div');
     row.className = 'funnel-row';
 
-    // Left bar
+    // Bar
     const bar = document.createElement('div');
     bar.className = 'funnel-bar';
     bar.style.cssText = `width:${barPx}px;background:${color}`;
     bar.innerHTML = `<span class="funnel-bar-count">${count}</span><span class="funnel-bar-label">${esc(stage.key)}</span>`;
     row.appendChild(bar);
 
-    // Cards or context
     if (stage.showCards && count > 0) {
       const wrap = document.createElement('div');
       wrap.className = 'funnel-cards-wrap';
       games.forEach(g => wrap.appendChild(renderFunnelCard(g)));
       row.appendChild(wrap);
-    } else if (!stage.showCards) {
+    } else if (stage.isGroup) {
+      // Qualified: show sub-tier breakdown inline
+      const tierWrap = document.createElement('div');
+      tierWrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;padding-left:12px;justify-content:center';
+      QUALIFIED_TIERS.forEach(tier => {
+        const tc = (filteredBuckets[tier] || []).length;
+        const tierColor = tier === '5 Stars' ? 'var(--rag-g)' : tier === '4 Stars' ? 'var(--rag-a)' : 'var(--text3)';
+        const tierBar = Math.max(Math.round(tc / maxCount * 160), tc > 0 ? 4 : 0);
+        tierWrap.innerHTML += `<div style="display:flex;align-items:center;gap:6px">
+          <div style="width:${tierBar}px;height:10px;background:${tierColor}55;border-radius:0 2px 2px 0;min-width:${tc>0?'4px':'0'}"></div>
+          <span style="font-family:var(--mono);font-size:9px;color:${tierColor}">${esc(tier)}: ${tc}</span>
+        </div>`;
+      });
+      row.appendChild(tierWrap);
+    } else {
       const ctx = document.createElement('div');
       ctx.className = 'funnel-ctx';
-      const prev = i > 0 ? filteredBuckets[FUNNEL_STAGES[i-1].key].length : 0;
-      ctx.textContent = prev > 0 ? `${Math.round(count/prev*100)}% pass rate` : '';
+      const prev = i > 0 ? (filteredBuckets[FUNNEL_STAGES[i-1].key] || []).length : 0;
+      if (prev > 0) ctx.textContent = `${Math.round(count/prev*100)}% from previous`;
       row.appendChild(ctx);
     }
 
     stageEl.appendChild(row);
 
-    // Transition label
     if (stage.transition) {
       const conn = document.createElement('div');
       conn.className = 'funnel-transition';
@@ -3402,12 +3436,32 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
     body.appendChild(stageEl);
   });
 
-  // Rebuild sidebar
+  // ── Exit stages ──
+  if (EXIT_STAGES.some(k => (filteredBuckets[k]||[]).length > 0)) {
+    const exitHdr = document.createElement('div');
+    exitHdr.style.cssText = 'margin-top:14px;padding:6px 0 4px;border-top:0.5px solid var(--border2);font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3)';
+    exitHdr.textContent = 'Exits';
+    body.appendChild(exitHdr);
+
+    EXIT_STAGES.forEach(key => {
+      const count = (filteredBuckets[key] || []).length;
+      const exitRow = document.createElement('div');
+      exitRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:3px 0';
+      const barPx = Math.max(Math.round(count / maxCount * BAR_MAX_PX), count > 0 ? 4 : 0);
+      exitRow.innerHTML = `
+        <div style="width:${barPx}px;height:12px;background:#3a1010;border-radius:0 2px 2px 0"></div>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${esc(key)}: <span style="color:var(--text2)">${count}</span></span>`;
+      body.appendChild(exitRow);
+    });
+  }
+
+  // ── Sidebar ──
   if (sidebar) {
     sidebar.innerHTML = '';
     sidebar.appendChild(buildSigningTargetsPanel(allTasks));
   }
 }
+
 
 
 async function fetchFunnelAnnualData() {
@@ -3450,7 +3504,7 @@ async function fetchFunnelAnnualData() {
       completed: !!t.completed,
       stage, feel, risk, year, budget, submittedDate,
     };
-  }).filter(t => t.stage); // must have a stage
+  }).filter(t => t.stage && t.stage !== 'Training set'); // keep all except Training set
   return _funnelAnnualData;
 }
 
@@ -3461,7 +3515,9 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
 
   const STAGE_DEPTH = {
     'Inbound': 0, 'Qualified': 1, 'Shortlist': 2,
-    'Playtest': 3, 'Deep Product Evaluation': 4, 'Signed': 5, 'Closed/Pass': -1
+    '1-3 Stars': 1, '4 Stars': 1, '5 Stars': 1,
+    'Shortlist': 2, 'Playtest': 3, 'PreSigning': 4, 'Advanced Talks': 5, 'Signed': 6,
+    'Failed': -1, 'Rejected': -1, 'Closed/Pass': -1
   };
 
   const windows = [
@@ -3471,8 +3527,11 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
   ];
 
   const now = Date.now();
-  const stageOrder = ['Inbound','Qualified','Shortlist','Playtest','Deep Product Evaluation','Signed'];
+  const stageOrder = ['Inbound','Qualified','Shortlist','Playtest','PreSigning','Advanced Talks','Signed'];
   const BAR_MAX = 260;
+
+  // For rolling stats: Qualified = sum of all three tiers
+  const qualifiedCount = (t) => ['1-3 Stars','4 Stars','5 Stars'].includes(t.stage);
 
   container.innerHTML = '';
   const wrap = document.createElement('div');
@@ -3514,8 +3573,15 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
     stageOrder.forEach(s => {
       const depth = STAGE_DEPTH[s];
       passedThrough[s] = windowTasks.filter(t => (STAGE_DEPTH[t.stage] ?? -1) >= depth).length;
-      currentlyHere[s] = windowTasks.filter(t => t.stage === s).length;
+      // Qualified: count all three tier stages
+      currentlyHere[s] = s === 'Qualified'
+        ? windowTasks.filter(t => ['1-3 Stars','4 Stars','5 Stars'].includes(t.stage)).length
+        : windowTasks.filter(t => t.stage === s).length;
     });
+
+    // Exit counts for rolling window
+    const exitCounts = {};
+    EXIT_STAGES.forEach(k => { exitCounts[k] = windowTasks.filter(t => t.stage === k).length; });
 
     const totalWindow = windowTasks.length;
     const maxVal = Math.max(...Object.values(passedThrough), 1);
@@ -3593,6 +3659,18 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
         }
       }
       row.appendChild(rateEl);
+      // For Qualified: show tier sub-breakdown below the bar
+      if (stage === 'Qualified') {
+        const tierRow = document.createElement('div');
+        tierRow.style.cssText = 'display:flex;gap:16px;padding:3px 0 2px 190px;flex-wrap:wrap';
+        ['1-3 Stars','4 Stars','5 Stars'].forEach(tier => {
+          const tc = windowTasks.filter(t => t.stage === tier).length;
+          const c = tier === '5 Stars' ? 'var(--rag-g)' : tier === '4 Stars' ? 'var(--rag-a)' : 'var(--text3)';
+          tierRow.innerHTML += `<span style="font-family:var(--mono);font-size:10px;color:${c}">${esc(tier)}: ${tc}</span>`;
+        });
+        stageEl.appendChild(tierRow);
+      }
+
       stageEl.appendChild(row);
 
       if (si < stageOrder.length - 1) {
@@ -3616,9 +3694,11 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
     summary.style.cssText = 'padding-left:190px;font-family:var(--mono);font-size:11px;display:flex;flex-direction:column;gap:6px';
     const signRate = totalWindow > 0 ? (passedThrough['Signed'] / totalWindow * 100).toFixed(1) : '—';
     const signColor = parseFloat(signRate) >= 2 ? 'var(--rag-g)' : parseFloat(signRate) >= 1 ? 'var(--rag-a)' : 'var(--text3)';
+    const exitSummary = EXIT_STAGES.map(k => `${k}: <strong style="color:var(--text2)">${exitCounts[k]||0}</strong>`).join(' &nbsp;·&nbsp; ');
     summary.innerHTML = `
       <div style="color:var(--text2)">Total submitted in window: <strong style="color:var(--text)">${totalWindow}</strong></div>
       <div style="color:var(--text2)">Signed: <strong style="color:var(--rag-g)">${passedThrough['Signed']}</strong> &nbsp;·&nbsp; Sign rate: <strong style="color:${signColor}">${signRate}%</strong></div>
+      <div style="color:var(--text3)">Exits — ${exitSummary}</div>
       <div style="color:var(--text3);font-size:9px;margin-top:6px;line-height:1.7">
         Passed through = games submitted in window that reached at least this stage &nbsp;·&nbsp;
         Both pass rates shown: from previous stage and from top of funnel &nbsp;·&nbsp;
@@ -3716,8 +3796,13 @@ async function renderFunnel() {
 
   // Build buckets (all tasks, pre-filter)
   const buckets = {};
-  FUNNEL_STAGES.forEach(s => { buckets[s.key] = []; });
-  allTasks.forEach(t => { if (buckets[t.stage]) buckets[t.stage].push(t); });
+  // Initialise buckets for all stages including sub-tiers and exits
+  FUNNEL_STAGES.forEach(s => {
+    buckets[s.key] = [];
+    (s.subStages || []).forEach(sub => { buckets[sub] = []; });
+  });
+  EXIT_STAGES.forEach(k => { buckets[k] = []; });
+  allTasks.forEach(t => { if (t.stage && buckets[t.stage] !== undefined) buckets[t.stage].push(t); });
 
   // Filter bar
   const filterBar = hdr.querySelector('#funnel-filters');
