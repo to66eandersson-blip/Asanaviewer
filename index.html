@@ -627,11 +627,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .funnel-stage { width: 100%; }
 .funnel-row { display: flex; align-items: stretch; gap: 0; min-height: 60px; }
 .funnel-bar { display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-  padding: 10px 16px; border-radius: 0 3px 3px 0; transition: filter 0.12s; cursor: default; }
-.funnel-bar:hover { filter: brightness(1.12); }
-.funnel-bar-count { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; color: #fff; line-height: 1; }
+  padding: 10px 16px; border-radius: 0 3px 3px 0;
+  border: 0.5px solid var(--border2); border-left: none;
+  transition: filter 0.12s; cursor: default; }
+.funnel-bar:hover { filter: brightness(1.08); }
+.funnel-bar-count { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; color: var(--text); line-height: 1; }
 .funnel-bar-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(255,255,255,0.6); max-width: 80px; line-height: 1.4; }
+  text-transform: uppercase; color: var(--text3); max-width: 80px; line-height: 1.4; }
+/* Signed row gets the accent — the only outcome the funnel exists to produce */
+.funnel-bar.is-outcome { border-color: var(--accent-border); }
+.funnel-bar.is-outcome .funnel-bar-count { color: var(--accent); }
+.funnel-bar.is-outcome .funnel-bar-label { color: var(--accent); opacity: 0.8; }
 .funnel-cards-wrap { flex: 1; min-width: 0; overflow-x: auto; display: flex;
   align-items: flex-start; gap: 8px; padding: 8px 0 8px 14px; }
 .funnel-ctx { display: flex; align-items: center; padding-left: 14px;
@@ -1016,7 +1022,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.88</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.89</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1060,7 +1066,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.88</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.89</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3175,12 +3181,24 @@ const EXIT_STAGES = ['Failed', 'Rejected', 'Closed/Pass'];
 // Qualified sub-tiers map to these stage enum values
 const QUALIFIED_TIERS = ['1-3 Stars', '4 Stars', '5 Stars'];
 
+// Main funnel bars use a single neutral surface — the funnel shape and counts
+// carry the information, color is reserved for the outcome (Signed) only.
+const FUNNEL_BAR_NEUTRAL = 'var(--surface3)';
+const FUNNEL_BAR_OUTCOME = 'var(--accent-dim)';   // Signed
 const FUNNEL_COLORS = {
-  'Incoming': '#3d1010', 'Qualified': '#541818',
-  '1-3 Stars': '#4a1a1a', '4 Stars': '#541818', '5 Stars': '#5e1e1e',
-  'Shortlist': '#6a2020', 'Playtest': '#7e2828',
-  'PreSigning': '#923535', 'Advanced Talks': '#a04040', 'Signed': '#b87c2a',
-  'Failed': '#2a1a1a', 'Rejected': '#2a1a1a', 'Closed/Pass': '#2a1a1a',
+  'Incoming':       FUNNEL_BAR_NEUTRAL,
+  'Qualified':      FUNNEL_BAR_NEUTRAL,
+  '1-3 Stars':      FUNNEL_BAR_NEUTRAL,
+  '4 Stars':        FUNNEL_BAR_NEUTRAL,
+  '5 Stars':        FUNNEL_BAR_NEUTRAL,
+  'Shortlist':      FUNNEL_BAR_NEUTRAL,
+  'Playtest':       FUNNEL_BAR_NEUTRAL,
+  'PreSigning':     FUNNEL_BAR_NEUTRAL,
+  'Advanced Talks': FUNNEL_BAR_NEUTRAL,
+  'Signed':         FUNNEL_BAR_OUTCOME,
+  'Failed':         'var(--surface2)',
+  'Rejected':       'var(--surface2)',
+  'Closed/Pass':    'var(--surface2)',
 };
 const FEEL_COLORS  = { 'Good': 'var(--rag-g)', 'Fear': 'var(--rag-r)', 'Smart': '#6b9e9e', 'Invincible': '#a890c0' };
 const RISK_COLORS  = { 'Art Game': '#7b9cbf', 'Safe Bet': 'var(--rag-g)', 'High Risk / High Reward': 'var(--rag-a)' };
@@ -3420,7 +3438,7 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
 
     // Bar
     const bar = document.createElement('div');
-    bar.className = 'funnel-bar';
+    bar.className = 'funnel-bar' + (stage.key === 'Signed' ? ' is-outcome' : '');
     bar.style.cssText = `width:${barPx}px;background:${color}`;
     bar.innerHTML = `<span class="funnel-bar-count">${count}</span><span class="funnel-bar-label">${esc(stage.key)}</span>`;
     row.appendChild(bar);
@@ -3484,7 +3502,7 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
       exitRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:3px 0';
       const barPx = Math.max(Math.round(count / maxCount * BAR_MAX_PX), count > 0 ? 4 : 0);
       exitRow.innerHTML = `
-        <div style="width:${barPx}px;height:12px;background:#3a1010;border-radius:0 2px 2px 0"></div>
+        <div style="width:${barPx}px;height:12px;background:var(--surface2);border:0.5px solid var(--border2);border-left:none;border-radius:0 2px 2px 0"></div>
         <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${esc(key)}: <span style="color:var(--text2)">${count}</span></span>`;
       body.appendChild(exitRow);
     });
