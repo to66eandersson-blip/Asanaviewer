@@ -620,38 +620,48 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .funnel-filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 /* Main + sidebar layout */
 .funnel-body { display: flex; flex-direction: column; padding: 1.25rem 1.75rem 2rem;
-  gap: 0; overflow-y: auto; flex: 1; min-height: 0; }
+  gap: 0; overflow-y: auto; flex: 1; min-height: 0; position: relative; }
+/* Funnel spine — vertical hairline at the left edge that bars grow off of.
+   28px = funnel-body's left padding, so the spine sits flush with the content edge. */
+.funnel-body::before { content: ''; position: absolute; top: 1.25rem; bottom: 2rem;
+  left: 1.75rem; width: 0.5px; background: var(--border2); pointer-events: none; }
 .funnel-sidebar { width: 240px; flex-shrink: 0; border-left: 0.5px solid var(--border2);
   overflow-y: auto; padding: 1.25rem 1.25rem 1.5rem; height: 100%; }
 /* Snapshot stage rows */
-.funnel-stage { width: 100%; }
-.funnel-row { display: flex; align-items: stretch; gap: 0; min-height: 60px; }
-/* Tier rows under a group header (Qualified) read as subordinate via a small
-   indent and slightly tighter row height. The bar itself uses the same styling. */
-.funnel-row-tier { min-height: 44px; margin-left: 14px; }
-.funnel-row-tier .funnel-bar { padding: 6px 16px; }
-.funnel-row-tier .funnel-bar-count { font-size: 20px; }
+.funnel-stage { width: 100%; position: relative; }
+.funnel-row { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+/* Tier rows under a group header (Qualified) read as subordinate via slightly
+   tighter row height and a smaller bar. */
+.funnel-row-tier { min-height: 32px; }
+.funnel-row-tier .funnel-bar { height: 20px; }
+.funnel-row-tier .funnel-bar-count { font-size: 18px; }
 .funnel-group-hdr { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--text2);
-  padding: 4px 0 6px; }
-.funnel-bar { display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-  padding: 10px 16px; border-radius: 0 3px 3px 0;
+  padding: 6px 0 4px 10px; }
+/* The bar is now height-only — no inner text, no left border. It grows off the spine. */
+.funnel-bar { flex-shrink: 0; height: 28px;
   border: 0.5px solid var(--border2); border-left: none;
-  transition: filter 0.12s; cursor: default; }
-.funnel-bar:hover { filter: brightness(1.08); }
-.funnel-bar-count { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; color: var(--text); line-height: 1; }
+  border-radius: 0 2px 2px 0;
+  transition: filter 0.12s, background 0.12s; cursor: default; }
+.funnel-bar:hover { filter: brightness(1.10); }
+/* Count + label sit outside the bar, to the right. Aligned to the bar's
+   vertical centre. */
+.funnel-bar-meta { display: flex; align-items: baseline; gap: 10px; flex-shrink: 0;
+  min-width: 110px; }
+.funnel-bar-count { font-family: var(--mono); font-size: 22px; font-weight: 300;
+  letter-spacing: -0.02em; color: var(--text); line-height: 1; }
 .funnel-bar-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--text3); max-width: 80px; line-height: 1.4; }
+  text-transform: uppercase; color: var(--text3); line-height: 1.4; white-space: nowrap; }
 /* Signed row gets the accent — the only outcome the funnel exists to produce */
 .funnel-bar.is-outcome { border-color: var(--accent-border); }
-.funnel-bar.is-outcome .funnel-bar-count { color: var(--accent); }
-.funnel-bar.is-outcome .funnel-bar-label { color: var(--accent); opacity: 0.8; }
+.funnel-bar-meta.is-outcome .funnel-bar-count { color: var(--accent); }
+.funnel-bar-meta.is-outcome .funnel-bar-label { color: var(--accent); opacity: 0.8; }
 .funnel-cards-wrap { flex: 1; min-width: 0; overflow-x: auto; display: flex;
-  align-items: flex-start; gap: 8px; padding: 8px 0 8px 14px; }
-.funnel-ctx { display: flex; align-items: center; padding-left: 14px;
+  align-items: center; gap: 8px; padding: 4px 0 4px 0; }
+.funnel-ctx { display: flex; align-items: center;
   font-family: var(--mono); font-size: 10px; color: var(--text3); }
 .funnel-transition { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
-  color: var(--text3); padding: 4px 0 4px 8px; }
+  color: var(--text3); padding: 6px 0 6px 10px; }
 /* Cards — compact with hover expand */
 a.funnel-game-card { flex: 0 0 150px; background: var(--surface2); border: 0.5px solid var(--border2);
   border-radius: 4px; padding: 9px 11px; display: flex; flex-direction: column; gap: 0;
@@ -1030,7 +1040,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.92</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.93</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1074,7 +1084,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.92</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.93</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3424,16 +3434,49 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
   // For Qualified group: aggregate sub-tiers
   filteredBuckets['Qualified'] = QUALIFIED_TIERS.flatMap(t => filteredBuckets[t] || []);
 
-  const maxCount = Math.max(
-    ...FUNNEL_STAGES.map(s => filteredBuckets[s.key]?.length || 0), 1
+  // True max across every rendered stage — tiers included — so 1-3★ doesn't
+  // dwarf the Signed row by accident.
+  const maxAll = Math.max(
+    ...FUNNEL_STAGES.flatMap(s => s.isGroup
+        ? (s.subStages || []).map(sub => filteredBuckets[sub]?.length || 0)
+        : [filteredBuckets[s.key]?.length || 0]),
+    1
   );
-  const BAR_MAX_PX = 320;
+  const BAR_MAX_PX = 360;
+  const BAR_MIN_PX = 4;  // a single-task bar is still a visible sliver
+
+  // Square-root scale: linear leaves small counts invisible, log over-compresses.
+  // sqrt(80/239) ≈ 0.58 — 80 reads as "a lot" without dwarfing the row of 1.
+  function barWidth(count) {
+    if (count <= 0) return 0;
+    return Math.max(Math.round(Math.sqrt(count / maxAll) * BAR_MAX_PX), BAR_MIN_PX);
+  }
+
+  // Progression ramp: index in the main funnel (post-Qualified) drives opacity
+  // toward var(--accent). Pre-funnel (Incoming, tiers) stays neutral — they
+  // haven't entered the publishing pipeline yet.
+  // Stage order for ramp: Incoming=0, Qualified-group=0 (tiers neutral),
+  // Shortlist=1, Playtest=2, PreSigning=3, Advanced Talks=4, Signed=5.
+  const RAMP_STEPS = [0, 0, 1, 2, 3, 4, 5];   // matches FUNNEL_STAGES indices
+  const RAMP_MAX   = 5;
+  function stageBg(stageIdx) {
+    const step = RAMP_STEPS[stageIdx] ?? 0;
+    if (step === 0) return 'var(--surface3)';
+    // opacity ramp from ~0.06 to ~0.22 against the page bg — Signed sits at full
+    const opacity = 0.06 + (step / RAMP_MAX) * 0.16;
+    return `rgba(245, 162, 48, ${opacity.toFixed(3)})`;  // RF orange
+  }
+  function stageBorder(stageIdx) {
+    const step = RAMP_STEPS[stageIdx] ?? 0;
+    if (step === 0) return 'var(--border2)';
+    const opacity = 0.10 + (step / RAMP_MAX) * 0.30;
+    return `rgba(245, 162, 48, ${opacity.toFixed(3)})`;
+  }
 
   // ── Main funnel stages ──
   FUNNEL_STAGES.forEach((stage, i) => {
     const games  = filteredBuckets[stage.key] || [];
     const count  = games.length;
-    const color  = FUNNEL_COLORS[stage.key] || '#5a1a1a';
 
     const stageEl = document.createElement('div');
     stageEl.className = 'funnel-stage';
@@ -3448,14 +3491,16 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
 
       (stage.subStages || []).forEach(tier => {
         const tc = (filteredBuckets[tier] || []).length;
-        const tierBarPx = Math.max(Math.round((tc / maxCount) * BAR_MAX_PX), tc > 0 ? 60 : 30);
         const tierRow = document.createElement('div');
         tierRow.className = 'funnel-row funnel-row-tier';
         const tierBar = document.createElement('div');
         tierBar.className = 'funnel-bar';
-        tierBar.style.cssText = `width:${tierBarPx}px;background:${FUNNEL_BAR_NEUTRAL}`;
-        tierBar.innerHTML = `<span class="funnel-bar-count">${tc}</span><span class="funnel-bar-label">${esc(tier)}</span>`;
+        tierBar.style.cssText = `width:${barWidth(tc)}px;background:var(--surface3);border-color:var(--border2)`;
         tierRow.appendChild(tierBar);
+        const tierMeta = document.createElement('div');
+        tierMeta.className = 'funnel-bar-meta';
+        tierMeta.innerHTML = `<span class="funnel-bar-count">${tc}</span><span class="funnel-bar-label">${esc(tier)}</span>`;
+        tierRow.appendChild(tierMeta);
         stageEl.appendChild(tierRow);
       });
 
@@ -3469,16 +3514,20 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
       return;
     }
 
-    const barPx  = Math.max(Math.round((count / maxCount) * BAR_MAX_PX), count > 0 ? 60 : 30);
     const row = document.createElement('div');
     row.className = 'funnel-row';
 
-    // Bar
+    // Bar — width-only visual, no text inside
     const bar = document.createElement('div');
     bar.className = 'funnel-bar' + (stage.key === 'Signed' ? ' is-outcome' : '');
-    bar.style.cssText = `width:${barPx}px;background:${color}`;
-    bar.innerHTML = `<span class="funnel-bar-count">${count}</span><span class="funnel-bar-label">${esc(stage.key)}</span>`;
+    bar.style.cssText = `width:${barWidth(count)}px;background:${stageBg(i)};border-color:${stageBorder(i)}`;
     row.appendChild(bar);
+
+    // Count + label sit outside the bar to the right, so they read regardless of bar width
+    const meta = document.createElement('div');
+    meta.className = 'funnel-bar-meta' + (stage.key === 'Signed' ? ' is-outcome' : '');
+    meta.innerHTML = `<span class="funnel-bar-count">${count}</span><span class="funnel-bar-label">${esc(stage.key)}</span>`;
+    row.appendChild(meta);
 
     if (stage.showCards && count > 0) {
       const wrap = document.createElement('div');
@@ -3508,18 +3557,21 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
   // ── Exit stages ──
   if (EXIT_STAGES.some(k => (filteredBuckets[k]||[]).length > 0)) {
     const exitHdr = document.createElement('div');
-    exitHdr.style.cssText = 'margin-top:14px;padding:6px 0 4px;border-top:0.5px solid var(--border2);font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3)';
+    exitHdr.style.cssText = 'margin-top:14px;padding:6px 0 4px 10px;border-top:0.5px solid var(--border2);font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3)';
     exitHdr.textContent = 'Exits';
     body.appendChild(exitHdr);
 
     EXIT_STAGES.forEach(key => {
       const count = (filteredBuckets[key] || []).length;
       const exitRow = document.createElement('div');
-      exitRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:3px 0';
-      const barPx = Math.max(Math.round(count / maxCount * BAR_MAX_PX), count > 0 ? 4 : 0);
+      exitRow.style.cssText = 'display:flex;align-items:center;gap:12px;padding:3px 0;min-height:24px';
+      const barPx = barWidth(count);
       exitRow.innerHTML = `
-        <div style="width:${barPx}px;height:12px;background:var(--surface2);border:0.5px solid var(--border2);border-left:none;border-radius:0 2px 2px 0"></div>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${esc(key)}: <span style="color:var(--text2)">${count}</span></span>`;
+        <div style="width:${barPx}px;height:14px;background:var(--surface2);border:0.5px solid var(--border2);border-left:none;border-radius:0 2px 2px 0;flex-shrink:0"></div>
+        <div style="display:flex;align-items:baseline;gap:10px;min-width:110px">
+          <span style="font-family:var(--mono);font-size:14px;font-weight:300;color:var(--text2);line-height:1">${count}</span>
+          <span style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);white-space:nowrap">${esc(key)}</span>
+        </div>`;
       body.appendChild(exitRow);
     });
   }
