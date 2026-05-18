@@ -1016,7 +1016,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.87</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.88</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1060,7 +1060,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.87</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.88</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3136,8 +3136,8 @@ const CF_SUBMISSION_DATE_F= '1207319688785734';
 
 // Section GID → funnel stage fallback (for tasks where CF is not yet set)
 const SECTION_TO_STAGE = {
-  '1163485042326162': 'Inbound',       // 📇Incoming
-  '1163492904183522': 'Inbound',       // 🎮In Review (also Inbound)
+  '1163485042326162': 'Incoming',      // 📇Incoming
+  '1163492904183522': 'Incoming',      // 🎮In Review (also Incoming)
   '1208460531667650': 'Failed',        // Failed
   '1208460531667651': '1-3 Stars',     // 1-3 Stars
   '1208460531667652': '4 Stars',       // 4 Stars
@@ -3149,7 +3149,7 @@ const SECTION_TO_STAGE = {
   '1163492904183521': 'Advanced Talks',// 📞Adv Talks
   '1163492904147521': 'Signed',        // 💚Signed
   '1163492904160521': 'Closed/Pass',   // ⛔Pass
-  '1163492904140521': 'Inbound',       // ⌛Waiting for Dev (still inbound)
+  '1163492904140521': 'Incoming',      // ⌛Waiting for Dev (still incoming)
   '1214732609541877': 'Training set',  // Training set
   '1209794284804451': null,            // 2026 (signing target sections — skip)
   '1208460531667489': null,            // 2027
@@ -3158,7 +3158,7 @@ const SECTION_TO_STAGE = {
 
 // Main funnel stages — shown as primary flow
 const FUNNEL_STAGES = [
-  { key: 'Inbound',         showCards: false, transition: 'Scribe AI assessment' },
+  { key: 'Incoming',        showCards: false, transition: 'Scribe AI assessment' },
   { key: 'Qualified',       showCards: false, isGroup: true,
     subStages: ['1-3 Stars', '4 Stars', '5 Stars'],
     transition: 'Scout screening — human playthrough and review' },
@@ -3176,7 +3176,7 @@ const EXIT_STAGES = ['Failed', 'Rejected', 'Closed/Pass'];
 const QUALIFIED_TIERS = ['1-3 Stars', '4 Stars', '5 Stars'];
 
 const FUNNEL_COLORS = {
-  'Inbound': '#3d1010', 'Qualified': '#541818',
+  'Incoming': '#3d1010', 'Qualified': '#541818',
   '1-3 Stars': '#4a1a1a', '4 Stars': '#541818', '5 Stars': '#5e1e1e',
   'Shortlist': '#6a2020', 'Playtest': '#7e2828',
   'PreSigning': '#923535', 'Advanced Talks': '#a04040', 'Signed': '#b87c2a',
@@ -3431,17 +3431,24 @@ function rebuildFunnelBody(allTasks, buckets, body, sidebar) {
       games.forEach(g => wrap.appendChild(renderFunnelCard(g)));
       row.appendChild(wrap);
     } else if (stage.isGroup) {
-      // Qualified: show sub-tier breakdown inline
+      // Qualified: 3 stacked mini-bars matching the height of the main bar
       const tierWrap = document.createElement('div');
       tierWrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;padding-left:12px;justify-content:center';
+      const totalQ = (filteredBuckets['Qualified'] || []).length || 1;
       QUALIFIED_TIERS.forEach(tier => {
         const tc = (filteredBuckets[tier] || []).length;
+        const pct = Math.round(tc / totalQ * 100);
         const tierColor = tier === '5 Stars' ? 'var(--rag-g)' : tier === '4 Stars' ? 'var(--rag-a)' : 'var(--text3)';
-        const tierBar = Math.max(Math.round(tc / maxCount * 160), tc > 0 ? 4 : 0);
-        tierWrap.innerHTML += `<div style="display:flex;align-items:center;gap:6px">
-          <div style="width:${tierBar}px;height:10px;background:${tierColor}55;border-radius:0 2px 2px 0;min-width:${tc>0?'4px':'0'}"></div>
-          <span style="font-family:var(--mono);font-size:9px;color:${tierColor}">${esc(tier)}: ${tc}</span>
-        </div>`;
+        // Bar width proportional to this tier's share of total Qualified
+        const tierBarW = Math.max(Math.round(tc / maxCount * BAR_MAX_PX * 0.7), tc > 0 ? 6 : 0);
+        tierWrap.innerHTML += `
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:${tierBarW}px;height:15px;background:${tierColor}44;
+              border-radius:0 2px 2px 0;border-left:2px solid ${tierColor}88;flex-shrink:0"></div>
+            <span style="font-family:var(--mono);font-size:10px;color:${tierColor};white-space:nowrap">
+              ${esc(tier)}&nbsp;&nbsp;<strong style="color:${tierColor}">${tc}</strong>
+            </span>
+          </div>`;
       });
       row.appendChild(tierWrap);
     } else {
@@ -3542,7 +3549,7 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
   const allTasks = Object.values(byGid);
 
   const STAGE_DEPTH = {
-    'Inbound': 0, 'Qualified': 1, 'Shortlist': 2,
+    'Incoming': 0, 'Qualified': 1, 'Shortlist': 2,
     '1-3 Stars': 1, '4 Stars': 1, '5 Stars': 1,
     'Shortlist': 2, 'Playtest': 3, 'PreSigning': 4, 'Advanced Talks': 5, 'Signed': 6,
     'Failed': -1, 'Rejected': -1, 'Closed/Pass': -1
@@ -3555,11 +3562,12 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
   ];
 
   const now = Date.now();
-  const stageOrder = ['Inbound','Qualified','Shortlist','Playtest','PreSigning','Advanced Talks','Signed'];
+  const stageOrder = ['Incoming','Qualified','Shortlist','Playtest','PreSigning','Advanced Talks','Signed'];
   const BAR_MAX = 260;
 
   // For rolling stats: Qualified = sum of all three tiers
   const qualifiedCount = (t) => ['1-3 Stars','4 Stars','5 Stars'].includes(t.stage);
+  const INCOMING = 'Incoming';
 
   container.innerHTML = '';
   const wrap = document.createElement('div');
@@ -3606,6 +3614,8 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
         ? windowTasks.filter(t => ['1-3 Stars','4 Stars','5 Stars'].includes(t.stage)).length
         : windowTasks.filter(t => t.stage === s).length;
     });
+    // Incoming: also show total from all tasks (not just those with submission date)
+    const incomingTotal = allTasks.filter(t => t.stage === 'Incoming').length;
 
     // Exit counts for rolling window
     const exitCounts = {};
@@ -3687,16 +3697,40 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
         }
       }
       row.appendChild(rateEl);
-      // For Qualified: show tier sub-breakdown below the bar
+      // For Qualified: show each tier with its own cumulative + current pair of bars
       if (stage === 'Qualified') {
-        const tierRow = document.createElement('div');
-        tierRow.style.cssText = 'display:flex;gap:16px;padding:3px 0 2px 190px;flex-wrap:wrap';
+        const col1 = '#f5a230', col2 = '#7b9cbf';
         ['1-3 Stars','4 Stars','5 Stars'].forEach(tier => {
-          const tc = windowTasks.filter(t => t.stage === tier).length;
-          const c = tier === '5 Stars' ? 'var(--rag-g)' : tier === '4 Stars' ? 'var(--rag-a)' : 'var(--text3)';
-          tierRow.innerHTML += `<span style="font-family:var(--mono);font-size:10px;color:${c}">${esc(tier)}: ${tc}</span>`;
+          const tierDepth = STAGE_DEPTH[tier] || 1;
+          const tierPassed  = windowTasks.filter(t => (STAGE_DEPTH[t.stage] ?? -1) >= tierDepth && t.stage !== 'Failed' && t.stage !== 'Rejected' && t.stage !== 'Closed/Pass').length;
+          const tierCurrent = windowTasks.filter(t => t.stage === tier).length;
+          const tierColor   = tier === '5 Stars' ? 'var(--rag-g)' : tier === '4 Stars' ? 'var(--rag-a)' : 'var(--text3)';
+          const b1w = tierPassed  > 0 ? Math.max(Math.round(tierPassed  / maxVal * BAR_MAX), 4) : 0;
+          const b2w = tierCurrent > 0 ? Math.max(Math.round(tierCurrent / maxVal * BAR_MAX), 4) : 0;
+          const tierEl = document.createElement('div');
+          tierEl.style.cssText = 'display:flex;align-items:flex-start;gap:0;margin-top:2px';
+          // Indent label
+          const tierLbl = document.createElement('div');
+          tierLbl.style.cssText = `width:190px;flex-shrink:0;font-family:var(--mono);font-size:10px;
+            padding-right:14px;text-align:right;padding-top:2px;color:${tierColor};
+            letter-spacing:0.05em`;
+          tierLbl.textContent = tier;
+          tierEl.appendChild(tierLbl);
+          // Bars
+          const tierBars = document.createElement('div');
+          tierBars.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+          tierBars.innerHTML = `
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:${b1w}px;height:12px;background:${col1}66;border-radius:0 2px 2px 0"></div>
+              <span style="font-family:var(--mono);font-size:10px;color:${tierPassed>0?'var(--text2)':'var(--text3)'}">${tierPassed||'—'}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:${b2w}px;height:12px;background:${col2}66;border-radius:0 2px 2px 0"></div>
+              <span style="font-family:var(--mono);font-size:10px;color:${tierCurrent>0?'var(--text2)':'var(--text3)'}">${tierCurrent||'—'}</span>
+            </div>`;
+          tierEl.appendChild(tierBars);
+          stageEl.appendChild(tierEl);
         });
-        stageEl.appendChild(tierRow);
       }
 
       stageEl.appendChild(row);
@@ -3724,7 +3758,8 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
     const signColor = parseFloat(signRate) >= 2 ? 'var(--rag-g)' : parseFloat(signRate) >= 1 ? 'var(--rag-a)' : 'var(--text3)';
     const exitSummary = EXIT_STAGES.map(k => `${k}: <strong style="color:var(--text2)">${exitCounts[k]||0}</strong>`).join(' &nbsp;·&nbsp; ');
     summary.innerHTML = `
-      <div style="color:var(--text2)">Total submitted in window: <strong style="color:var(--text)">${totalWindow}</strong></div>
+      <div style="color:var(--text2)">Total submitted in window: <strong style="color:var(--text)">${totalWindow}</strong> <span style="color:var(--text3);font-size:9px">(games with submission date set)</span></div>
+      <div style="color:var(--text3);font-size:10px">Incoming total (all): <strong style="color:var(--text2)">${incomingTotal}</strong> — submission date not required for this count</div>
       <div style="color:var(--text2)">Signed: <strong style="color:var(--rag-g)">${passedThrough['Signed']}</strong> &nbsp;·&nbsp; Sign rate: <strong style="color:${signColor}">${signRate}%</strong></div>
       <div style="color:var(--text3)">Exits — ${exitSummary}</div>
       <div style="color:var(--text3);font-size:9px;margin-top:6px;line-height:1.7">
