@@ -1022,7 +1022,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.90</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.91</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1066,7 +1066,7 @@ a.funnel-game-card:hover .funnel-card-detail { max-height: 140px; margin-top: 8p
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.90</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.91</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -2111,14 +2111,12 @@ function buildApp(proj,tasks){
   currentBoardCode = mapEntry?.[1]?.code || '';
   roadmapLoaded = false; // reset so next roadmap view re-fetches
   _pubGidToGame  = null;  // rediscover publishing boards on next load
-  // Update game title in topbar — use authoritative title from map
-  const titleEl = document.getElementById('tb-game-title');
-  if (titleEl) {
-    const mapEntry = PRODUCT_BOARD_MAP[currentPid];
-    const product  = portfolioProducts.find(p => p.boardGid === currentPid);
-    // Priority: map title > portfolio product name > Asana project name
-    titleEl.textContent = (mapEntry?.title) || (product?.name) || proj.name || '';
-  }
+  // Update topbar title — board name on board-scoped tabs, tab name on portfolio tabs
+  const mapEntryForTitle = PRODUCT_BOARD_MAP[currentPid];
+  const productForTitle  = portfolioProducts.find(p => p.boardGid === currentPid);
+  // Priority: map title > portfolio product name > Asana project name
+  currentBoardName = (mapEntryForTitle?.title) || (productForTitle?.name) || proj.name || '';
+  updateTopbarTitle();
   // Update picker status label with loaded board name
   const pickerSel = document.getElementById('board-select');
   if (pickerSel) {
@@ -3956,9 +3954,22 @@ $('inp-pat').addEventListener('keydown',e=>{if(e.key==='Enter')$('inp-url').focu
 
 /* ─── Tab switching ─── */
 let activeTab = 'timeline';
+let currentBoardName = '';
 // Section/Domain chips only filter the event store used by Timeline and Goals Board.
 // On every other tab they are visual noise — hide them.
 const TABS_WITH_BOARD_FILTERS = new Set(['timeline', 'goals']);
+// Portfolio-level tabs show their own name in the topbar title — the loaded board
+// has no bearing on what they display, so showing the board name would mislead.
+const PORTFOLIO_TAB_TITLES = {
+  fof:     'Flow of Fury',
+  roadmap: 'Roadmap',
+  funnel:  'Pitch Funnel',
+};
+function updateTopbarTitle() {
+  const titleEl = document.getElementById('tb-game-title');
+  if (!titleEl) return;
+  titleEl.textContent = PORTFOLIO_TAB_TITLES[activeTab] || currentBoardName || '';
+}
 function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'tab-btn-' + tab));
@@ -3968,6 +3979,7 @@ function switchTab(tab) {
   const showBoardFilters = TABS_WITH_BOARD_FILTERS.has(tab);
   const fbWrap = document.querySelector('.filterbars');
   if (fbWrap) fbWrap.style.display = showBoardFilters ? '' : 'none';
+  updateTopbarTitle();
   if (tab === 'goals' && allEvents.length) renderGoalsBoard();
   if (tab === 'fof') { renderFoF(); }
   if (tab === 'roadmap') renderRoadmap();
@@ -4854,6 +4866,9 @@ function buildBoardDropdown() {
 async function onBoardPickerChange(gid) {
   if (gid) sessionStorage.setItem('rf_pid', gid);
   if (!gid || !PAT) return;
+  // If user is on a portfolio-level tab, selecting a board implies they want to
+  // drill in — return them to the board-scoped Timeline view.
+  if (PORTFOLIO_TAB_TITLES[activeTab]) switchTab('timeline');
   // Find the product name for the title
   const product = portfolioProducts.find(p => p.boardGid === gid);
   try {
