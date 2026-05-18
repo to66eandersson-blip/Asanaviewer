@@ -1068,7 +1068,7 @@ a.funnel-game-card:hover { border-color: var(--accent-border); background: var(-
 <div id="screen-setup" class="screen">
   <div class="setup-wrap">
     <div class="setup-card">
-      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.95</span></div>
+      <div class="logo-row"><div class="logo-gem"></div><span class="logo-label">Product Board</span><span style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-left:8px;border:0.5px solid var(--border2);border-radius:3px;padding:1px 5px">v4.96</span></div>
       <h1>Connect your board</h1>
       <p>Enter your Asana Personal Access Token, then paste any Product Board URL to generate a unified timeline view with rich milestone data.</p>
       <div class="note-box"><strong>Read-only &amp; private.</strong> Your token is used only to call Asana's API directly from your browser. It is never stored or sent anywhere else, and clears when you close the tab.</div>
@@ -1112,7 +1112,7 @@ a.funnel-game-card:hover { border-color: var(--accent-border); background: var(-
 <div id="screen-app" class="screen active">
   <!-- Row 1: logo + game title + board picker + controls -->
   <div class="topbar">
-    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.95</span></div>
+    <div class="tb-logo"><img class="tb-logo-img" src="rf_logo_square.png" alt="Raw Fury"><span class="tb-version">v4.96</span></div>
     <span class="tb-game-title" id="tb-game-title">Kulo Niku Bowl Up!</span>
     <div class="tb-sep"></div>
     <div class="board-picker-wrap">
@@ -3794,6 +3794,32 @@ function renderRollingStats(snapshotTasks, annualTasks, container) {
       row.appendChild(rateEl);
 
       body.appendChild(row);
+
+      // After the Qualified row, surface the tier breakdown of submissions
+      // still sitting in Qualified (i.e. not yet advanced). The Star Rating CF
+      // doesn't persist past the Qualified stage, so we can't reconstruct the
+      // tier mix of everything that passed through — only what's still here.
+      if (stage === 'Qualified') {
+        const tierCaption = document.createElement('div');
+        tierCaption.className = 'funnel-transition';
+        tierCaption.textContent = '↳  still at this stage, by tier';
+        body.appendChild(tierCaption);
+
+        ['1-3 Stars', '4 Stars', '5 Stars'].forEach(tier => {
+          const tc = windowTasks.filter(t => t.stage === tier).length;
+          const tierRow = document.createElement('div');
+          tierRow.className = 'fnr-row funnel-row-tier';
+          const tierBar = document.createElement('div');
+          tierBar.className = 'funnel-bar';
+          tierBar.style.cssText = `width:${barWidth(tc)}px;background:var(--surface3);border-color:var(--border2)`;
+          tierRow.appendChild(tierBar);
+          const tierMeta = document.createElement('div');
+          tierMeta.className = 'funnel-bar-meta';
+          tierMeta.innerHTML = `<span class="funnel-bar-count">${tc}</span><span class="funnel-bar-label">${esc(tier)}</span>`;
+          tierRow.appendChild(tierMeta);
+          body.appendChild(tierRow);
+        });
+      }
     });
 
     // ── Summary footer ──
